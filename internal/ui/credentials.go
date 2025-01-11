@@ -173,7 +173,7 @@ func (m credentialsModel) View() string {
 	b.WriteString(m.styles.Title.Render("Welcome to Merlion!") + "\n\n")
 	b.WriteString(m.styles.App.Render("Please enter your credentials") + "\n\n")
 
-	inputContainer := m.styles.App.Copy().Padding(0, 1)
+	inputContainer := m.styles.Input.Copy().Padding(0, 1)
 	b.WriteString(inputContainer.Render("Email: "+m.emailInput.View()) + "\n")
 	b.WriteString(inputContainer.Render("Password: "+m.passwordInput.View()) + "\n\n")
 
@@ -189,7 +189,7 @@ func (m credentialsModel) View() string {
 
 	// Add signup notice
 	b.WriteString(m.styles.Muted.Render("\nDon't have an account yet?") + "\n")
-	b.WriteString(m.styles.App.Render("Visit https://merlion.dev to create one"))
+	b.WriteString(m.styles.Muted.Render("Visit https://merlion.dev to create one"))
 
 	// Center the container in the terminal
 	container := m.styles.Container.Render(b.String())

@@ -6,6 +6,7 @@ type Styles struct {
     App       lipgloss.Style
     Title     lipgloss.Style
     Container lipgloss.Style
+	Highlight lipgloss.Style
     Input     lipgloss.Style
     Error     lipgloss.Style
     Success   lipgloss.Style

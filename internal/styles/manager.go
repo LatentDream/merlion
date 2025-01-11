@@ -102,7 +102,6 @@ func (tm *ThemeManager) Styles() *Styles {
 
 	return &Styles{
 		App: lipgloss.NewStyle().
-			Background(theme.Background).
 			Foreground(theme.Foreground),
 
 		Title: lipgloss.NewStyle().
@@ -116,9 +115,13 @@ func (tm *ThemeManager) Styles() *Styles {
 			BorderForeground(theme.BorderColor).
 			Padding(1, 2),
 
+		Highlight: lipgloss.NewStyle().
+			BorderForeground(theme.BorderColor).
+			Foreground(theme.Tertiary),
+
 		Input: lipgloss.NewStyle().
 			BorderForeground(theme.BorderColor).
-			Foreground(theme.Foreground),
+			Foreground(theme.Secondary),
 
 		Error: lipgloss.NewStyle().
 			Foreground(theme.Error).

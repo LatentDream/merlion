@@ -14,6 +14,7 @@ type Theme struct {
 	// UI colors
 	Primary   lipgloss.Color
 	Secondary lipgloss.Color
+	Tertiary  lipgloss.Color
 	Error     lipgloss.Color
 	Warning   lipgloss.Color
 	Success   lipgloss.Color
@@ -25,15 +26,15 @@ type Theme struct {
 }
 
 var (
-	// Gruvbox theme
 	Gruvbox = Theme{
 		Name:           "gruvbox",
 		Background:     lipgloss.Color("#282828"),
 		Foreground:     lipgloss.Color("#ebdbb2"),
 		Selection:      lipgloss.Color("#504945"),
 		Comment:        lipgloss.Color("#928374"),
-		Primary:        lipgloss.Color("#b8bb26"),
+		Primary:        lipgloss.Color("#fe8019"),
 		Secondary:      lipgloss.Color("#83a598"),
+		Tertiary:       lipgloss.Color("#b8bb26"),
 		Error:          lipgloss.Color("#fb4934"),
 		Warning:        lipgloss.Color("#fabd2f"),
 		Success:        lipgloss.Color("#b8bb26"),
@@ -51,6 +52,7 @@ var (
 		Comment:        lipgloss.Color("#565f89"),
 		Primary:        lipgloss.Color("#7aa2f7"),
 		Secondary:      lipgloss.Color("#bb9af7"),
+		Tertiary:       lipgloss.Color("#73daca"),
 		Error:          lipgloss.Color("#f7768e"),
 		Warning:        lipgloss.Color("#e0af68"),
 		Success:        lipgloss.Color("#9ece6a"),
@@ -68,6 +70,7 @@ var (
 		Comment:        lipgloss.Color("#787c99"),
 		Primary:        lipgloss.Color("#4a76cd"),
 		Secondary:      lipgloss.Color("#8a5cf5"),
+		Tertiary:       lipgloss.Color("#d17e3d"),
 		Error:          lipgloss.Color("#cc3333"),
 		Warning:        lipgloss.Color("#cc9933"),
 		Success:        lipgloss.Color("#339933"),
@@ -79,17 +82,18 @@ var (
 	// Purple Dream theme
 	PurpleDream = Theme{
 		Name:           "purpledream",
-		Background:     lipgloss.Color("#FFFFFF"), // White background from the context
-		Foreground:     lipgloss.Color("#333333"), // Dark text for readability
-		Selection:      lipgloss.Color("#F0F0FA"), // Light purple tinted selection
-		Comment:        lipgloss.Color("#9B8BC0"), // Muted purple for comments
-		Primary:        lipgloss.Color("#7D56F4"), // Main purple from titleStyle background
-		Secondary:      lipgloss.Color("#9B78FF"), // Lighter purple for secondary elements
-		Error:          lipgloss.Color("#FF0000"), // Red from errorStyle
-		Warning:        lipgloss.Color("#FFB86C"), // Warm orange for warnings
-		Success:        lipgloss.Color("#50FA7B"), // Bright green for success
-		BorderColor:    lipgloss.Color("#7D56F4"), // Purple from containerStyle border
-		HighlightColor: lipgloss.Color("#FAFAFA"), // White from titleStyle foreground
-		MutedColor:     lipgloss.Color("#B8B8B8"), // Muted gray for less emphasis
+		Background:     lipgloss.Color("#FFFFFF"),
+		Foreground:     lipgloss.Color("#333333"),
+		Selection:      lipgloss.Color("#F0F0FA"),
+		Comment:        lipgloss.Color("#9B8BC0"),
+		Primary:        lipgloss.Color("#7D56F4"),
+		Secondary:      lipgloss.Color("#9B78FF"),
+		Tertiary:       lipgloss.Color("#c39ac9"),
+		Error:          lipgloss.Color("#FF0000"),
+		Warning:        lipgloss.Color("#FFB86C"),
+		Success:        lipgloss.Color("#50FA7B"),
+		BorderColor:    lipgloss.Color("#7D56F4"),
+		HighlightColor: lipgloss.Color("#FAFAFA"),
+		MutedColor:     lipgloss.Color("#B8B8B8"),
 	}
 )
