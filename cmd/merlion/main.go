@@ -2,16 +2,36 @@ package main
 
 import (
 	"fmt"
+	tea "github.com/charmbracelet/bubbletea"
 	"log"
 	"merlion/internal/api"
 	"merlion/internal/auth"
+	"merlion/internal/styles"
 	"merlion/internal/ui"
 	"os"
-
-	tea "github.com/charmbracelet/bubbletea"
+	"path/filepath"
 )
 
 func main() {
+	// Initialize config directory
+	userConfigDir, err := os.UserConfigDir()
+	if err != nil {
+		log.Fatalf("Failed to get user config directory: %v", err)
+	}
+
+	configDir := filepath.Join(userConfigDir, "merlion")
+	if err := os.MkdirAll(configDir, 0700); err != nil {
+		log.Fatalf("Failed to create config directory: %v", err)
+	}
+
+	// Initialize theme manager
+	themeManager, err := styles.NewThemeManager(configDir)
+	if err != nil {
+		log.Fatalf("Failed to initialize theme manager: %v", err)
+	}
+
+	// Get current styles
+	appStyles := themeManager.Styles()
 
 	// Initialize credentials manager
 	credMgr, err := auth.NewCredentialsManager()
@@ -23,7 +43,7 @@ func main() {
 	creds, err := credMgr.LoadCredentials()
 	if err != nil {
 		// First time setup - prompt user for credentials
-		creds, err = ui.GetCredentials()
+		creds, err = ui.GetCredentials(appStyles, themeManager)
 		if err != nil {
 			log.Fatalf("Failed to get credentials: %v", err)
 		}

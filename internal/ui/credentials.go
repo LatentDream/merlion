@@ -7,6 +7,7 @@ import (
 
 	"merlion/internal/api"
 	"merlion/internal/auth"
+	"merlion/internal/styles"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -22,14 +23,20 @@ type credentialsModel struct {
 	width         int
 	height        int
 	validating    bool
+	styles        *styles.Styles
+	themeManager  *styles.ThemeManager
 }
 
-func NewCredentialsUI() *credentialsModel {
+func NewCredentialsUI(appStyles *styles.Styles, themeManager *styles.ThemeManager) *credentialsModel {
 	emailInput := textinput.New()
 	emailInput.Placeholder = "Enter your email"
 	emailInput.Focus()
 	emailInput.CharLimit = 64
 	emailInput.Width = 32
+
+	// Apply theme to input
+	emailInput.PromptStyle = appStyles.Input
+	emailInput.TextStyle = appStyles.Input
 
 	passwordInput := textinput.New()
 	passwordInput.Placeholder = "Enter your password"
@@ -37,10 +44,15 @@ func NewCredentialsUI() *credentialsModel {
 	passwordInput.Width = 32
 	passwordInput.EchoMode = textinput.EchoPassword
 	passwordInput.EchoCharacter = '•'
+	// Apply theme to input
+	passwordInput.PromptStyle = appStyles.Input
+	passwordInput.TextStyle = appStyles.Input
 
 	return &credentialsModel{
 		emailInput:    emailInput,
 		passwordInput: passwordInput,
+		styles:        appStyles,
+		themeManager:  themeManager,
 	}
 }
 
@@ -112,7 +124,30 @@ func (m credentialsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.passwordInput.Focus()
 				return m, textinput.Blink
 			}
+
+		case "ctrl+t": // Add theme toggle shortcut
+			var nextTheme string
+			switch m.themeManager.Current().Name {
+			case "gruvbox":
+				nextTheme = "neotokyo"
+			case "neotokyo":
+				nextTheme = "quiet"
+			case "quiet":
+				nextTheme = "gruvbox"
+			}
+			if err := m.themeManager.SetTheme(nextTheme); err != nil {
+				m.err = fmt.Errorf("failed to change theme: %v", err)
+				return m, nil
+			}
+			m.styles = m.themeManager.Styles()
+			// Update input styles
+			m.emailInput.PromptStyle = m.styles.Input
+			m.emailInput.TextStyle = m.styles.Input
+			m.passwordInput.PromptStyle = m.styles.Input
+			m.passwordInput.TextStyle = m.styles.Input
+			return m, nil
 		}
+
 	}
 
 	// Handle input updates
@@ -124,30 +159,6 @@ func (m credentialsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-var (
-	titleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#FAFAFA")).
-			Background(lipgloss.Color("#7D56F4")).
-			Padding(0, 1)
-
-	inputStyle = lipgloss.NewStyle().
-			Padding(0, 1)
-
-	containerStyle = lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			Padding(1, 2).
-			BorderForeground(lipgloss.Color("#7D56F4"))
-
-	errorStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FF0000")).
-			Padding(1, 0)
-
-	signupStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#7D56F4")).
-			Padding(1, 0)
-)
-
 func (m credentialsModel) View() string {
 	if m.width == 0 {
 		return "Loading..."
@@ -155,27 +166,31 @@ func (m credentialsModel) View() string {
 
 	// Create the form content
 	var b strings.Builder
-	b.WriteString(titleStyle.Render("Welcome to Merlion!") + "\n\n")
-	b.WriteString("Please enter your credentials\n\n")
-	b.WriteString(inputStyle.Render("Email: "+m.emailInput.View()) + "\n")
-	b.WriteString(inputStyle.Render("Password: "+m.passwordInput.View()) + "\n\n")
+
+	// Use theme styles
+	b.WriteString(m.styles.Title.Render("Welcome to Merlion!") + "\n\n")
+	b.WriteString(m.styles.App.Render("Please enter your credentials") + "\n\n")
+
+	inputContainer := m.styles.App.Copy().Padding(0, 1)
+	b.WriteString(inputContainer.Render("Email: "+m.emailInput.View()) + "\n")
+	b.WriteString(inputContainer.Render("Password: "+m.passwordInput.View()) + "\n\n")
 
 	if m.validating {
-		b.WriteString("Validating credentials...\n")
+		b.WriteString(m.styles.Muted.Render("Validating credentials...") + "\n")
 	} else {
-		b.WriteString("(Press tab to switch fields, enter to submit)\n")
+		b.WriteString(m.styles.Muted.Render("(Press tab to switch fields, enter to submit)") + "\n")
 	}
 
 	if m.err != nil {
-		b.WriteString(errorStyle.Render(fmt.Sprintf("Error: %v", m.err)) + "\n")
+		b.WriteString(m.styles.Error.Render(fmt.Sprintf("Error: %v", m.err)) + "\n")
 	}
 
 	// Add signup notice
-	b.WriteString(signupStyle.Render("\nDon't have an account yet?"))
-	b.WriteString(signupStyle.Render("Visit https://merlion.dev to create one"))
+	b.WriteString(m.styles.Muted.Render("\nDon't have an account yet?") + "\n")
+	b.WriteString(m.styles.App.Render("Visit https://merlion.dev to create one"))
 
 	// Center the container in the terminal
-	container := containerStyle.Render(b.String())
+	container := m.styles.Container.Render(b.String())
 
 	return lipgloss.Place(
 		m.width,
@@ -186,11 +201,11 @@ func (m credentialsModel) View() string {
 	)
 }
 
-func GetCredentials() (*auth.Credentials, error) {
+func GetCredentials(appStyles *styles.Styles, themeManager *styles.ThemeManager) (*auth.Credentials, error) {
 	p := tea.NewProgram(
-		NewCredentialsUI(),
-		tea.WithAltScreen(),       // Use alternate screen
-		tea.WithMouseCellMotion(), // Enable mouse support
+		NewCredentialsUI(appStyles, themeManager),
+		tea.WithAltScreen(),
+		tea.WithMouseCellMotion(),
 	)
 
 	m, err := p.Run()

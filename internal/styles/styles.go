@@ -2,18 +2,12 @@ package styles
 
 import "github.com/charmbracelet/lipgloss"
 
-var (
-    AppStyle = lipgloss.NewStyle().
-        Margin(1, 2)
-
-    TitleStyle = lipgloss.NewStyle().
-        Bold(true).
-        Foreground(lipgloss.Color("#FAFAFA")).
-        Background(lipgloss.Color("#7D56F4")).
-        Padding(0, 1)
-
-    StatusBarStyle = lipgloss.NewStyle().
-        Foreground(lipgloss.Color("#FFFFFF")).
-        Background(lipgloss.Color("#666666")).
-        Padding(0, 1)
-)
+type Styles struct {
+    App       lipgloss.Style
+    Title     lipgloss.Style
+    Container lipgloss.Style
+    Input     lipgloss.Style
+    Error     lipgloss.Style
+    Success   lipgloss.Style
+    Muted     lipgloss.Style
+}
