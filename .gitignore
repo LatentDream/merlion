@@ -18,4 +18,5 @@ go.work.sum
 # env file
 .env
 
-merlion
+/merlion
+!merlion/
