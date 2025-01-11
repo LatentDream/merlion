@@ -5,6 +5,7 @@ import (
 	"log"
 	"merlion/internal/api"
 	"merlion/internal/auth"
+	"merlion/internal/ui"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -18,15 +19,16 @@ func main() {
 		log.Fatalf("Failed to initialize credentials manager: %v", err)
 	}
 
-	// Load or save credentials
+	// Try to load credentials
 	creds, err := credMgr.LoadCredentials()
 	if err != nil {
 		// First time setup - prompt user for credentials
-		// You can use github.com/charmbracelet/bubbles/textinput for this
-		creds = &auth.Credentials{
-			Email:    "user@example.com",
-			Password: "password",
+		creds, err = ui.GetCredentials()
+		if err != nil {
+			log.Fatalf("Failed to get credentials: %v", err)
 		}
+
+		// Save the credentials
 		if err := credMgr.SaveCredentials(*creds); err != nil {
 			log.Fatalf("Failed to save credentials: %v", err)
 		}
