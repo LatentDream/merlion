@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"strings"
 
+	"merlion/internal/api"
+	"merlion/internal/auth"
+
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"merlion/internal/auth"
 )
 
 type credentialsModel struct {
@@ -19,6 +21,7 @@ type credentialsModel struct {
 	credentials   *auth.Credentials
 	width         int
 	height        int
+	validating    bool
 }
 
 func NewCredentialsUI() *credentialsModel {
@@ -60,6 +63,9 @@ func (m credentialsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "tab", "shift+tab":
+			if m.validating {
+				return m, nil // Ignore tab while validating
+			}
 			// Cycle between inputs
 			if m.emailInput.Focused() {
 				m.emailInput.Blur()
@@ -71,12 +77,33 @@ func (m credentialsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, textinput.Blink
 
 		case "enter":
+			if m.validating {
+				return m, nil // Ignore enter while validating
+			}
+
 			if m.passwordInput.Focused() {
-				m.done = true
-				m.credentials = &auth.Credentials{
+				// Validate credentials
+				m.validating = true
+				creds := auth.Credentials{
 					Email:    strings.TrimSpace(m.emailInput.Value()),
 					Password: m.passwordInput.Value(),
 				}
+
+				client, err := api.NewClient(nil)
+				if err != nil {
+					m.err = fmt.Errorf("could not initialize client: %w", err)
+					m.validating = false
+					return m, nil
+				}
+
+				if err := client.ValidateCredentials(creds); err != nil {
+					m.err = err
+					m.validating = false
+					return m, nil
+				}
+
+				m.done = true
+				m.credentials = &creds
 				return m, tea.Quit
 			}
 			// Move to password field when pressing enter in email field
@@ -111,6 +138,14 @@ var (
 			Border(lipgloss.RoundedBorder()).
 			Padding(1, 2).
 			BorderForeground(lipgloss.Color("#7D56F4"))
+
+	errorStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#FF0000")).
+			Padding(1, 0)
+
+	signupStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#7D56F4")).
+			Padding(1, 0)
 )
 
 func (m credentialsModel) View() string {
@@ -124,11 +159,20 @@ func (m credentialsModel) View() string {
 	b.WriteString("Please enter your credentials\n\n")
 	b.WriteString(inputStyle.Render("Email: "+m.emailInput.View()) + "\n")
 	b.WriteString(inputStyle.Render("Password: "+m.passwordInput.View()) + "\n\n")
-	b.WriteString("(Press tab to switch fields, enter to submit)")
+
+	if m.validating {
+		b.WriteString("Validating credentials...\n")
+	} else {
+		b.WriteString("(Press tab to switch fields, enter to submit)\n")
+	}
 
 	if m.err != nil {
-		b.WriteString(fmt.Sprintf("\nError: %v\n", m.err))
+		b.WriteString(errorStyle.Render(fmt.Sprintf("Error: %v", m.err)) + "\n")
 	}
+
+	// Add signup notice
+	b.WriteString(signupStyle.Render("\nDon't have an account yet?"))
+	b.WriteString(signupStyle.Render("Visit https://merlion.dev to create one"))
 
 	// Center the container in the terminal
 	container := containerStyle.Render(b.String())

@@ -176,3 +176,20 @@ func (c *Client) Login() error {
 
 	return err
 }
+
+func (c *Client) ValidateCredentials(creds auth.Credentials) error {
+	// Try to login with the credentials
+	_, err := c.doRequest(http.MethodPost, "users/login", map[string]string{
+		"email":    creds.Email,
+		"password": creds.Password,
+	})
+
+	if err != nil {
+		return fmt.Errorf("invalid credentials: please check your email and password")
+	}
+
+	// Store the cookies and token from the successful login
+	c.credentials = &creds
+
+	return nil
+}
