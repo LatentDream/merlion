@@ -49,6 +49,8 @@ func (tm *ThemeManager) loadTheme() error {
 		tm.current = NeoTokyo
 	case "quiet":
 		tm.current = Quiet
+	case "purpledream":
+		tm.current = PurpleDream
 	default:
 		return fmt.Errorf("unknown theme: %s", themeName)
 	}
@@ -85,6 +87,8 @@ func (tm *ThemeManager) SetTheme(name string) error {
 		tm.current = NeoTokyo
 	case "quiet":
 		tm.current = Quiet
+	case "purpledream":
+		tm.current = PurpleDream
 	default:
 		return fmt.Errorf("unknown theme: %s", name)
 	}

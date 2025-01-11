@@ -75,4 +75,21 @@ var (
 		HighlightColor: lipgloss.Color("#4a76cd"),
 		MutedColor:     lipgloss.Color("#999999"),
 	}
+
+	// Purple Dream theme
+	PurpleDream = Theme{
+		Name:           "purpledream",
+		Background:     lipgloss.Color("#FFFFFF"), // White background from the context
+		Foreground:     lipgloss.Color("#333333"), // Dark text for readability
+		Selection:      lipgloss.Color("#F0F0FA"), // Light purple tinted selection
+		Comment:        lipgloss.Color("#9B8BC0"), // Muted purple for comments
+		Primary:        lipgloss.Color("#7D56F4"), // Main purple from titleStyle background
+		Secondary:      lipgloss.Color("#9B78FF"), // Lighter purple for secondary elements
+		Error:          lipgloss.Color("#FF0000"), // Red from errorStyle
+		Warning:        lipgloss.Color("#FFB86C"), // Warm orange for warnings
+		Success:        lipgloss.Color("#50FA7B"), // Bright green for success
+		BorderColor:    lipgloss.Color("#7D56F4"), // Purple from containerStyle border
+		HighlightColor: lipgloss.Color("#FAFAFA"), // White from titleStyle foreground
+		MutedColor:     lipgloss.Color("#B8B8B8"), // Muted gray for less emphasis
+	}
 )

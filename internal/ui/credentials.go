@@ -133,6 +133,8 @@ func (m credentialsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "neotokyo":
 				nextTheme = "quiet"
 			case "quiet":
+				nextTheme = "purpledream"
+			case "purpledream":
 				nextTheme = "gruvbox"
 			}
 			if err := m.themeManager.SetTheme(nextTheme); err != nil {
