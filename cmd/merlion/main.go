@@ -72,14 +72,13 @@ func main() {
 	}
 
 	p := tea.NewProgram(
-		initialModel(),
+		initialModel(notes),
 		tea.WithAltScreen(),       // Use alternate screen buffer
 		tea.WithMouseCellMotion(), // Enable mouse support
 	)
 
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error running merlion: %v", err)
-		fmt.Printf("Found X note: %d", len(notes))
 		os.Exit(1)
 	}
 }
@@ -90,9 +89,9 @@ type model struct {
 	height  int
 }
 
-func initialModel() model {
+func initialModel(notes []api.Note) model {
 	return model{
-		content: "Welcome to Merlion - Markdown TUI Editor",
+		content: fmt.Sprintf("Welcome to Merlion - Found %d notes", len(notes)),
 	}
 }
 
