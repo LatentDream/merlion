@@ -2,12 +2,53 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"merlion/internal/api"
+	"merlion/internal/auth"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
+
+	// Initialize credentials manager
+	credMgr, err := auth.NewCredentialsManager()
+	if err != nil {
+		log.Fatalf("Failed to initialize credentials manager: %v", err)
+	}
+
+	// Load or save credentials
+	creds, err := credMgr.LoadCredentials()
+	if err != nil {
+		// First time setup - prompt user for credentials
+		// You can use github.com/charmbracelet/bubbles/textinput for this
+		creds = &auth.Credentials{
+			Email:    "user@example.com",
+			Password: "password",
+		}
+		if err := credMgr.SaveCredentials(*creds); err != nil {
+			log.Fatalf("Failed to save credentials: %v", err)
+		}
+	}
+
+	// Initialize API client
+	client, err := api.NewClient(creds)
+	if err != nil {
+		log.Fatalf("Failed to create API client: %v", err)
+	}
+
+	// Login
+	if err := client.Login(); err != nil {
+		log.Fatalf("Failed to login: %v", err)
+	}
+
+	// Now you can make authenticated requests
+	notes, err := client.ListNotes()
+	if err != nil {
+		log.Fatalf("Failed to list notes: %v", err)
+	}
+
 	p := tea.NewProgram(
 		initialModel(),
 		tea.WithAltScreen(),       // Use alternate screen buffer
@@ -16,6 +57,7 @@ func main() {
 
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error running merlion: %v", err)
+		fmt.Printf("Found X note: %d", len(notes))
 		os.Exit(1)
 	}
 }
