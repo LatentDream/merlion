@@ -72,7 +72,7 @@ func main() {
 	}
 
 	p := tea.NewProgram(
-		initialModel(notes),
+		ui.NewModel(notes),
 		tea.WithAltScreen(),       // Use alternate screen buffer
 		tea.WithMouseCellMotion(), // Enable mouse support
 	)
