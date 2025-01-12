@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
@@ -114,11 +115,13 @@ type Model struct {
 	viewport    viewport.Model
 	help        viewport.Model
 	renderer    *glamour.TermRenderer
+	spinner     spinner.Model
 	keys        keyMap
 	focusedPane focusedPanel
 	width       int
 	height      int
 	ready       bool
+	loading     bool
 }
 
 func NewModel(notes []api.Note) (Model, error) {
@@ -131,13 +134,13 @@ func NewModel(notes []api.Note) (Model, error) {
 		return Model{}, fmt.Errorf("failed to initialize markdown renderer: %w", err)
 	}
 
-	items := make([]list.Item, len(notes))
-	for i, note := range notes {
-		items[i] = item{note: note}
-	}
+	// Initialize spinner
+	s := spinner.New()
+	s.Spinner = spinner.Dot
+	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("#7D56F4"))
 
-	// Initialize list
-	l := list.New(items, list.NewDefaultDelegate(), 0, 0)
+	// Initialize list placeholder
+	l := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
 	l.Title = "Notes"
 	l.SetShowTitle(true)
 	l.SetShowStatusBar(false)
@@ -165,13 +168,37 @@ func NewModel(notes []api.Note) (Model, error) {
 		viewport:    vp,
 		help:        help,
 		renderer:    renderer,
+		spinner:     s,
 		keys:        keys,
 		focusedPane: noteList,
+		loading:     true,
 	}, nil
 }
 
 func (m Model) Init() tea.Cmd {
-	return nil
+	return tea.Batch(
+		spinner.Tick,
+		m.loadNotes,
+	)
+}
+
+// NotesLoadedMsg is sent when notes are loaded
+type NotesLoadedMsg struct {
+	Notes []api.Note
+}
+
+// Internal alias for better readability in the package
+type notesLoadedMsg = NotesLoadedMsg
+
+func (m Model) loadNotes() tea.Msg {
+	// Simulate loading delay (remove this in production)
+	// time.Sleep(2 * time.Second)
+
+	items := make([]list.Item, len(m.list.Items()))
+	for i, item := range m.list.Items() {
+		items[i] = item
+	}
+	return notesLoadedMsg{Notes: nil} // Replace nil with actual notes
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -181,6 +208,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	)
 
 	switch msg := msg.(type) {
+	case spinner.TickMsg:
+		var cmd tea.Cmd
+		m.spinner, cmd = m.spinner.Update(msg)
+		return m, cmd
+
+	case notesLoadedMsg:
+		m.loading = false
+		items := make([]list.Item, len(msg.Notes))
+		for i, note := range msg.Notes {
+			items[i] = item{note: note}
+		}
+		m.list.SetItems(items)
+		return m, nil
 	case tea.WindowSizeMsg:
 		if !m.ready {
 			m.ready = true
@@ -280,10 +320,29 @@ func (m Model) View() string {
 		contentStyle = inactiveContentStyle
 	}
 
+	var listView string
+	if m.loading {
+		loadingStyle := lipgloss.NewStyle().
+			Width(m.list.Width()).
+			Height(m.list.Height()).
+			Align(lipgloss.Center).
+			AlignVertical(lipgloss.Center)
+
+		listView = loadingStyle.Render(
+			lipgloss.JoinHorizontal(
+				lipgloss.Center,
+				m.spinner.View(),
+				" Loading notes...",
+			),
+		)
+	} else {
+		listView = m.list.View()
+	}
+
 	// Combine list and help section vertically
 	leftSide := lipgloss.JoinVertical(
 		lipgloss.Left,
-		m.list.View(),
+		listView,
 		m.help.View(),
 	)
 

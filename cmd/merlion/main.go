@@ -65,22 +65,37 @@ func main() {
 		log.Fatalf("Failed to login: %v", err)
 	}
 
-	// Now you can make authenticated requests
-	notes, err := client.ListNotes()
-	if err != nil {
-		log.Fatalf("Failed to list notes: %v", err)
-	}
+	// Create a channel for notes
+	notesChan := make(chan []api.Note)
 
-	model, err := ui.NewModel(notes)
+	// Start the UI with empty notes list
+	model, err := ui.NewModel([]api.Note{})
 	if err != nil {
 		log.Fatalf("Failed to create UI model: %v", err)
 	}
+
+	// Start loading notes in background
+	go func() {
+		notes, err := client.ListNotes()
+		if err != nil {
+			log.Printf("Failed to list notes: %v", err)
+			notesChan <- []api.Note{}
+			return
+		}
+		notesChan <- notes
+	}()
 
 	p := tea.NewProgram(
 		model,
 		tea.WithAltScreen(),       // Use alternate screen buffer
 		tea.WithMouseCellMotion(), // Enable mouse support
 	)
+
+	// Start note loading
+	go func() {
+		notes := <-notesChan
+		p.Send(ui.NotesLoadedMsg{Notes: notes})
+	}()
 
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error running merlion: %v", err)
