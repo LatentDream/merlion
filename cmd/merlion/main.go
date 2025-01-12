@@ -71,8 +71,13 @@ func main() {
 		log.Fatalf("Failed to list notes: %v", err)
 	}
 
+	model, err := ui.NewModel(notes)
+	if err != nil {
+		log.Fatalf("Failed to create UI model: %v", err)
+	}
+
 	p := tea.NewProgram(
-		ui.NewModel(notes),
+		model,
 		tea.WithAltScreen(),       // Use alternate screen buffer
 		tea.WithMouseCellMotion(), // Enable mouse support
 	)
