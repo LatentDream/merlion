@@ -69,7 +69,7 @@ func main() {
 	notesChan := make(chan []api.Note)
 
 	// Start the UI with empty notes list
-	model, err := ui.NewModel([]api.Note{})
+	model, err := ui.NewModel([]api.Note{}, themeManager)
 	if err != nil {
 		log.Fatalf("Failed to create UI model: %v", err)
 	}

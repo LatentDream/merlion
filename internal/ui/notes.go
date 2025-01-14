@@ -1,3 +1,31 @@
+// var (
+// 	titleStyle = lipgloss.NewStyle().
+// 			Bold(true).
+// 			Foreground(lipgloss.Color("#FAFAFA")).
+// 			Background(lipgloss.Color("#7D56F4")).
+// 			Padding(0, 1)
+//
+// 	selectedItemStyle = lipgloss.NewStyle().
+// 				Foreground(lipgloss.Color("#7D56F4")).
+// 				Bold(true)
+//
+// 	activeContentStyle = lipgloss.NewStyle().
+// 				Border(lipgloss.RoundedBorder()).
+// 				BorderForeground(lipgloss.Color("#7D56F4"))
+//
+// 	inactiveContentStyle = lipgloss.NewStyle().
+// 				Border(lipgloss.RoundedBorder()).
+// 				BorderForeground(lipgloss.Color("#1A1A1A"))
+//
+// 	controlsStyle = lipgloss.NewStyle().
+// 			BorderStyle(lipgloss.RoundedBorder()).
+// 			BorderForeground(lipgloss.Color("#1A1A1A")).
+// 			Padding(1, 2)
+//
+// 	helpStyle = lipgloss.NewStyle().
+// 			Foreground(lipgloss.Color("#626262"))
+// )
+
 package ui
 
 import (
@@ -12,6 +40,7 @@ import (
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 	"merlion/internal/api"
+	"merlion/internal/styles"
 )
 
 type focusedPanel int
@@ -19,34 +48,6 @@ type focusedPanel int
 const (
 	noteList focusedPanel = iota
 	markdown
-)
-
-var (
-	titleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#FAFAFA")).
-			Background(lipgloss.Color("#7D56F4")).
-			Padding(0, 1)
-
-	selectedItemStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#7D56F4")).
-				Bold(true)
-
-	activeContentStyle = lipgloss.NewStyle().
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(lipgloss.Color("#7D56F4"))
-
-	inactiveContentStyle = lipgloss.NewStyle().
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(lipgloss.Color("#1A1A1A"))
-
-	controlsStyle = lipgloss.NewStyle().
-			BorderStyle(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#1A1A1A")).
-			Padding(1, 2)
-
-	helpStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#626262"))
 )
 
 type keyMap struct {
@@ -111,20 +112,25 @@ func (i item) Description() string {
 func (i item) FilterValue() string { return i.note.Title }
 
 type Model struct {
-	list        list.Model
-	viewport    viewport.Model
-	help        viewport.Model
-	renderer    *glamour.TermRenderer
-	spinner     spinner.Model
-	keys        keyMap
-	focusedPane focusedPanel
-	width       int
-	height      int
-	ready       bool
-	loading     bool
+	list         list.Model
+	viewport     viewport.Model
+	help         viewport.Model
+	renderer     *glamour.TermRenderer
+	spinner      spinner.Model
+	keys         keyMap
+	focusedPane  focusedPanel
+	width        int
+	height       int
+	ready        bool
+	loading      bool
+	styles       *styles.Styles
+	themeManager *styles.ThemeManager
 }
 
-func NewModel(notes []api.Note) (Model, error) {
+func NewModel(notes []api.Note, themeManager *styles.ThemeManager) (Model, error) {
+	// Get styles from theme manager
+	s := themeManager.Styles()
+
 	// Initialize glamour for markdown rendering
 	renderer, err := glamour.NewTermRenderer(
 		glamour.WithAutoStyle(),
@@ -134,25 +140,37 @@ func NewModel(notes []api.Note) (Model, error) {
 		return Model{}, fmt.Errorf("failed to initialize markdown renderer: %w", err)
 	}
 
-	// Initialize spinner
-	s := spinner.New()
-	s.Spinner = spinner.Dot
-	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("#7D56F4"))
+	// Initialize spinner with themed color
+	sp := spinner.New()
+	sp.Spinner = spinner.Dot
+	sp.Style = lipgloss.NewStyle().Foreground(themeManager.Current().Primary)
 
-	// Initialize list placeholder
-	l := list.New([]list.Item{}, list.NewDefaultDelegate(), 0, 0)
+	// Initialize list with themed styles
+	delegate := list.NewDefaultDelegate()
+	// delegate.Styles.SelectedTitle = s.SelectedItem
+	// delegate.Styles.SelectedDesc = s.SelectedItem.
+	// 	Foreground(themeManager.Current().Secondary)
+	// delegate.Styles.SelectedTitle = s.SelectedItem.
+	// 	Border(lipgloss.Border{
+	// 		Left: "┃", // This is the pipe character
+	// 	}).
+	// 	BorderForeground(themeManager.Current().Primary).
+	// 	Padding(0, 1)
+
+	l := list.New([]list.Item{}, delegate, 0, 0)
 	l.Title = "Notes"
 	l.SetShowTitle(true)
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
-	l.Styles.Title = titleStyle
+	l.Styles.Title = s.TitleBar
 
 	// Initialize main content viewport
 	vp := viewport.New(0, 0)
+	vp.Style = s.Container
 
-	// Initialize help viewport
+	// Initialize help viewport with themed styles
 	help := viewport.New(0, 0)
-	help.Style = controlsStyle
+	help.Style = s.Controls
 	helpContent := strings.Join([]string{
 		"↑/k, ↓/j: Navigate",
 		"←/h, →/l: Switch pane",
@@ -164,14 +182,16 @@ func NewModel(notes []api.Note) (Model, error) {
 	help.SetContent(helpContent)
 
 	return Model{
-		list:        l,
-		viewport:    vp,
-		help:        help,
-		renderer:    renderer,
-		spinner:     s,
-		keys:        keys,
-		focusedPane: noteList,
-		loading:     true,
+		list:         l,
+		viewport:     vp,
+		help:         help,
+		renderer:     renderer,
+		spinner:      sp,
+		keys:         keys,
+		focusedPane:  noteList,
+		loading:      true,
+		styles:       s,
+		themeManager: themeManager,
 	}, nil
 }
 
@@ -315,9 +335,9 @@ func (m Model) View() string {
 
 	var contentStyle lipgloss.Style
 	if m.focusedPane == markdown {
-		contentStyle = activeContentStyle
+		contentStyle = m.styles.ActiveContent
 	} else {
-		contentStyle = inactiveContentStyle
+		contentStyle = m.styles.InactiveContent
 	}
 
 	var listView string

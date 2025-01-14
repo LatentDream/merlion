@@ -99,39 +99,52 @@ func (tm *ThemeManager) SetTheme(name string) error {
 // Now let's create the styles that use the current theme
 func (tm *ThemeManager) Styles() *Styles {
 	theme := tm.Current()
-
 	return &Styles{
 		App: lipgloss.NewStyle().
 			Foreground(theme.Foreground),
-
 		Title: lipgloss.NewStyle().
 			Bold(true).
 			Foreground(theme.Primary).
 			Background(theme.Selection).
 			Padding(0, 1),
-
 		Container: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(theme.BorderColor).
 			Padding(1, 2),
-
 		Highlight: lipgloss.NewStyle().
 			BorderForeground(theme.BorderColor).
 			Foreground(theme.Tertiary),
-
 		Input: lipgloss.NewStyle().
 			BorderForeground(theme.BorderColor).
 			Foreground(theme.Secondary),
-
 		Error: lipgloss.NewStyle().
 			Foreground(theme.Error).
 			Padding(1, 0),
-
 		Success: lipgloss.NewStyle().
 			Foreground(theme.Success).
 			Padding(1, 0),
-
 		Muted: lipgloss.NewStyle().
+			Foreground(theme.MutedColor),
+		// New themed styles
+		TitleBar: lipgloss.NewStyle().
+			Bold(true).
+			Foreground(theme.Background).
+			Background(theme.Primary).
+			Padding(0, 1),
+		SelectedItem: lipgloss.NewStyle().
+			Foreground(theme.Primary).
+			Bold(true),
+		ActiveContent: lipgloss.NewStyle().
+			Border(lipgloss.NormalBorder()).
+			BorderForeground(theme.Primary),
+		InactiveContent: lipgloss.NewStyle().
+			Border(lipgloss.NormalBorder()).
+			BorderForeground(theme.BorderColor),
+		Controls: lipgloss.NewStyle().
+			BorderStyle(lipgloss.RoundedBorder()).
+			BorderForeground(theme.BorderColor).
+			Padding(1, 2),
+		Help: lipgloss.NewStyle().
 			Foreground(theme.MutedColor),
 	}
 }
