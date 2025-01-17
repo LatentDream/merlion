@@ -135,10 +135,10 @@ func (tm *ThemeManager) Styles() *Styles {
 			Foreground(theme.Primary).
 			Bold(true),
 		ActiveContent: lipgloss.NewStyle().
-			Border(lipgloss.NormalBorder()).
+			Border(lipgloss.RoundedBorder()).
 			BorderForeground(theme.Primary),
 		InactiveContent: lipgloss.NewStyle().
-			Border(lipgloss.NormalBorder()).
+			Border(lipgloss.RoundedBorder()).
 			BorderForeground(theme.BorderColor),
 		Controls: lipgloss.NewStyle().
 			BorderStyle(lipgloss.RoundedBorder()).

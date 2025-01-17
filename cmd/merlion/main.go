@@ -68,8 +68,7 @@ func main() {
 	// Create a channel for notes
 	notesChan := make(chan []api.Note)
 
-	// Start the UI with empty notes list
-	model, err := ui.NewModel([]api.Note{}, themeManager)
+	model, err := ui.NewModel([]api.Note{}, client, themeManager)
 	if err != nil {
 		log.Fatalf("Failed to create UI model: %v", err)
 	}

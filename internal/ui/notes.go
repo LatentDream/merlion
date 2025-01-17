@@ -1,36 +1,11 @@
-// var (
-// 	titleStyle = lipgloss.NewStyle().
-// 			Bold(true).
-// 			Foreground(lipgloss.Color("#FAFAFA")).
-// 			Background(lipgloss.Color("#7D56F4")).
-// 			Padding(0, 1)
-//
-// 	selectedItemStyle = lipgloss.NewStyle().
-// 				Foreground(lipgloss.Color("#7D56F4")).
-// 				Bold(true)
-//
-// 	activeContentStyle = lipgloss.NewStyle().
-// 				Border(lipgloss.RoundedBorder()).
-// 				BorderForeground(lipgloss.Color("#7D56F4"))
-//
-// 	inactiveContentStyle = lipgloss.NewStyle().
-// 				Border(lipgloss.RoundedBorder()).
-// 				BorderForeground(lipgloss.Color("#1A1A1A"))
-//
-// 	controlsStyle = lipgloss.NewStyle().
-// 			BorderStyle(lipgloss.RoundedBorder()).
-// 			BorderForeground(lipgloss.Color("#1A1A1A")).
-// 			Padding(1, 2)
-//
-// 	helpStyle = lipgloss.NewStyle().
-// 			Foreground(lipgloss.Color("#626262"))
-// )
-
 package ui
 
 import (
 	"fmt"
 	"strings"
+
+	"merlion/internal/api"
+	"merlion/internal/styles"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -39,11 +14,12 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
-	"merlion/internal/api"
-	"merlion/internal/styles"
 )
 
 type focusedPanel int
+
+type noteContentMsg string
+type errMsg struct{ err error }
 
 const (
 	noteList focusedPanel = iota
@@ -125,10 +101,10 @@ type Model struct {
 	loading      bool
 	styles       *styles.Styles
 	themeManager *styles.ThemeManager
+	client       *api.Client
 }
 
-func NewModel(notes []api.Note, themeManager *styles.ThemeManager) (Model, error) {
-	// Get styles from theme manager
+func NewModel(notes []api.Note, client *api.Client, themeManager *styles.ThemeManager) (Model, error) {
 	s := themeManager.Styles()
 
 	// Initialize glamour for markdown rendering
@@ -147,16 +123,6 @@ func NewModel(notes []api.Note, themeManager *styles.ThemeManager) (Model, error
 
 	// Initialize list with themed styles
 	delegate := list.NewDefaultDelegate()
-	// delegate.Styles.SelectedTitle = s.SelectedItem
-	// delegate.Styles.SelectedDesc = s.SelectedItem.
-	// 	Foreground(themeManager.Current().Secondary)
-	// delegate.Styles.SelectedTitle = s.SelectedItem.
-	// 	Border(lipgloss.Border{
-	// 		Left: "┃", // This is the pipe character
-	// 	}).
-	// 	BorderForeground(themeManager.Current().Primary).
-	// 	Padding(0, 1)
-
 	l := list.New([]list.Item{}, delegate, 0, 0)
 	l.Title = "Notes"
 	l.SetShowTitle(true)
@@ -166,7 +132,7 @@ func NewModel(notes []api.Note, themeManager *styles.ThemeManager) (Model, error
 
 	// Initialize main content viewport
 	vp := viewport.New(0, 0)
-	vp.Style = s.Container
+	// vp.Style = s.Container
 
 	// Initialize help viewport with themed styles
 	help := viewport.New(0, 0)
@@ -192,6 +158,7 @@ func NewModel(notes []api.Note, themeManager *styles.ThemeManager) (Model, error
 		loading:      true,
 		styles:       s,
 		themeManager: themeManager,
+		client:       client,
 	}, nil
 }
 
@@ -200,6 +167,17 @@ func (m Model) Init() tea.Cmd {
 		spinner.Tick,
 		m.loadNotes,
 	)
+}
+
+// CMDs
+func fetchNoteContent(client *api.Client, noteId string) tea.Cmd {
+	return func() tea.Msg {
+		res, err := client.GetNote(noteId)
+		if err != nil {
+			return errMsg{err}
+		}
+		return noteContentMsg(*res.Content)
+	}
 }
 
 // NotesLoadedMsg is sent when notes are loaded
@@ -211,9 +189,6 @@ type NotesLoadedMsg struct {
 type notesLoadedMsg = NotesLoadedMsg
 
 func (m Model) loadNotes() tea.Msg {
-	// Simulate loading delay (remove this in production)
-	// time.Sleep(2 * time.Second)
-
 	items := make([]list.Item, len(m.list.Items()))
 	for i, item := range m.list.Items() {
 		items[i] = item
@@ -250,7 +225,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Split the view
 		listWidth := m.width / 3
-		contentWidth := m.width - listWidth - 4
+		contentWidth := m.width - listWidth
 
 		// Left side divisions
 		listHeight := m.height - 10
@@ -299,21 +274,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.focusedPane == noteList {
 				if i := m.list.SelectedItem(); i != nil {
 					note := i.(item).note
-					if note.Content != nil {
+					if note.Content == nil {
+						// Set loading state
+						m.viewport.SetContent("Loading note content...")
+						m.loading = true
+						// Fetch the note content
+						return m, fetchNoteContent(m.client, note.NoteID)
+					} else {
 						rendered, err := m.renderer.Render(*note.Content)
 						if err != nil {
 							m.viewport.SetContent(fmt.Sprintf("Error rendering markdown: %v", err))
 						} else {
 							m.viewport.SetContent(rendered)
 						}
-					} else {
-						m.viewport.SetContent("No content available")
 					}
 					m.focusedPane = markdown
 				}
 			}
 		}
-
 		// Handle navigation based on focused pane
 		if m.focusedPane == noteList {
 			m.list, cmd = m.list.Update(msg)
@@ -323,6 +301,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.viewport, cmd = m.viewport.Update(msg)
 			cmds = append(cmds, cmd)
 		}
+
+	case noteContentMsg:
+		m.loading = false
+		if i := m.list.SelectedItem(); i != nil {
+			note := i.(item).note
+			content := string(msg)
+			note.Content = &content
+			rendered, err := m.renderer.Render(content)
+			if err != nil {
+				m.viewport.SetContent(fmt.Sprintf("Error rendering markdown: %v", err))
+			} else {
+				m.viewport.SetContent(rendered)
+			}
+		}
+		return m, nil
+
 	}
 
 	return m, tea.Batch(cmds...)
@@ -333,11 +327,18 @@ func (m Model) View() string {
 		return "Loading..."
 	}
 
-	var contentStyle lipgloss.Style
+	var rendererStyle lipgloss.Style
 	if m.focusedPane == markdown {
-		contentStyle = m.styles.ActiveContent
+		rendererStyle = m.styles.ActiveContent
 	} else {
-		contentStyle = m.styles.InactiveContent
+		rendererStyle = m.styles.InactiveContent
+	}
+
+	var listStyle lipgloss.Style
+	if m.focusedPane == noteList {
+		listStyle = m.styles.ActiveContent
+	} else {
+		listStyle = m.styles.InactiveContent
 	}
 
 	var listView string
@@ -356,7 +357,7 @@ func (m Model) View() string {
 			),
 		)
 	} else {
-		listView = m.list.View()
+		listView = listStyle.Render(m.list.View())
 	}
 
 	// Combine list and help section vertically
@@ -370,6 +371,6 @@ func (m Model) View() string {
 	return lipgloss.JoinHorizontal(
 		lipgloss.Left,
 		leftSide,
-		contentStyle.Render(m.viewport.View()),
+		rendererStyle.Render(m.viewport.View()),
 	)
 }
