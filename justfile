@@ -10,4 +10,4 @@ build:
 
 # Run binary
 run:
-    ./merlion
+    ./merlion 2> app.log
