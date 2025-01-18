@@ -8,6 +8,7 @@ require (
 	github.com/charmbracelet/glamour v0.8.0
 	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/charmbracelet/log v0.4.0
+	github.com/charmbracelet/x/editor v0.1.0
 	github.com/muesli/go-app-paths v0.2.2
 )
 

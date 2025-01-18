@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"os"
 
 	"merlion/internal/api"
 	"merlion/internal/styles"
@@ -14,6 +15,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/log"
+	"github.com/charmbracelet/x/editor"
 )
 
 type focusedPanel int
@@ -35,6 +38,7 @@ type keyMap struct {
 	PageDown    key.Binding
 	Select      key.Binding
 	Back        key.Binding
+	Edit        key.Binding
 	Quit        key.Binding
 	ToggleTheme key.Binding
 }
@@ -67,6 +71,10 @@ var keys = keyMap{
 	Select: key.NewBinding(
 		key.WithKeys("enter"),
 		key.WithHelp("enter", "select"),
+	),
+	Edit: key.NewBinding(
+		key.WithKeys("e"),
+		key.WithHelp("e", "edit"),
 	),
 	Back: key.NewBinding(
 		key.WithKeys("esc"),
@@ -156,14 +164,68 @@ func NewModel(notes []api.Note, client *api.Client, themeManager *styles.ThemeMa
 	}, nil
 }
 
-type themeToggleMsg struct{}
-type rendererUpdatedMsg struct {
-	renderer *glamour.TermRenderer
-	content  string
+// Message returned when editing is complete
+type editorFinishedMsg struct {
+	err error
+}
+
+func (m *Model) openEditor(content string) tea.Cmd {
+	// Create a temporary file for editing
+	tmpfile, err := os.CreateTemp("", "note-*.md")
+	if err != nil {
+		return func() tea.Msg {
+			return editorFinishedMsg{fmt.Errorf("could not create temp file: %w", err)}
+		}
+	}
+
+	// Write content to temp file
+	if _, err := tmpfile.WriteString(content); err != nil {
+		os.Remove(tmpfile.Name())
+		return func() tea.Msg {
+			return editorFinishedMsg{fmt.Errorf("could not write to temp file: %w", err)}
+		}
+	}
+	tmpfile.Close()
+
+	// Create editor command
+	cmd, err := editor.Cmd("Note", tmpfile.Name())
+	if err != nil {
+		os.Remove(tmpfile.Name())
+		return func() tea.Msg {
+			return editorFinishedMsg{fmt.Errorf("failed to create editor command: %w", err)}
+		}
+	}
+
+	// Return command that will execute editor
+	return tea.ExecProcess(cmd, func(err error) tea.Msg {
+		defer os.Remove(tmpfile.Name()) // Clean up temp file
+
+		if err != nil {
+			return editorFinishedMsg{fmt.Errorf("editor failed: %w", err)}
+		}
+
+		// Read the edited content
+		newContent, err := os.ReadFile(tmpfile.Name())
+		if err != nil {
+			return editorFinishedMsg{fmt.Errorf("failed to read edited content: %w", err)}
+		}
+
+		// Update note content through your API
+		if i := m.list.SelectedItem(); i != nil {
+			note := i.(item).note
+			content := string(newContent)
+			note.Content = &content
+			log.Info(content)
+			// You would want to update this through your API here
+		}
+
+		return editorFinishedMsg{nil}
+	})
 }
 
 // Create a command to handle theme toggle asynchronously
 func toggleTheme(m *Model) {
+	log.Info("Theme Toggled")
 	m.styles = m.themeManager.NextTheme()
 
 	// Update only the necessary styles instead of recreating components
@@ -230,6 +292,24 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.list.SetItems(items)
 		return m, nil
 
+	case editorFinishedMsg:
+		if msg.err != nil {
+			m.viewport.SetContent(fmt.Sprintf("Error editing note: %v", msg.err))
+			return m, nil
+		}
+
+		// Refresh the viewport content after successful edit
+		if i := m.list.SelectedItem(); i != nil {
+			note := i.(item).note
+			rendered, err := m.renderer.Render(*note.Content)
+			if err != nil {
+				m.viewport.SetContent(fmt.Sprintf("Error rendering markdown: %v", err))
+			} else {
+				m.viewport.SetContent(rendered)
+			}
+		}
+		return m, nil
+
 	case tea.WindowSizeMsg:
 		if !m.ready {
 			m.ready = true
@@ -288,6 +368,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.Back):
 			m.focusedPane = noteList
+
+		case key.Matches(msg, m.keys.Edit):
+			if i := m.list.SelectedItem(); i != nil {
+				note := i.(item).note
+				if note.Content != nil {
+					return m, m.openEditor(*note.Content)
+				}
+			}
 
 		case key.Matches(msg, m.keys.Select):
 			if m.focusedPane == noteList {
