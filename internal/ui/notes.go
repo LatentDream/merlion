@@ -198,7 +198,7 @@ func (m *Model) openEditor(content string) tea.Cmd {
 
 	// Return command that will execute editor
 	return tea.ExecProcess(cmd, func(err error) tea.Msg {
-		defer os.Remove(tmpfile.Name()) // Clean up temp file
+		defer os.Remove(tmpfile.Name())
 
 		if err != nil {
 			return editorFinishedMsg{fmt.Errorf("editor failed: %w", err)}
@@ -215,8 +215,12 @@ func (m *Model) openEditor(content string) tea.Cmd {
 			note := i.(item).note
 			content := string(newContent)
 			note.Content = &content
-			log.Info(content)
-			// You would want to update this through your API here
+
+			// Update the item in the model's list
+			currentIndex := m.list.Index()
+			items := m.list.Items()
+			items[currentIndex] = item{note: note}
+			m.list.SetItems(items)
 		}
 
 		return editorFinishedMsg{nil}
