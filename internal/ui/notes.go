@@ -5,6 +5,7 @@ import (
 
 	"merlion/internal/api"
 	"merlion/internal/styles"
+    styledDelegate "merlion/internal/styles/components/delegate"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -120,7 +121,16 @@ func NewModel(notes []api.Note, client *api.Client, themeManager *styles.ThemeMa
 	sp.Style = lipgloss.NewStyle().Foreground(themeManager.Current().Primary)
 
 	// Initialize list with themed styles
-	delegate := list.NewDefaultDelegate()
+	delegate := styledDelegate.New(themeManager)
+	// delegate := list.NewDefaultDelegate()
+	// delegate.Styles.SelectedTitle = s.SelectedItem.
+	// 	Border(lipgloss.NormalBorder(), false, false, false, true). // Only left border
+	// 	BorderForeground(themeManager.Current().Primary).
+	// 	Padding(0, 0, 0, 1) // Only left padding
+	//
+	// delegate.Styles.SelectedDesc = delegate.Styles.SelectedTitle.
+	// 	Foreground(themeManager.Current().Secondary) // Just change the foreground color
+
 	l := list.New([]list.Item{}, delegate, 0, 0)
 	l.Title = "Notes"
 	l.SetShowTitle(true)
