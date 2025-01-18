@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"strings"
 
 	"merlion/internal/api"
 	"merlion/internal/styles"
@@ -90,7 +89,6 @@ func (i item) FilterValue() string { return i.note.Title }
 type Model struct {
 	list         list.Model
 	viewport     viewport.Model
-	help         viewport.Model
 	renderer     *glamour.TermRenderer
 	spinner      spinner.Model
 	keys         keyMap
@@ -135,22 +133,9 @@ func NewModel(notes []api.Note, client *api.Client, themeManager *styles.ThemeMa
 	// vp.Style = s.Container
 
 	// Initialize help viewport with themed styles
-	help := viewport.New(0, 0)
-	help.Style = s.Controls
-	helpContent := strings.Join([]string{
-		"↑/k, ↓/j: Navigate",
-		"←/h, →/l: Switch pane",
-		"enter: Select",
-		"pgup/pgdn: Scroll",
-		"esc: Back to list",
-		"q: Quit",
-	}, "\n")
-	help.SetContent(helpContent)
-
 	return Model{
 		list:         l,
 		viewport:     vp,
-		help:         help,
 		renderer:     renderer,
 		spinner:      sp,
 		keys:         keys,
@@ -216,30 +201,36 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.list.SetItems(items)
 		return m, nil
+
 	case tea.WindowSizeMsg:
 		if !m.ready {
 			m.ready = true
 		}
-		m.width = msg.Width
-		m.height = msg.Height
+		m.width = msg.Width - 4
+		m.height = msg.Height - 2
 
-		// Split the view
-		listWidth := m.width / 3
-		contentWidth := m.width - listWidth
+		// Account for padding and borders in the style
+		horizontalPadding := m.styles.ActiveContent.GetHorizontalPadding() +
+			m.styles.ActiveContent.GetHorizontalBorderSize()
 
-		// Left side divisions
-		listHeight := m.height - 10
-		helpHeight := 6
+		// Calculate available width after accounting for style spacing
+		availableWidth := m.width - horizontalPadding
 
+		// Split the view with adjusted measurements
+		listWidth := availableWidth / 3
+		contentWidth := availableWidth - listWidth
+
+		// Left side height accounting for any vertical spacing
+		listHeight := m.height
+
+		// Update component dimensions
 		m.list.SetWidth(listWidth)
 		m.list.SetHeight(listHeight)
 
-		m.help.Width = listWidth
-		m.help.Height = helpHeight
-
 		m.viewport.Width = contentWidth
-		m.viewport.Height = m.height - 2
+		m.viewport.Height = m.height
 
+		// Update content if selected
 		if i := m.list.SelectedItem(); i != nil {
 			note := i.(item).note
 			if note.Content != nil {
@@ -327,6 +318,7 @@ func (m Model) View() string {
 		return "Loading..."
 	}
 
+	// Set up renderer style
 	var rendererStyle lipgloss.Style
 	if m.focusedPane == markdown {
 		rendererStyle = m.styles.ActiveContent
@@ -334,11 +326,12 @@ func (m Model) View() string {
 		rendererStyle = m.styles.InactiveContent
 	}
 
+	// Set up list style with explicit width
 	var listStyle lipgloss.Style
 	if m.focusedPane == noteList {
-		listStyle = m.styles.ActiveContent
+		listStyle = m.styles.ActiveContent.Width(m.width / 3) // Force width to be 1/3
 	} else {
-		listStyle = m.styles.InactiveContent
+		listStyle = m.styles.InactiveContent.Width(m.width / 3) // Force width to be 1/3
 	}
 
 	var listView string
@@ -357,6 +350,7 @@ func (m Model) View() string {
 			),
 		)
 	} else {
+		// Apply the style to both the container and the list
 		listView = listStyle.Render(m.list.View())
 	}
 
@@ -364,7 +358,6 @@ func (m Model) View() string {
 	leftSide := lipgloss.JoinVertical(
 		lipgloss.Left,
 		listView,
-		m.help.View(),
 	)
 
 	// Join left side with content viewport horizontally
