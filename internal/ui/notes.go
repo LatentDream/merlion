@@ -221,6 +221,14 @@ func (m *Model) openEditor(content string) tea.Cmd {
 			items := m.list.Items()
 			items[currentIndex] = item{note: note}
 			m.list.SetItems(items)
+
+			// Update the note to
+			req := note.ToCreateRequest()
+			_, err := m.client.UpdateNote(note.NoteID, req)
+			if err != nil {
+				log.Error("Not able to save the note %s", note.NoteID)
+				return editorFinishedMsg{fmt.Errorf("failed to save the edited content: %w", err)}
+			}
 		}
 
 		return editorFinishedMsg{nil}

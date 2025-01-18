@@ -24,3 +24,17 @@ type CreateNoteRequest struct {
 	IsWorkLog   *bool    `json:"is_work_log,omitempty"`
 	IsPublic    *bool    `json:"is_public,omitempty"`
 }
+
+// Utilities
+
+func (n Note) ToCreateRequest() CreateNoteRequest {
+	return CreateNoteRequest{
+		Title:       n.Title,
+		Content:     n.Content,
+		WorkspaceID: n.WorkspaceID,
+		Tags:        n.Tags,
+		IsFavorite:  &n.IsFavorite,
+		IsWorkLog:   &n.IsWorkLog,
+		IsPublic:    &n.IsPublic,
+	}
+}
