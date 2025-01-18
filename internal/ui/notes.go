@@ -5,7 +5,7 @@ import (
 
 	"merlion/internal/api"
 	"merlion/internal/styles"
-    styledDelegate "merlion/internal/styles/components/delegate"
+	styledDelegate "merlion/internal/styles/components/delegate"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -27,15 +27,16 @@ const (
 )
 
 type keyMap struct {
-	Up       key.Binding
-	Down     key.Binding
-	Left     key.Binding
-	Right    key.Binding
-	PageUp   key.Binding
-	PageDown key.Binding
-	Select   key.Binding
-	Back     key.Binding
-	Quit     key.Binding
+	Up          key.Binding
+	Down        key.Binding
+	Left        key.Binding
+	Right       key.Binding
+	PageUp      key.Binding
+	PageDown    key.Binding
+	Select      key.Binding
+	Back        key.Binding
+	Quit        key.Binding
+	ToggleTheme key.Binding
 }
 
 var keys = keyMap{
@@ -75,6 +76,10 @@ var keys = keyMap{
 		key.WithKeys("q", "ctrl+c"),
 		key.WithHelp("q", "quit"),
 	),
+	ToggleTheme: key.NewBinding(
+		key.WithKeys("ctrl+t"),
+		key.WithHelp("ctrl+t", "toggle theme"),
+	),
 }
 
 type item struct {
@@ -98,6 +103,7 @@ type Model struct {
 	height       int
 	ready        bool
 	loading      bool
+	listDelegate *styledDelegate.StyledDelegate
 	styles       *styles.Styles
 	themeManager *styles.ThemeManager
 	client       *api.Client
@@ -122,14 +128,6 @@ func NewModel(notes []api.Note, client *api.Client, themeManager *styles.ThemeMa
 
 	// Initialize list with themed styles
 	delegate := styledDelegate.New(themeManager)
-	// delegate := list.NewDefaultDelegate()
-	// delegate.Styles.SelectedTitle = s.SelectedItem.
-	// 	Border(lipgloss.NormalBorder(), false, false, false, true). // Only left border
-	// 	BorderForeground(themeManager.Current().Primary).
-	// 	Padding(0, 0, 0, 1) // Only left padding
-	//
-	// delegate.Styles.SelectedDesc = delegate.Styles.SelectedTitle.
-	// 	Foreground(themeManager.Current().Secondary) // Just change the foreground color
 
 	l := list.New([]list.Item{}, delegate, 0, 0)
 	l.Title = "Notes"
@@ -151,10 +149,30 @@ func NewModel(notes []api.Note, client *api.Client, themeManager *styles.ThemeMa
 		keys:         keys,
 		focusedPane:  noteList,
 		loading:      true,
+		listDelegate: delegate,
 		styles:       s,
 		themeManager: themeManager,
 		client:       client,
 	}, nil
+}
+
+type themeToggleMsg struct{}
+type rendererUpdatedMsg struct {
+	renderer *glamour.TermRenderer
+	content  string
+}
+
+// Create a command to handle theme toggle asynchronously
+func toggleTheme(m *Model) {
+	m.styles = m.themeManager.NextTheme()
+
+	// Update only the necessary styles instead of recreating components
+	m.list.Styles.Title = m.styles.TitleBar
+	m.spinner.Style = lipgloss.NewStyle().Foreground(m.themeManager.Current().Primary)
+
+	// Update the delegate's styles without recreating the entire list
+	m.listDelegate.UpdateStyles(m.themeManager)
+	m.list.SetDelegate(m.listDelegate)
 }
 
 func (m Model) Init() tea.Cmd {
@@ -292,7 +310,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.focusedPane = markdown
 				}
 			}
+
+		case key.Matches(msg, m.keys.ToggleTheme):
+			toggleTheme(&m)
 		}
+
 		// Handle navigation based on focused pane
 		if m.focusedPane == noteList {
 			m.list, cmd = m.list.Update(msg)

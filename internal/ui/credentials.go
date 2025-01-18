@@ -126,18 +126,7 @@ func (m credentialsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "ctrl+t": // Add theme toggle shortcut
-			var nextTheme string
-			switch m.themeManager.Current().Name {
-			case "gruvbox":
-				nextTheme = "neotokyo"
-			case "neotokyo":
-				nextTheme = "quiet"
-			case "quiet":
-				nextTheme = "purpledream"
-			case "purpledream":
-				nextTheme = "gruvbox"
-			}
-			if err := m.themeManager.SetTheme(nextTheme); err != nil {
+			if err := m.themeManager.NextTheme(); err != nil {
 				m.err = fmt.Errorf("failed to change theme: %v", err)
 				return m, nil
 			}

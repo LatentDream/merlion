@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/log"
 )
 
 type ThemeManager struct {
@@ -77,6 +78,25 @@ func (tm *ThemeManager) SaveTheme() error {
 
 func (tm *ThemeManager) Current() Theme {
 	return tm.current
+}
+
+func (tm *ThemeManager) NextTheme() *Styles {
+	var nextTheme string
+	switch tm.Current().Name {
+	case "gruvbox":
+		nextTheme = "neotokyo"
+	case "neotokyo":
+		nextTheme = "quiet"
+	case "quiet":
+		nextTheme = "purpledream"
+	case "purpledream":
+		nextTheme = "gruvbox"
+	}
+	err := tm.SetTheme(nextTheme)
+	if err != nil {
+		log.Fatal("Failed to toggle theme %s", err)
+	}
+	return tm.Styles()
 }
 
 func (tm *ThemeManager) SetTheme(name string) error {
@@ -155,7 +175,7 @@ func (tm *ThemeManager) Styles() *Styles {
 
 		ActiveContent: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(theme.Primary).
+			BorderForeground(theme.Secondary).
 			PaddingLeft(1).
 			PaddingRight(1).
 			Width(0).
