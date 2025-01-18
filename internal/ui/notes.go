@@ -237,7 +237,6 @@ func (m *Model) openEditor(content string) tea.Cmd {
 
 // Create a command to handle theme toggle asynchronously
 func toggleTheme(m *Model) {
-	log.Info("Theme Toggled")
 	m.styles = m.themeManager.NextTheme()
 
 	// Update only the necessary styles instead of recreating components

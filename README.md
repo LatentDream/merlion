@@ -6,7 +6,7 @@ TODOs:
 - [x] Add style package to note UI
 - [x] Pass the client to the UI
 - [x] Loading Large note
-- [ ] Edit note -> $EDITOR -> Save
+- [x] Edit note -> $EDITOR -> Save
 - [ ] Filtering by tag
 - [ ] Create note
 - [ ] Edit Title / Tag
