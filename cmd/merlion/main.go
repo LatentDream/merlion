@@ -1,20 +1,30 @@
 package main
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/log"
+	"fmt"
 	"merlion/internal/api"
 	"merlion/internal/auth"
 	"merlion/internal/styles"
 	"merlion/internal/ui"
+	"merlion/internal/utils"
 	"os"
 	"path/filepath"
+
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/log"
 )
 
 func main() {
+	closer, err := utils.SetupLog()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	// Initialize config directory
 	userConfigDir, err := os.UserConfigDir()
 	if err != nil {
+		_ = closer()
 		log.Fatalf("Failed to get user config directory: %v", err)
 	}
 
@@ -26,6 +36,7 @@ func main() {
 	// Initialize theme manager
 	themeManager, err := styles.NewThemeManager(configDir)
 	if err != nil {
+		_ = closer()
 		log.Fatalf("Failed to initialize theme manager: %v", err)
 	}
 
@@ -35,6 +46,7 @@ func main() {
 	// Initialize credentials manager
 	credMgr, err := auth.NewCredentialsManager()
 	if err != nil {
+		_ = closer()
 		log.Fatalf("Failed to initialize credentials manager: %v", err)
 	}
 
@@ -44,11 +56,13 @@ func main() {
 		// First time setup - prompt user for credentials
 		creds, err = ui.GetCredentials(appStyles, themeManager)
 		if err != nil {
+			_ = closer()
 			log.Fatalf("Failed to get credentials: %v", err)
 		}
 
 		// Save the credentials
 		if err := credMgr.SaveCredentials(*creds); err != nil {
+			_ = closer()
 			log.Fatalf("Failed to save credentials: %v", err)
 		}
 	}
@@ -56,11 +70,13 @@ func main() {
 	// Initialize API client
 	client, err := api.NewClient(creds)
 	if err != nil {
+		_ = closer()
 		log.Fatalf("Failed to create API client: %v", err)
 	}
 
 	// Login
 	if err := client.Login(); err != nil {
+		_ = closer()
 		log.Fatalf("Failed to login: %v", err)
 	}
 
@@ -69,6 +85,7 @@ func main() {
 
 	model, err := ui.NewModel([]api.Note{}, client, themeManager)
 	if err != nil {
+		_ = closer()
 		log.Fatalf("Failed to create UI model: %v", err)
 	}
 
@@ -96,6 +113,8 @@ func main() {
 	}()
 
 	if _, err := p.Run(); err != nil {
+		_ = closer()
 		log.Fatal("Error running merlion: %v", err)
 	}
+	_ = closer()
 }

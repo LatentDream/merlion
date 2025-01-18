@@ -11,3 +11,9 @@ build:
 # Run binary
 run:
     ./merlion 2> app.log
+
+clean:
+    rm -f ./merlion
+
+log:
+	tail -f ~/.cache/merlion/merlion.log
