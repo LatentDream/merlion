@@ -85,7 +85,7 @@ func toggleTheme(m *Model) {
 	// Update the renderer
 	renderer, err := glamour.NewTermRenderer(
 		glamour.WithStyles(m.themeManager.GetRendererStyle()),
-		glamour.WithWordWrap(80),
+		glamour.WithWordWrap(int(m.themeManager.Theme.WordWrap)),
 	)
 	if err != nil {
 		log.Error("Error while creating new renderer %v", err)
@@ -96,7 +96,11 @@ func toggleTheme(m *Model) {
 		// Re-render
 		if i := m.list.SelectedItem(); i != nil {
 			note := i.(item).note
-			rendered, err := m.renderer.Render(*note.Content)
+			content := "Please reload the notes"
+			if note.Content != nil {
+				content = *note.Content
+			}
+			rendered, err := m.renderer.Render(content)
 			if err != nil {
 				log.Error("Failed to render new note after theme swap %v", err)
 				m.viewport.SetContent(fmt.Sprintf("Error rendering markdown: %v", err))

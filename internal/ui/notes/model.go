@@ -23,6 +23,8 @@ const (
 	markdown
 )
 
+const ViewRatio = 4
+
 type item struct {
 	note api.Note
 }
@@ -50,7 +52,7 @@ func NewModel(notes []api.Note, client *api.Client, themeManager *styles.ThemeMa
 	// Initialize glamour for markdown rendering
 	renderer, err := glamour.NewTermRenderer(
 		glamour.WithStyles(themeManager.GetRendererStyle()),
-		glamour.WithWordWrap(80),
+		glamour.WithWordWrap(int(themeManager.Theme.WordWrap)),
 	)
 	if err != nil {
 		return Model{}, fmt.Errorf("failed to initialize markdown renderer: %w", err)
@@ -152,7 +154,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		availableWidth := m.width - horizontalPadding
 
 		// Split the view with adjusted measurements
-		listWidth := availableWidth / 3
+		listWidth := availableWidth / ViewRatio
 		contentWidth := availableWidth - listWidth
 
 		// Left side height accounting for any vertical spacing
@@ -282,9 +284,9 @@ func (m Model) View() string {
 	// Set up list style with explicit width
 	var listStyle lipgloss.Style
 	if m.focusedPane == noteList {
-		listStyle = m.styles.ActiveContent.Width(m.width / 3) // Force width to be 1/3
+		listStyle = m.styles.ActiveContent.Width(m.width / ViewRatio)
 	} else {
-		listStyle = m.styles.InactiveContent.Width(m.width / 3) // Force width to be 1/3
+		listStyle = m.styles.InactiveContent.Width(m.width / ViewRatio)
 	}
 
 	var listView string

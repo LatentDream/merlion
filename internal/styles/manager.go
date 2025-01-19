@@ -12,13 +12,13 @@ import (
 
 type ThemeManager struct {
 	configDir string
-	theme     Theme
+	Theme     Theme
 }
 
 func NewThemeManager(configDir string) (*ThemeManager, error) {
 	tm := &ThemeManager{
 		configDir: configDir,
-		theme:     NeoTokyo, // Default theme
+		Theme:     NeoTokyo, // Default theme
 	}
 
 	// Load saved theme if exists
@@ -45,9 +45,9 @@ func (tm *ThemeManager) loadTheme() error {
 
 	switch themeName {
 	case "gruvbox":
-		tm.theme = Gruvbox
+		tm.Theme = Gruvbox
 	case "neotokyo":
-		tm.theme = NeoTokyo
+		tm.Theme = NeoTokyo
 	default:
 		return fmt.Errorf("unknown theme: %s", themeName)
 	}
@@ -56,7 +56,7 @@ func (tm *ThemeManager) loadTheme() error {
 }
 
 func (tm *ThemeManager) SaveTheme() error {
-	data, err := json.Marshal(tm.theme.Name)
+	data, err := json.Marshal(tm.Theme.Name)
 	if err != nil {
 		return fmt.Errorf("marshaling theme: %w", err)
 	}
@@ -73,7 +73,7 @@ func (tm *ThemeManager) SaveTheme() error {
 }
 
 func (tm *ThemeManager) Current() Theme {
-	return tm.theme
+	return tm.Theme
 }
 
 func (tm *ThemeManager) NextTheme() *Styles {
@@ -94,9 +94,9 @@ func (tm *ThemeManager) NextTheme() *Styles {
 func (tm *ThemeManager) SetTheme(name string) error {
 	switch name {
 	case "gruvbox":
-		tm.theme = Gruvbox
+		tm.Theme = Gruvbox
 	case "neotokyo":
-		tm.theme = NeoTokyo
+		tm.Theme = NeoTokyo
 	default:
 		return fmt.Errorf("unknown theme: %s", name)
 	}
