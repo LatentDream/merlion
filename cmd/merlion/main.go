@@ -6,6 +6,7 @@ import (
 	"merlion/internal/auth"
 	"merlion/internal/styles"
 	"merlion/internal/ui"
+	NotesUI "merlion/internal/ui/notes"
 	"merlion/internal/utils"
 	"os"
 	"path/filepath"
@@ -83,7 +84,7 @@ func main() {
 	// Create a channel for notes
 	notesChan := make(chan []api.Note)
 
-	model, err := ui.NewModel([]api.Note{}, client, themeManager)
+	model, err := NotesUI.NewModel([]api.Note{}, client, themeManager)
 	if err != nil {
 		_ = closer()
 		log.Fatalf("Failed to create UI model: %v", err)
@@ -109,7 +110,7 @@ func main() {
 	// Start note loading
 	go func() {
 		notes := <-notesChan
-		p.Send(ui.NotesLoadedMsg{Notes: notes})
+		p.Send(NotesUI.NotesLoadedMsg{Notes: notes})
 	}()
 
 	if _, err := p.Run(); err != nil {

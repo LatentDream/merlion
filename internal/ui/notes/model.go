@@ -1,8 +1,7 @@
-package ui
+package Notes
 
 import (
 	"fmt"
-	"os"
 
 	"merlion/internal/api"
 	"merlion/internal/styles"
@@ -15,90 +14,18 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/log"
-	"github.com/charmbracelet/x/editor"
 )
 
 type focusedPanel int
-
-type noteContentMsg string
-type errMsg struct{ err error }
 
 const (
 	noteList focusedPanel = iota
 	markdown
 )
 
-type keyMap struct {
-	Up          key.Binding
-	Down        key.Binding
-	Left        key.Binding
-	Right       key.Binding
-	PageUp      key.Binding
-	PageDown    key.Binding
-	Select      key.Binding
-	Back        key.Binding
-	Edit        key.Binding
-	Quit        key.Binding
-	ToggleTheme key.Binding
-}
-
-var keys = keyMap{
-	Up: key.NewBinding(
-		key.WithKeys("up", "k"),
-		key.WithHelp("↑/k", "up"),
-	),
-	Down: key.NewBinding(
-		key.WithKeys("down", "j"),
-		key.WithHelp("↓/j", "down"),
-	),
-	Left: key.NewBinding(
-		key.WithKeys("left", "h"),
-		key.WithHelp("←/h", "back to list"),
-	),
-	Right: key.NewBinding(
-		key.WithKeys("right", "l"),
-		key.WithHelp("→/l", "view note"),
-	),
-	PageUp: key.NewBinding(
-		key.WithKeys("pgup"),
-		key.WithHelp("pgup", "page up"),
-	),
-	PageDown: key.NewBinding(
-		key.WithKeys("pgdown"),
-		key.WithHelp("pgdn", "page down"),
-	),
-	Select: key.NewBinding(
-		key.WithKeys("enter"),
-		key.WithHelp("enter", "select"),
-	),
-	Edit: key.NewBinding(
-		key.WithKeys("e"),
-		key.WithHelp("e", "edit"),
-	),
-	Back: key.NewBinding(
-		key.WithKeys("esc"),
-		key.WithHelp("esc", "back"),
-	),
-	Quit: key.NewBinding(
-		key.WithKeys("q", "ctrl+c"),
-		key.WithHelp("q", "quit"),
-	),
-	ToggleTheme: key.NewBinding(
-		key.WithKeys("ctrl+t"),
-		key.WithHelp("ctrl+t", "toggle theme"),
-	),
-}
-
 type item struct {
 	note api.Note
 }
-
-func (i item) Title() string { return i.note.Title }
-func (i item) Description() string {
-	return fmt.Sprintf("Created: %s", i.note.CreatedAt.Format("2006-01-02"))
-}
-func (i item) FilterValue() string { return i.note.Title }
 
 type Model struct {
 	list         list.Model
@@ -164,147 +91,11 @@ func NewModel(notes []api.Note, client *api.Client, themeManager *styles.ThemeMa
 	}, nil
 }
 
-// Message returned when editing is complete
-type editorFinishedMsg struct {
-	err error
-}
-
-func (m *Model) openEditor(content string) tea.Cmd {
-	// Create a temporary file for editing
-	tmpfile, err := os.CreateTemp("", "note-*.md")
-	if err != nil {
-		return func() tea.Msg {
-			return editorFinishedMsg{fmt.Errorf("could not create temp file: %w", err)}
-		}
-	}
-
-	// Write content to temp file
-	if _, err := tmpfile.WriteString(content); err != nil {
-		os.Remove(tmpfile.Name())
-		return func() tea.Msg {
-			return editorFinishedMsg{fmt.Errorf("could not write to temp file: %w", err)}
-		}
-	}
-	tmpfile.Close()
-
-	// Create editor command
-	cmd, err := editor.Cmd("Note", tmpfile.Name())
-	if err != nil {
-		os.Remove(tmpfile.Name())
-		return func() tea.Msg {
-			return editorFinishedMsg{fmt.Errorf("failed to create editor command: %w", err)}
-		}
-	}
-
-	// Return command that will execute editor
-	return tea.ExecProcess(cmd, func(err error) tea.Msg {
-		defer os.Remove(tmpfile.Name())
-
-		if err != nil {
-			return editorFinishedMsg{fmt.Errorf("editor failed: %w", err)}
-		}
-
-		// Read the edited content
-		newContent, err := os.ReadFile(tmpfile.Name())
-		if err != nil {
-			return editorFinishedMsg{fmt.Errorf("failed to read edited content: %w", err)}
-		}
-
-		// Update note content through your API
-		if i := m.list.SelectedItem(); i != nil {
-			note := i.(item).note
-			content := string(newContent)
-			note.Content = &content
-
-			// Update the item in the model's list
-			currentIndex := m.list.Index()
-			items := m.list.Items()
-			items[currentIndex] = item{note: note}
-			m.list.SetItems(items)
-
-			// Update the note to
-			req := note.ToCreateRequest()
-			_, err := m.client.UpdateNote(note.NoteID, req)
-			if err != nil {
-				log.Error("Not able to save the note %s", note.NoteID)
-				return editorFinishedMsg{fmt.Errorf("failed to save the edited content: %w", err)}
-			}
-		}
-
-		return editorFinishedMsg{nil}
-	})
-}
-
-// Create a command to handle theme toggle asynchronously
-func toggleTheme(m *Model) {
-	m.styles = m.themeManager.NextTheme()
-
-	// Update only the necessary styles instead of recreating components
-	m.list.Styles.Title = m.styles.TitleBar
-	m.spinner.Style = lipgloss.NewStyle().Foreground(m.themeManager.Current().Primary)
-
-	// Update the delegate's styles without recreating the entire list
-	m.listDelegate.UpdateStyles(m.themeManager)
-	m.list.SetDelegate(m.listDelegate)
-
-	// Update the renderer
-	renderer, err := glamour.NewTermRenderer(
-		glamour.WithStyles(m.themeManager.GetRendererStyle()),
-		glamour.WithWordWrap(80),
-	)
-	if err != nil {
-		log.Error("Error while creating new renderer %v", err)
-	} else {
-		// Swap renderer
-		m.renderer = renderer
-
-		// Re-render
-		if i := m.list.SelectedItem(); i != nil {
-			note := i.(item).note
-			rendered, err := m.renderer.Render(*note.Content)
-			if err != nil {
-				log.Error("Failed to render new note after theme swap %v", err)
-				m.viewport.SetContent(fmt.Sprintf("Error rendering markdown: %v", err))
-			} else {
-				m.viewport.SetContent(rendered)
-			}
-		}
-	}
-
-}
-
 func (m Model) Init() tea.Cmd {
 	return tea.Batch(
 		spinner.Tick,
 		m.loadNotes,
 	)
-}
-
-// CMDs
-func fetchNoteContent(client *api.Client, noteId string) tea.Cmd {
-	return func() tea.Msg {
-		res, err := client.GetNote(noteId)
-		if err != nil {
-			return errMsg{err}
-		}
-		return noteContentMsg(*res.Content)
-	}
-}
-
-// NotesLoadedMsg is sent when notes are loaded
-type NotesLoadedMsg struct {
-	Notes []api.Note
-}
-
-// Internal alias for better readability in the package
-type notesLoadedMsg = NotesLoadedMsg
-
-func (m Model) loadNotes() tea.Msg {
-	items := make([]list.Item, len(m.list.Items()))
-	for i, item := range m.list.Items() {
-		items[i] = item
-	}
-	return notesLoadedMsg{Notes: nil} // Replace nil with actual notes
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -468,6 +259,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	return m, tea.Batch(cmds...)
 }
+
+func (i item) Title() string { return i.note.Title }
+func (i item) Description() string {
+	return fmt.Sprintf("Created: %s", i.note.CreatedAt.Format("2006-01-02"))
+}
+func (i item) FilterValue() string { return i.note.Title }
 
 func (m Model) View() string {
 	if !m.ready {
