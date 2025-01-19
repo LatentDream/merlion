@@ -71,6 +71,8 @@ func NewModel(notes []api.Note, client *api.Client, themeManager *styles.ThemeMa
 	l.SetShowTitle(true)
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
+	l.SetShowStatusBar(true)
+	l.SetFilteringEnabled(true)
 	l.Styles.Title = s.TitleBar
 
 	// Initialize main content viewport
@@ -119,6 +121,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.list.SetItems(items)
 		return m, nil
+
+	case list.FilterMatchesMsg:
+		m.list, cmd = m.list.Update(msg)
+		return m, cmd
 
 	case editorFinishedMsg:
 		if msg.err != nil {
@@ -182,6 +188,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case tea.KeyMsg:
+		// If we're actively filtering, don't handle any other keypresses
+		if m.list.FilterState() == list.Filtering {
+			m.list, cmd = m.list.Update(msg)
+			return m, cmd
+		}
+
 		switch {
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
@@ -193,6 +205,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.focusedPane == noteList {
 				m.focusedPane = markdown
 			}
+
+		case key.Matches(msg, m.keys.ClearFilter):
+			m.list.ResetFilter()
+			return m, nil
 
 		case key.Matches(msg, m.keys.Back):
 			m.focusedPane = noteList

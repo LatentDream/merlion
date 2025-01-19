@@ -14,6 +14,7 @@ type keyMap struct {
 	Down        key.Binding
 	Left        key.Binding
 	Right       key.Binding
+	ClearFilter key.Binding
 	PageUp      key.Binding
 	PageDown    key.Binding
 	Select      key.Binding
@@ -35,6 +36,10 @@ var keys = keyMap{
 	Left: key.NewBinding(
 		key.WithKeys("left", "h"),
 		key.WithHelp("←/h", "back to list"),
+	),
+	ClearFilter: key.NewBinding(
+		key.WithKeys("c"),
+		key.WithHelp("c", "clear filter"),
 	),
 	Right: key.NewBinding(
 		key.WithKeys("right", "l"),
@@ -58,7 +63,7 @@ var keys = keyMap{
 	),
 	Back: key.NewBinding(
 		key.WithKeys("esc"),
-		key.WithHelp("esc", "back"),
+		key.WithHelp("esc", "back | clear filter"),
 	),
 	Quit: key.NewBinding(
 		key.WithKeys("q", "ctrl+c"),
