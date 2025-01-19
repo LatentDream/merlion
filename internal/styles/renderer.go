@@ -43,7 +43,7 @@ func (tm *ThemeManager) GetRendererStyle() ansi.StyleConfig {
 			StylePrimitive: ansi.StylePrimitive{
 				Prefix:          " ",
 				Suffix:          " ",
-				Color:           stringPtr(string(tm.theme.Primary)),
+				Color:           stringPtr(string(tm.theme.Background)),
 				BackgroundColor: stringPtr(string(tm.theme.Secondary)),
 				Bold:            boolPtr(true),
 			},
