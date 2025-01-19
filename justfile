@@ -1,4 +1,3 @@
-
 # Build and execute
 build-run:
     just build
@@ -10,10 +9,12 @@ build:
 
 # Run binary
 run:
-    ./merlion 2> app.log
+    ./merlion
 
+# Remove the Exectutable
 clean:
     rm -f ./merlion
 
+# Display the live logs
 log:
-	tail -f ~/.cache/merlion/merlion.log
+    tail -f ~/.cache/merlion/merlion.log

@@ -122,7 +122,7 @@ func NewModel(notes []api.Note, client *api.Client, themeManager *styles.ThemeMa
 
 	// Initialize glamour for markdown rendering
 	renderer, err := glamour.NewTermRenderer(
-		glamour.WithAutoStyle(),
+		glamour.WithStyles(themeManager.GetRendererStyle()),
 		glamour.WithWordWrap(80),
 	)
 	if err != nil {
@@ -246,6 +246,31 @@ func toggleTheme(m *Model) {
 	// Update the delegate's styles without recreating the entire list
 	m.listDelegate.UpdateStyles(m.themeManager)
 	m.list.SetDelegate(m.listDelegate)
+
+	// Update the renderer
+	renderer, err := glamour.NewTermRenderer(
+		glamour.WithStyles(m.themeManager.GetRendererStyle()),
+		glamour.WithWordWrap(80),
+	)
+	if err != nil {
+		log.Error("Error while creating new renderer %v", err)
+	} else {
+		// Swap renderer
+		m.renderer = renderer
+
+		// Re-render
+		if i := m.list.SelectedItem(); i != nil {
+			note := i.(item).note
+			rendered, err := m.renderer.Render(*note.Content)
+			if err != nil {
+				log.Error("Failed to render new note after theme swap %v", err)
+				m.viewport.SetContent(fmt.Sprintf("Error rendering markdown: %v", err))
+			} else {
+				m.viewport.SetContent(rendered)
+			}
+		}
+	}
+
 }
 
 func (m Model) Init() tea.Cmd {

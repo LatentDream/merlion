@@ -12,13 +12,13 @@ import (
 
 type ThemeManager struct {
 	configDir string
-	current   Theme
+	theme     Theme
 }
 
 func NewThemeManager(configDir string) (*ThemeManager, error) {
 	tm := &ThemeManager{
 		configDir: configDir,
-		current:   NeoTokyo, // Default theme
+		theme:     NeoTokyo, // Default theme
 	}
 
 	// Load saved theme if exists
@@ -45,13 +45,9 @@ func (tm *ThemeManager) loadTheme() error {
 
 	switch themeName {
 	case "gruvbox":
-		tm.current = Gruvbox
+		tm.theme = Gruvbox
 	case "neotokyo":
-		tm.current = NeoTokyo
-	case "quiet":
-		tm.current = Quiet
-	case "purpledream":
-		tm.current = PurpleDream
+		tm.theme = NeoTokyo
 	default:
 		return fmt.Errorf("unknown theme: %s", themeName)
 	}
@@ -60,7 +56,7 @@ func (tm *ThemeManager) loadTheme() error {
 }
 
 func (tm *ThemeManager) SaveTheme() error {
-	data, err := json.Marshal(tm.current.Name)
+	data, err := json.Marshal(tm.theme.Name)
 	if err != nil {
 		return fmt.Errorf("marshaling theme: %w", err)
 	}
@@ -77,7 +73,7 @@ func (tm *ThemeManager) SaveTheme() error {
 }
 
 func (tm *ThemeManager) Current() Theme {
-	return tm.current
+	return tm.theme
 }
 
 func (tm *ThemeManager) NextTheme() *Styles {
@@ -86,10 +82,6 @@ func (tm *ThemeManager) NextTheme() *Styles {
 	case "gruvbox":
 		nextTheme = "neotokyo"
 	case "neotokyo":
-		nextTheme = "quiet"
-	case "quiet":
-		nextTheme = "purpledream"
-	case "purpledream":
 		nextTheme = "gruvbox"
 	}
 	err := tm.SetTheme(nextTheme)
@@ -102,13 +94,9 @@ func (tm *ThemeManager) NextTheme() *Styles {
 func (tm *ThemeManager) SetTheme(name string) error {
 	switch name {
 	case "gruvbox":
-		tm.current = Gruvbox
+		tm.theme = Gruvbox
 	case "neotokyo":
-		tm.current = NeoTokyo
-	case "quiet":
-		tm.current = Quiet
-	case "purpledream":
-		tm.current = PurpleDream
+		tm.theme = NeoTokyo
 	default:
 		return fmt.Errorf("unknown theme: %s", name)
 	}
@@ -116,7 +104,7 @@ func (tm *ThemeManager) SetTheme(name string) error {
 	return tm.SaveTheme()
 }
 
-// Now let's create the styles that use the current theme
+// Create the styles that use the current theme
 func (tm *ThemeManager) Styles() *Styles {
 	theme := tm.Current()
 

@@ -23,6 +23,10 @@ type Theme struct {
 	BorderColor    lipgloss.Color
 	HighlightColor lipgloss.Color
 	MutedColor     lipgloss.Color
+
+	// Specific Renderer elements
+	Margin     uint
+	ListIndent uint
 }
 
 var (
@@ -41,6 +45,8 @@ var (
 		BorderColor:    lipgloss.Color("#504945"),
 		HighlightColor: lipgloss.Color("#d79921"),
 		MutedColor:     lipgloss.Color("#a89984"),
+		Margin:         2,
+		ListIndent:     4,
 	}
 
 	// Neo Tokyo theme
@@ -59,41 +65,7 @@ var (
 		BorderColor:    lipgloss.Color("#24283b"),
 		HighlightColor: lipgloss.Color("#ff9e64"),
 		MutedColor:     lipgloss.Color("#787c99"),
-	}
-
-	// Quiet theme (light)
-	Quiet = Theme{
-		Name:           "quiet",
-		Background:     lipgloss.Color("#ffffff"),
-		Foreground:     lipgloss.Color("#333333"),
-		Selection:      lipgloss.Color("#f0f0f0"),
-		Comment:        lipgloss.Color("#787c99"),
-		Primary:        lipgloss.Color("#4a76cd"),
-		Secondary:      lipgloss.Color("#8a5cf5"),
-		Tertiary:       lipgloss.Color("#d17e3d"),
-		Error:          lipgloss.Color("#cc3333"),
-		Warning:        lipgloss.Color("#cc9933"),
-		Success:        lipgloss.Color("#339933"),
-		BorderColor:    lipgloss.Color("#e0e0e0"),
-		HighlightColor: lipgloss.Color("#4a76cd"),
-		MutedColor:     lipgloss.Color("#999999"),
-	}
-
-	// Purple Dream theme
-	PurpleDream = Theme{
-		Name:           "purpledream",
-		Background:     lipgloss.Color("#FFFFFF"),
-		Foreground:     lipgloss.Color("#333333"),
-		Selection:      lipgloss.Color("#F0F0FA"),
-		Comment:        lipgloss.Color("#9B8BC0"),
-		Primary:        lipgloss.Color("#7D56F4"),
-		Secondary:      lipgloss.Color("#9B78FF"),
-		Tertiary:       lipgloss.Color("#c39ac9"),
-		Error:          lipgloss.Color("#FF0000"),
-		Warning:        lipgloss.Color("#FFB86C"),
-		Success:        lipgloss.Color("#50FA7B"),
-		BorderColor:    lipgloss.Color("#7D56F4"),
-		HighlightColor: lipgloss.Color("#FAFAFA"),
-		MutedColor:     lipgloss.Color("#B8B8B8"),
+		Margin:         2,
+		ListIndent:     4,
 	}
 )
