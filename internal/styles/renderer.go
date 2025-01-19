@@ -20,7 +20,7 @@ func (tm *ThemeManager) GetRendererStyle() ansi.StyleConfig {
 			StylePrimitive: ansi.StylePrimitive{
 				BlockPrefix: "\n",
 				BlockSuffix: "\n",
-				Color:      stringPtr(string(tm.theme.Foreground)),
+				Color:       stringPtr(string(tm.theme.Foreground)),
 			},
 			Margin: uintPtr(tm.theme.Margin),
 		},
@@ -35,8 +35,8 @@ func (tm *ThemeManager) GetRendererStyle() ansi.StyleConfig {
 		Heading: ansi.StyleBlock{
 			StylePrimitive: ansi.StylePrimitive{
 				BlockSuffix: "\n",
-				Color:      stringPtr(string(tm.theme.Primary)),
-				Bold:       boolPtr(true),
+				Color:       stringPtr(string(tm.theme.Primary)),
+				Bold:        boolPtr(true),
 			},
 		},
 		H1: ansi.StyleBlock{
