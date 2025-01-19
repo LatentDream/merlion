@@ -18,3 +18,7 @@ clean:
 # Display the live logs
 log:
     tail -f ~/.cache/merlion/merlion.log
+
+export:
+    just build
+    mv ./merlion ~/tools/

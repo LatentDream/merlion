@@ -75,7 +75,6 @@ func NewModel(notes []api.Note, client *api.Client, themeManager *styles.ThemeMa
 
 	// Initialize main content viewport
 	vp := viewport.New(0, 0)
-	// vp.Style = s.Container
 
 	// Initialize help viewport with themed styles
 	return Model{
