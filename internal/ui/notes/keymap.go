@@ -22,57 +22,63 @@ type keyMap struct {
 	Edit        key.Binding
 	Quit        key.Binding
 	ToggleTheme key.Binding
+	NewNote		key.Binding
 }
 
 var keys = keyMap{
 	Up: key.NewBinding(
 		key.WithKeys("up", "k"),
-		key.WithHelp("↑/k", "up"),
+		key.WithHelp("↑/k", "Up"),
 	),
 	Down: key.NewBinding(
 		key.WithKeys("down", "j"),
-		key.WithHelp("↓/j", "down"),
+		key.WithHelp("↓/j", "Down"),
 	),
 	Left: key.NewBinding(
 		key.WithKeys("left", "h"),
-		key.WithHelp("←/h", "back to list"),
+		key.WithHelp("←/h", "Back to list"),
 	),
 	ClearFilter: key.NewBinding(
 		key.WithKeys("c"),
-		key.WithHelp("c", "clear filter"),
+		key.WithHelp("c", "Clear filter"),
 	),
 	Right: key.NewBinding(
 		key.WithKeys("right", "l"),
-		key.WithHelp("→/l", "view note"),
+		key.WithHelp("→/l", "View note"),
 	),
 	PageUp: key.NewBinding(
 		key.WithKeys("pgup"),
-		key.WithHelp("pgup", "page up"),
+		key.WithHelp("pgup", "Page up"),
 	),
 	PageDown: key.NewBinding(
 		key.WithKeys("pgdown"),
-		key.WithHelp("pgdn", "page down"),
+		key.WithHelp("pgdn", "Page down"),
 	),
 	Select: key.NewBinding(
 		key.WithKeys("enter"),
-		key.WithHelp("enter", "select"),
+		key.WithHelp("enter", "Select"),
 	),
 	Edit: key.NewBinding(
 		key.WithKeys("e"),
-		key.WithHelp("e", "edit"),
+		key.WithHelp("e", "Edit"),
 	),
 	Back: key.NewBinding(
 		key.WithKeys("esc"),
-		key.WithHelp("esc", "back | clear filter"),
+		key.WithHelp("esc", "Back"),
 	),
 	Quit: key.NewBinding(
 		key.WithKeys("q", "ctrl+c"),
-		key.WithHelp("q", "quit"),
+		key.WithHelp("q", "Quit"),
 	),
 	ToggleTheme: key.NewBinding(
 		key.WithKeys("ctrl+t"),
-		key.WithHelp("ctrl+t", "toggle theme"),
+		key.WithHelp("ctrl+t", "Toggle theme"),
 	),
+	NewNote: key.NewBinding(
+		key.WithKeys("n"),
+		key.WithHelp("n", "New"),
+	),
+
 }
 
 // Key Map Handler Helper ---

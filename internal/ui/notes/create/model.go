@@ -1,0 +1,93 @@
+package create
+
+import (
+	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"merlion/internal/api"
+	"merlion/internal/styles"
+)
+
+type Model struct {
+	title        textinput.Model
+	width        int
+	height       int
+	themeManager *styles.ThemeManager
+	client       *api.Client
+}
+
+type DoneMsg struct {
+	Note api.Note
+	Err  error
+}
+
+func New(client *api.Client, themeManager *styles.ThemeManager) Model {
+	title := textinput.New()
+	title.Placeholder = "Note title"
+	title.Focus()
+	title.CharLimit = 156
+	title.Width = 40
+
+	return Model{
+		title:        title,
+		themeManager: themeManager,
+		client:       client,
+	}
+}
+
+func (m Model) Init() tea.Cmd {
+	return textinput.Blink
+}
+
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "esc":
+			return m, func() tea.Msg {
+				return DoneMsg{Err: nil}
+			}
+		case "enter":
+			note := api.Note{
+				Title: m.title.Value(),
+			}
+			// TODO: Save New
+			return m, func() tea.Msg {
+				return DoneMsg{Note: note, Err: nil}
+			}
+		}
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+	}
+
+	var cmd tea.Cmd
+	m.title, cmd = m.title.Update(msg)
+	return m, cmd
+}
+
+func (m Model) View() string {
+	formStyle := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(m.themeManager.Current().Primary).
+		Padding(1, 2).
+		Width(50)
+
+	return lipgloss.Place(
+		m.width,
+		m.height,
+		lipgloss.Center,
+		lipgloss.Center,
+		formStyle.Render(
+			lipgloss.JoinVertical(
+				lipgloss.Left,
+				"Create New Note",
+				"",
+				"Title:",
+				m.title.View(),
+				"",
+				"enter: save • esc: cancel",
+			),
+		),
+	)
+}

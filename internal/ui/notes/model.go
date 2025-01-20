@@ -2,10 +2,12 @@ package Notes
 
 import (
 	"fmt"
+	"log"
 
 	"merlion/internal/api"
 	"merlion/internal/styles"
 	styledDelegate "merlion/internal/styles/components/delegate"
+	"merlion/internal/ui/notes/create"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -29,6 +31,13 @@ type item struct {
 	note api.Note
 }
 
+type ViewState string
+
+const (
+	MainView   ViewState = "main"
+	CreateView ViewState = "create"
+)
+
 type Model struct {
 	list         list.Model
 	viewport     viewport.Model
@@ -44,6 +53,8 @@ type Model struct {
 	styles       *styles.Styles
 	themeManager *styles.ThemeManager
 	client       *api.Client
+	createModel  create.Model
+	activeView   ViewState
 }
 
 func NewModel(notes []api.Note, client *api.Client, themeManager *styles.ThemeManager) (Model, error) {
@@ -91,6 +102,8 @@ func NewModel(notes []api.Note, client *api.Client, themeManager *styles.ThemeMa
 		styles:       s,
 		themeManager: themeManager,
 		client:       client,
+		createModel:  create.New(client, themeManager),
+		activeView:   MainView,
 	}, nil
 }
 
@@ -194,6 +207,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		}
 
+		// If we're actively in another view, don't handle any other keypresses
+		if m.activeView != MainView {
+			// Handle navigation based on focused pane
+			if m.activeView == CreateView {
+				var updatedModel tea.Model
+				updatedModel, cmd = m.createModel.Update(msg)
+				m.createModel = updatedModel.(create.Model)
+				cmds = append(cmds, cmd)
+				return m, cmd
+			} else {
+				log.Fatal("Don't know what we are looking at anymore")
+				return m, cmd
+			}
+		}
+
 		switch {
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
@@ -208,6 +236,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.ClearFilter):
 			m.list.ResetFilter()
+			return m, nil
+
+		case key.Matches(msg, m.keys.NewNote):
+			m.activeView = CreateView
 			return m, nil
 
 		case key.Matches(msg, m.keys.Back):
@@ -272,6 +304,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case create.DoneMsg:
+		// TODO: WIP
+		m.activeView = MainView
+		if msg.Err != nil {
+			// Handle error
+			return m, nil
+		}
+		if msg.Note.Title != "" {
+			// Refresh notes list
+			return m, m.loadNotes
+		}
+		return m, nil
+
 	}
 
 	return m, tea.Batch(cmds...)
@@ -286,6 +331,10 @@ func (i item) FilterValue() string { return i.note.Title }
 func (m Model) View() string {
 	if !m.ready {
 		return "Loading..."
+	}
+
+	if m.activeView == CreateView {
+		return m.createModel.View()
 	}
 
 	// Set up renderer style
