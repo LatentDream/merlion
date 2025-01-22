@@ -1,11 +1,12 @@
 package create
 
 import (
+	"merlion/internal/api"
+	"merlion/internal/styles"
+
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"merlion/internal/api"
-	"merlion/internal/styles"
 )
 
 type Model struct {
@@ -48,12 +49,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return DoneMsg{Err: nil}
 			}
 		case "enter":
+			// TODO: input validation - need a title
 			note := api.Note{
 				Title: m.title.Value(),
 			}
-			// TODO: Save New
+			newNote, err := m.client.CreateNote(note.ToCreateRequest())
+			if newNote != nil {
+				note = *newNote
+			}
 			return m, func() tea.Msg {
-				return DoneMsg{Note: note, Err: nil}
+				return DoneMsg{Note: note, Err: err}
 			}
 		}
 	case tea.WindowSizeMsg:

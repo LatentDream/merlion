@@ -313,7 +313,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		if msg.Note.Title != "" {
 			// Refresh notes list
-			return m, m.loadNotes
+			return m, nil
 		}
 		return m, nil
 
