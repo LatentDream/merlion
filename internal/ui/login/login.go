@@ -1,5 +1,4 @@
-// internal/ui/credentials.go
-package ui
+package login
 
 import (
 	"fmt"
@@ -14,7 +13,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-type credentialsModel struct {
+type Model struct {
 	emailInput    textinput.Model
 	passwordInput textinput.Model
 	err           error
@@ -27,7 +26,9 @@ type credentialsModel struct {
 	themeManager  *styles.ThemeManager
 }
 
-func NewCredentialsUI(appStyles *styles.Styles, themeManager *styles.ThemeManager) *credentialsModel {
+func NewModel(themeManager *styles.ThemeManager) (Model, error) {
+	appStyles := themeManager.Styles()
+
 	emailInput := textinput.New()
 	emailInput.Placeholder = "Enter your email"
 	emailInput.Focus()
@@ -48,19 +49,19 @@ func NewCredentialsUI(appStyles *styles.Styles, themeManager *styles.ThemeManage
 	passwordInput.PromptStyle = appStyles.Input
 	passwordInput.TextStyle = appStyles.Input
 
-	return &credentialsModel{
+	return Model{
 		emailInput:    emailInput,
 		passwordInput: passwordInput,
 		styles:        appStyles,
 		themeManager:  themeManager,
-	}
+	}, nil 
 }
 
-func (m credentialsModel) Init() tea.Cmd {
+func (m Model) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m credentialsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
@@ -150,7 +151,7 @@ func (m credentialsModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m credentialsModel) View() string {
+func (m Model) View() string {
 	if m.width == 0 {
 		return "Loading..."
 	}
@@ -190,23 +191,4 @@ func (m credentialsModel) View() string {
 		lipgloss.Center,
 		container,
 	)
-}
-
-func GetCredentials(appStyles *styles.Styles, themeManager *styles.ThemeManager) (*auth.Credentials, error) {
-	p := tea.NewProgram(
-		NewCredentialsUI(appStyles, themeManager),
-		tea.WithAltScreen(),
-		tea.WithMouseCellMotion(),
-	)
-
-	m, err := p.Run()
-	if err != nil {
-		return nil, fmt.Errorf("running credentials UI: %w", err)
-	}
-
-	if m, ok := m.(credentialsModel); ok && m.done {
-		return m.credentials, nil
-	}
-
-	return nil, fmt.Errorf("credentials input cancelled")
 }

@@ -22,7 +22,7 @@ type DoneMsg struct {
 	Err  error
 }
 
-func New(client *api.Client, themeManager *styles.ThemeManager) Model {
+func NewModel(client *api.Client, themeManager *styles.ThemeManager) (Model, error) {
 	title := textinput.New()
 	title.Placeholder = "Note title"
 	title.Focus()
@@ -33,7 +33,7 @@ func New(client *api.Client, themeManager *styles.ThemeManager) Model {
 		title:        title,
 		themeManager: themeManager,
 		client:       client,
-	}
+	}, nil
 }
 
 func (m Model) Init() tea.Cmd {

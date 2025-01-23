@@ -57,7 +57,7 @@ type Model struct {
 	activeView   ViewState
 }
 
-func NewModel(notes []api.Note, client *api.Client, themeManager *styles.ThemeManager) (Model, error) {
+func NewModel(client *api.Client, themeManager *styles.ThemeManager) (Model, error) {
 	s := themeManager.Styles()
 
 	// Initialize glamour for markdown rendering
@@ -102,7 +102,6 @@ func NewModel(notes []api.Note, client *api.Client, themeManager *styles.ThemeMa
 		styles:       s,
 		themeManager: themeManager,
 		client:       client,
-		createModel:  create.New(client, themeManager),
 		activeView:   MainView,
 	}, nil
 }
