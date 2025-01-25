@@ -23,11 +23,6 @@ func (m Model) SetClient(client *api.Client) tea.Cmd {
 	return nil
 }
 
-type DoneMsg struct {
-	Note api.Note
-	Err  error
-}
-
 func NewModel(client *api.Client, themeManager *styles.ThemeManager) navigation.View {
 	title := textinput.New()
 	title.Placeholder = "Note title"
@@ -51,21 +46,15 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "esc":
-			return m, func() tea.Msg {
-				return DoneMsg{Err: nil}
-			}
+			return m, navigation.SwitchUICmd(navigation.NoteUI)
 		case "enter":
 			// TODO: input validation - need a title
 			note := api.Note{
 				Title: m.title.Value(),
 			}
-			newNote, err := m.client.CreateNote(note.ToCreateRequest())
-			if newNote != nil {
-				note = *newNote
-			}
-			return m, func() tea.Msg {
-				return DoneMsg{Note: note, Err: err}
-			}
+			// TODO: Handle potential Error returned
+			m.client.CreateNote(note.ToCreateRequest())
+			return m, navigation.SwitchUICmd(navigation.NoteUI)
 		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
