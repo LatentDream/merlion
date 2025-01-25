@@ -1,4 +1,4 @@
-package application
+package navigation
 
 import (
 	"merlion/internal/api"

@@ -7,7 +7,7 @@ import (
 	"merlion/internal/api"
 	"merlion/internal/auth"
 	"merlion/internal/styles"
-	"merlion/internal/ui/application"
+	"merlion/internal/ui/navigation"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -122,7 +122,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if err != nil {
 					log.Fatalf("Not able to save credentials %v", err)
 				}
-				return m, application.LoginCmd(client)
+				return m, navigation.LoginCmd(client)
 			}
 			// Move to password field when pressing enter in email field
 			if m.emailInput.Focused() {

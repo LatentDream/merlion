@@ -5,8 +5,8 @@ import (
 	"merlion/internal/api"
 	"merlion/internal/auth"
 	"merlion/internal/styles"
-	"merlion/internal/ui/application"
 	"merlion/internal/ui/login"
+	"merlion/internal/ui/navigation"
 	NotesUI "merlion/internal/ui/notes"
 	"merlion/internal/ui/notes/create"
 
@@ -15,7 +15,7 @@ import (
 )
 
 type Model struct {
-	state  application.CurrentUI
+	state  navigation.CurrentUI
 	notes  NotesUI.Model
 	create create.Model
 	login  login.Model
@@ -29,29 +29,29 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Global Signal to swtich UI
 	switch msg := msg.(type) {
-	case application.SwitchUIMsg:
+	case navigation.SwitchUIMsg:
 		m.state = msg.NewState
 		return m, nil
-	case application.LoginMsg:
+	case navigation.LoginMsg:
 		m.notes.SetClient(msg.Client)
 		m.create.SetClient(msg.Client)
-		m.state = application.NoteUI
+		m.state = navigation.NoteUI
 		return m, nil
 	}
 
 	// Display Update
 	switch m.state {
-	case application.LoginUI:
+	case navigation.LoginUI:
 		var cmd tea.Cmd
 		loginModel, cmd := m.login.Update(msg)
 		m.login = loginModel.(login.Model)
 		return m, cmd
-	case application.NoteUI:
+	case navigation.NoteUI:
 		var cmd tea.Cmd
 		notesModel, cmd := m.notes.Update(msg)
 		m.notes = notesModel.(NotesUI.Model)
 		return m, cmd
-	case application.CreateUI:
+	case navigation.CreateUI:
 		var cmd tea.Cmd
 		createModel, cmd := m.create.Update(msg)
 		m.create = createModel.(create.Model)
@@ -63,9 +63,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() string {
 	switch m.state {
-	case application.LoginUI:
+	case navigation.LoginUI:
 		return m.login.View()
-	case application.NoteUI:
+	case navigation.NoteUI:
 		return m.notes.View()
 	default:
 		return m.create.View()
@@ -74,13 +74,13 @@ func (m Model) View() string {
 
 func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.ThemeManager) (Model, error) {
 	// Verify user credentials
-	initialUI := application.LoginUI
+	initialUI := navigation.LoginUI
 	var client *api.Client = nil
 	var err error = nil
 
 	creds, _ := credentialsManager.LoadCredentials()
 	if creds != nil {
-		initialUI = application.NoteUI
+		initialUI = navigation.NoteUI
 		client, err = api.NewClient(creds)
 		if err != nil {
 			log.Error("Failed to create API client: %v", err)

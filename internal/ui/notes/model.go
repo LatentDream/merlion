@@ -125,9 +125,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case spinner.TickMsg:
-		var cmd tea.Cmd
-		m.spinner, cmd = m.spinner.Update(msg)
-		return m, cmd
+		var spinnerCmd tea.Cmd
+		m.spinner, spinnerCmd = m.spinner.Update(msg)
+		cmds = append(cmds, spinnerCmd)
 
 	case notesLoadedMsg:
 		m.loading = false
@@ -136,7 +136,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			items[i] = item{note: note}
 		}
 		m.list.SetItems(items)
-		return m, nil
+		return m, spinner.Tick
 
 	case list.FilterMatchesMsg:
 		m.list, cmd = m.list.Update(msg)
@@ -332,10 +332,6 @@ func (i item) Description() string {
 func (i item) FilterValue() string { return i.note.Title }
 
 func (m Model) View() string {
-	if !m.ready {
-		return "Loading notes..."
-	}
-
 	if m.activeView == CreateView {
 		return m.createModel.View()
 	}
