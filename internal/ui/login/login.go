@@ -7,26 +7,28 @@ import (
 	"merlion/internal/api"
 	"merlion/internal/auth"
 	"merlion/internal/styles"
+	"merlion/internal/ui/application"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/log"
 )
 
 type Model struct {
-	emailInput    textinput.Model
-	passwordInput textinput.Model
-	err           error
-	done          bool
-	credentials   *auth.Credentials
-	width         int
-	height        int
-	validating    bool
-	styles        *styles.Styles
-	themeManager  *styles.ThemeManager
+	emailInput         textinput.Model
+	passwordInput      textinput.Model
+	err                error
+	credentials        *auth.Credentials
+	width              int
+	height             int
+	validating         bool
+	credentialsManager *auth.CredentialsManager
+	styles             *styles.Styles
+	themeManager       *styles.ThemeManager
 }
 
-func NewModel(themeManager *styles.ThemeManager) (Model, error) {
+func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.ThemeManager) (Model, error) {
 	appStyles := themeManager.Styles()
 
 	emailInput := textinput.New()
@@ -50,11 +52,12 @@ func NewModel(themeManager *styles.ThemeManager) (Model, error) {
 	passwordInput.TextStyle = appStyles.Input
 
 	return Model{
-		emailInput:    emailInput,
-		passwordInput: passwordInput,
-		styles:        appStyles,
-		themeManager:  themeManager,
-	}, nil 
+		emailInput:         emailInput,
+		passwordInput:      passwordInput,
+		styles:             appStyles,
+		themeManager:       themeManager,
+		credentialsManager: credentialsManager,
+	}, nil
 }
 
 func (m Model) Init() tea.Cmd {
@@ -115,9 +118,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, nil
 				}
 
-				m.done = true
-				m.credentials = &creds
-				return m, tea.Quit
+				err = m.credentialsManager.SaveCredentials(&creds)
+				if err != nil {
+					log.Fatalf("Not able to save credentials %v", err)
+				}
+				return m, application.LoginCmd(client)
 			}
 			// Move to password field when pressing enter in email field
 			if m.emailInput.Focused() {
@@ -152,10 +157,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
-	if m.width == 0 {
-		return "Loading..."
-	}
-
 	// Create the form content
 	var b strings.Builder
 

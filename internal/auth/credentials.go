@@ -112,7 +112,11 @@ func (cm *CredentialsManager) decrypt(data []byte) ([]byte, error) {
 	return gcm.Open(nil, nonce, ciphertext, nil)
 }
 
-func (cm *CredentialsManager) SaveCredentials(creds Credentials) error {
+func (cm *CredentialsManager) SaveCredentials(creds *Credentials) error {
+	if creds == nil {
+		return fmt.Errorf("No credentials supply (nil)")
+	}
+
 	// Marshal credentials
 	data, err := json.Marshal(creds)
 	if err != nil {

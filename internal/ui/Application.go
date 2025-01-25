@@ -5,6 +5,7 @@ import (
 	"merlion/internal/api"
 	"merlion/internal/auth"
 	"merlion/internal/styles"
+	"merlion/internal/ui/application"
 	"merlion/internal/ui/login"
 	NotesUI "merlion/internal/ui/notes"
 	"merlion/internal/ui/notes/create"
@@ -13,16 +14,8 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-type CurrentUI int
-
-const (
-	NoteUI CurrentUI = iota
-	CreateUI
-	LoginUI
-)
-
 type Model struct {
-	state  CurrentUI
+	state  application.CurrentUI
 	notes  NotesUI.Model
 	create create.Model
 	login  login.Model
@@ -32,38 +25,33 @@ func (m Model) Init() tea.Cmd {
 	return nil
 }
 
-type SwitchUIMsg struct {
-	NewState CurrentUI
-}
-
-func SwitchUICmd(newState CurrentUI) tea.Cmd {
-	return func() tea.Msg {
-		return SwitchUIMsg{NewState: newState}
-	}
-}
-
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// Global Signal to swtich UI
 	switch msg := msg.(type) {
-	case SwitchUIMsg:
+	case application.SwitchUIMsg:
 		m.state = msg.NewState
+		return m, nil
+	case application.LoginMsg:
+		m.notes.SetClient(msg.Client)
+		m.create.SetClient(msg.Client)
+		m.state = application.NoteUI
 		return m, nil
 	}
 
 	// Display Update
 	switch m.state {
-	case LoginUI:
+	case application.LoginUI:
 		var cmd tea.Cmd
 		loginModel, cmd := m.login.Update(msg)
 		m.login = loginModel.(login.Model)
 		return m, cmd
-	case NoteUI:
+	case application.NoteUI:
 		var cmd tea.Cmd
 		notesModel, cmd := m.notes.Update(msg)
 		m.notes = notesModel.(NotesUI.Model)
 		return m, cmd
-	case CreateUI:
+	case application.CreateUI:
 		var cmd tea.Cmd
 		createModel, cmd := m.create.Update(msg)
 		m.create = createModel.(create.Model)
@@ -75,9 +63,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() string {
 	switch m.state {
-	case LoginUI:
+	case application.LoginUI:
 		return m.login.View()
-	case NoteUI:
+	case application.NoteUI:
 		return m.notes.View()
 	default:
 		return m.create.View()
@@ -86,13 +74,13 @@ func (m Model) View() string {
 
 func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.ThemeManager) (Model, error) {
 	// Verify user credentials
-	initialUI := LoginUI
+	initialUI := application.LoginUI
 	var client *api.Client = nil
 	var err error = nil
 
 	creds, _ := credentialsManager.LoadCredentials()
 	if creds != nil {
-		initialUI = NoteUI
+		initialUI = application.NoteUI
 		client, err = api.NewClient(creds)
 		if err != nil {
 			log.Error("Failed to create API client: %v", err)
@@ -101,7 +89,7 @@ func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.
 	}
 
 	// Init all model
-	loginModel, err := login.NewModel(themeManager)
+	loginModel, err := login.NewModel(credentialsManager, themeManager)
 	if err != nil {
 		return Model{}, fmt.Errorf("failed to create login model: %w", err)
 	}

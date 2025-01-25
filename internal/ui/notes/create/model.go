@@ -17,6 +17,10 @@ type Model struct {
 	client       *api.Client
 }
 
+func (m Model) SetClient(client *api.Client) {
+	m.client = client
+}
+
 type DoneMsg struct {
 	Note api.Note
 	Err  error

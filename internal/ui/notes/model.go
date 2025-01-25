@@ -113,6 +113,10 @@ func (m Model) Init() tea.Cmd {
 	)
 }
 
+func (m Model) SetClient(client *api.Client) {
+	m.client = client
+}
+
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
@@ -329,7 +333,7 @@ func (i item) FilterValue() string { return i.note.Title }
 
 func (m Model) View() string {
 	if !m.ready {
-		return "Loading..."
+		return "Loading notes..."
 	}
 
 	if m.activeView == CreateView {
