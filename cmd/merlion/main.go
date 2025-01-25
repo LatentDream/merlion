@@ -44,25 +44,24 @@ func main() {
 		_ = closer()
 		log.Fatalf("Failed to initialize credentials manager: %v", err)
 	}
-	
-    model, err := ui.NewModel(credMgr, themeManager)
-    if err != nil {
-        _ = closer()
-        log.Fatalf("Failed to create UI model: %v", err)
-    }
 
-    p := tea.NewProgram(
-        model,
-        tea.WithAltScreen(),
-        tea.WithMouseCellMotion(),
-    )
+	model, err := ui.NewModel(credMgr, themeManager)
+	if err != nil {
+		_ = closer()
+		log.Fatalf("Failed to create UI model: %v", err)
+	}
 
-    if _, err := p.Run(); err != nil {
-        _ = closer()
-        log.Fatal("Error running program: %v", err)
-    }
-    _ = closer()
+	p := tea.NewProgram(
+		model,
+		tea.WithAltScreen(),
+		tea.WithMouseCellMotion(),
+	)
 
+	if _, err := p.Run(); err != nil {
+		_ = closer()
+		log.Fatal("Error running program: %v", err)
+	}
+	_ = closer()
 
 	// Try to load credentials
 	// creds, err := credMgr.LoadCredentials()

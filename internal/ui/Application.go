@@ -10,14 +10,15 @@ import (
 	"merlion/internal/ui/notes/create"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/log"
 )
 
 type state int
 
 const (
-	showNotes state = iota
-	showCreate
-	showLogin
+	noteUI state = iota
+	createUI
+	loginUI
 )
 
 type Model struct {
@@ -34,19 +35,19 @@ func (m Model) Init() tea.Cmd {
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch m.state {
 
-	case showLogin:
+	case loginUI:
 		var cmd tea.Cmd
 		loginModel, cmd := m.login.Update(msg)
 		m.login = loginModel.(login.Model)
 		return m, cmd
 
-	case showNotes:
+	case noteUI:
 		var cmd tea.Cmd
 		notesModel, cmd := m.notes.Update(msg)
 		m.notes = notesModel.(NotesUI.Model)
 		return m, cmd
 
-	case showCreate:
+	case createUI:
 		var cmd tea.Cmd
 		createModel, cmd := m.create.Update(msg)
 		m.create = createModel.(create.Model)
@@ -59,9 +60,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() string {
 	switch m.state {
-	case showLogin:
+	case loginUI:
 		return m.login.View()
-	case showNotes:
+	case noteUI:
 		return m.notes.View()
 	default:
 		return m.create.View()
@@ -70,10 +71,19 @@ func (m Model) View() string {
 
 func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.ThemeManager) (Model, error) {
 	// Verify user credentials
-
-	// TODO
-	
+	initialUI := loginUI
 	var client *api.Client = nil
+	var err error = nil
+
+	creds, _ := credentialsManager.LoadCredentials()
+	if creds != nil {
+		initialUI = noteUI
+		client, err = api.NewClient(creds)
+		if err != nil {
+			log.Error("Failed to create API client: %v", err)
+			return Model{}, err
+		}
+	}
 
 	// Init all model
 	loginModel, err := login.NewModel(themeManager)
@@ -94,7 +104,7 @@ func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.
 	// Determine which UI to start
 
 	return Model{
-		state:  showLogin,
+		state:  initialUI,
 		login:  loginModel,
 		notes:  notesModel,
 		create: createModel,
