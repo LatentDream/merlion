@@ -7,7 +7,7 @@ import (
 	"merlion/internal/api"
 	"merlion/internal/styles"
 	styledDelegate "merlion/internal/styles/components/delegate"
-	"merlion/internal/ui/notes/create"
+	"merlion/internal/ui/create"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"

@@ -8,7 +8,7 @@ import (
 	"merlion/internal/ui/login"
 	"merlion/internal/ui/navigation"
 	NotesUI "merlion/internal/ui/notes"
-	"merlion/internal/ui/notes/create"
+	"merlion/internal/ui/create"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
