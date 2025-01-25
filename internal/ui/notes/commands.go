@@ -110,7 +110,6 @@ func (m Model) loadNotes() tea.Cmd {
 			log.Fatal("In CMD - Trying to load notes without any client")
 		}
 		notes, err := m.client.ListNotes()
-		log.Info("Note loaded")
 		return notesLoadedMsg{Notes: notes, Err: err}
 	}
 }

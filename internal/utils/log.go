@@ -34,6 +34,22 @@ func SetupLog() (func() error, error) {
 		return func() error { return nil }, nil
 	}
 	log.SetOutput(f)
-	log.SetLevel(log.DebugLevel)
+	setLogLevel()
 	return f.Close, nil
+}
+
+func setLogLevel() {
+	level, exists := os.LookupEnv("LOG_LEVEL")
+	if !exists {
+		log.SetLevel(log.DebugLevel)
+		return
+	}
+
+	lvl, err := log.ParseLevel(level)
+	if err != nil {
+		log.SetLevel(log.DebugLevel)
+		return
+	}
+
+	log.SetLevel(lvl)
 }

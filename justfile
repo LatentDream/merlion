@@ -9,7 +9,7 @@ build:
 
 # Run binary
 run:
-    ./merlion
+    LOG_LEVEL=DEBUG ./merlion
 
 # Remove the Exectutable
 clean:
