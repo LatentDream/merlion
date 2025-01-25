@@ -3,6 +3,7 @@ package create
 import (
 	"merlion/internal/api"
 	"merlion/internal/styles"
+	"merlion/internal/ui/navigation"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -26,7 +27,7 @@ type DoneMsg struct {
 	Err  error
 }
 
-func NewModel(client *api.Client, themeManager *styles.ThemeManager) (Model, error) {
+func NewModel(client *api.Client, themeManager *styles.ThemeManager) navigation.View {
 	title := textinput.New()
 	title.Placeholder = "Note title"
 	title.Focus()
@@ -37,14 +38,14 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) (Model, err
 		title:        title,
 		themeManager: themeManager,
 		client:       client,
-	}, nil
+	}
 }
 
 func (m Model) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {

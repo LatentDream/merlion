@@ -22,6 +22,13 @@ type LoginMsg struct {
 	Client *api.Client
 }
 
+type View interface {
+	Init() tea.Cmd
+	Update(tea.Msg) (View, tea.Cmd)
+	View() string
+	SetClient(*api.Client)
+}
+
 // Global CMD to switch View
 
 func SwitchUICmd(newState CurrentUI) tea.Cmd {

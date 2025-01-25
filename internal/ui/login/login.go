@@ -28,7 +28,7 @@ type Model struct {
 	themeManager       *styles.ThemeManager
 }
 
-func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.ThemeManager) (Model, error) {
+func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.ThemeManager) navigation.View {
 	appStyles := themeManager.Styles()
 
 	emailInput := textinput.New()
@@ -57,14 +57,18 @@ func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.
 		styles:             appStyles,
 		themeManager:       themeManager,
 		credentialsManager: credentialsManager,
-	}, nil
+	}
+}
+
+func (m Model) SetClient(client *api.Client) {
+	// empty
 }
 
 func (m Model) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {

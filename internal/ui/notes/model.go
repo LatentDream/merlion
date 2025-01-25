@@ -16,6 +16,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/log"
 )
 
 type focusedPanel int
@@ -56,7 +57,7 @@ type Model struct {
 	createModel  create.Model
 }
 
-func NewModel(client *api.Client, themeManager *styles.ThemeManager) (Model, error) {
+func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 	s := themeManager.Styles()
 
 	// Initialize glamour for markdown rendering
@@ -65,7 +66,7 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) (Model, err
 		glamour.WithWordWrap(int(themeManager.Theme.WordWrap)),
 	)
 	if err != nil {
-		return Model{}, fmt.Errorf("failed to initialize markdown renderer: %w", err)
+		log.Fatal("failed to initialize markdown renderer: %v", err)
 	}
 
 	// Initialize spinner with themed color
@@ -101,7 +102,7 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) (Model, err
 		styles:       s,
 		themeManager: themeManager,
 		client:       client,
-	}, nil
+	}
 }
 
 func (m Model) Init() tea.Cmd {
@@ -115,7 +116,7 @@ func (m Model) SetClient(client *api.Client) {
 	m.client = client
 }
 
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
 		cmds []tea.Cmd
@@ -136,6 +137,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			items[i] = item{note: note}
 		}
 		m.list.SetItems(items)
+		m.loading = false
 		return m, nil
 
 	case list.FilterMatchesMsg:

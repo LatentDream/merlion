@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"fmt"
 	"merlion/internal/api"
 	"merlion/internal/auth"
 	"merlion/internal/styles"
@@ -11,112 +10,61 @@ import (
 	NotesUI "merlion/internal/ui/notes"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/log"
 )
 
 type Model struct {
 	state  navigation.CurrentUI
-	notes  NotesUI.Model
-	create create.Model
-	login  login.Model
-}
-
-func (m Model) Init() tea.Cmd {
-	switch m.state {
-	case navigation.LoginUI:
-		return m.login.Init()
-	case navigation.NoteUI:
-		return m.notes.Init()
-	case navigation.CreateUI:
-		return m.create.Init()
-	default:
-		return nil
-	}
-}
-
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-
-	// Global Signal to swtich UI
-	switch msg := msg.(type) {
-	case navigation.SwitchUIMsg:
-		m.state = msg.NewState
-		return m, nil
-	case navigation.LoginMsg:
-		m.notes.SetClient(msg.Client)
-		m.create.SetClient(msg.Client)
-		m.state = navigation.NoteUI
-		return m, nil
-	}
-
-	// Display Update
-	switch m.state {
-	case navigation.LoginUI:
-		var cmd tea.Cmd
-		loginModel, cmd := m.login.Update(msg)
-		m.login = loginModel.(login.Model)
-		return m, cmd
-	case navigation.NoteUI:
-		var cmd tea.Cmd
-		notesModel, cmd := m.notes.Update(msg)
-		m.notes = notesModel.(NotesUI.Model)
-		return m, cmd
-	case navigation.CreateUI:
-		var cmd tea.Cmd
-		createModel, cmd := m.create.Update(msg)
-		m.create = createModel.(create.Model)
-		return m, cmd
-	default:
-		return m, nil
-	}
-}
-
-func (m Model) View() string {
-	switch m.state {
-	case navigation.LoginUI:
-		return m.login.View()
-	case navigation.NoteUI:
-		return m.notes.View()
-	default:
-		return m.create.View()
-	}
+	views  map[navigation.CurrentUI]navigation.View
+	client *api.Client
 }
 
 func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.ThemeManager) (Model, error) {
-	// Verify user credentials
 	initialUI := navigation.LoginUI
 	var client *api.Client = nil
-	var err error = nil
 
+	// Check credentials
 	creds, _ := credentialsManager.LoadCredentials()
 	if creds != nil {
 		initialUI = navigation.NoteUI
-		client, err = api.NewClient(creds)
-		if err != nil {
-			log.Error("Failed to create API client: %v", err)
-			return Model{}, err
-		}
+		client, _ = api.NewClient(creds)
 	}
 
-	// Init all model
-	loginModel, err := login.NewModel(credentialsManager, themeManager)
-	if err != nil {
-		return Model{}, fmt.Errorf("failed to create login model: %w", err)
-	}
-
-	notesModel, err := NotesUI.NewModel(client, themeManager)
-	if err != nil {
-		return Model{}, fmt.Errorf("failed to create notes model: %w", err)
-	}
-
-	createModel, err := create.NewModel(client, themeManager)
-	if err != nil {
-		return Model{}, fmt.Errorf("failed to create create model: %w", err)
-	}
+	// Create views
+	views := make(map[navigation.CurrentUI]navigation.View)
+	views[navigation.LoginUI] = login.NewModel(credentialsManager, themeManager)
+	views[navigation.NoteUI] = NotesUI.NewModel(client, themeManager)
+	views[navigation.CreateUI] = create.NewModel(client, themeManager)
 
 	return Model{
 		state:  initialUI,
-		login:  loginModel,
-		notes:  notesModel,
-		create: createModel,
+		views:  views,
+		client: client,
 	}, nil
+}
+
+func (m Model) Init() tea.Cmd {
+	return m.views[m.state].Init()
+}
+
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case navigation.SwitchUIMsg:
+		m.state = msg.NewState
+		return m, m.views[m.state].Init()
+	case navigation.LoginMsg:
+		m.client = msg.Client
+		for _, view := range m.views {
+			view.SetClient(msg.Client)
+		}
+		m.state = navigation.NoteUI
+		return m, m.views[m.state].Init()
+	}
+
+	view, cmd := m.views[m.state].Update(msg)
+	m.views[m.state] = view
+	return m, cmd
+}
+
+func (m Model) View() string {
+	return m.views[m.state].View()
 }
