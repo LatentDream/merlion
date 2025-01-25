@@ -66,7 +66,7 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 		glamour.WithWordWrap(int(themeManager.Theme.WordWrap)),
 	)
 	if err != nil {
-		log.Fatal("failed to initialize markdown renderer: %v", err)
+		log.Fatalf("failed to initialize markdown renderer: %v", err)
 	}
 
 	// Initialize spinner with themed color
@@ -260,7 +260,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 						// We have the content, render..
 						rendered, err := m.renderer.Render(*note.Content)
 						if err != nil {
-							log.Error("Error rendering markdown: %v", err)
+							log.Errorf("Error rendering markdown: %v", err)
 							m.viewport.SetContent(fmt.Sprintf("Error rendering markdown: %v", err))
 						} else {
 							m.viewport.SetContent(rendered)

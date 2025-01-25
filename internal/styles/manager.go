@@ -86,7 +86,7 @@ func (tm *ThemeManager) NextTheme() *Styles {
 	}
 	err := tm.SetTheme(nextTheme)
 	if err != nil {
-		log.Fatal("Failed to toggle theme %s", err)
+		log.Fatalf("Failed to toggle theme %s", err)
 	}
 	return tm.Styles()
 }

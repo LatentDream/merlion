@@ -99,7 +99,7 @@ func toggleTheme(m *Model) {
 		glamour.WithWordWrap(int(m.themeManager.Theme.WordWrap)),
 	)
 	if err != nil {
-		log.Error("Error while creating new renderer %v", err)
+		log.Errorf("Error while creating new renderer %v", err)
 	} else {
 		// Swap renderer
 		m.renderer = renderer
@@ -113,7 +113,7 @@ func toggleTheme(m *Model) {
 			}
 			rendered, err := m.renderer.Render(content)
 			if err != nil {
-				log.Error("Failed to render new note after theme swap %v", err)
+				log.Errorf("Failed to render new note after theme swap %v", err)
 				m.viewport.SetContent(fmt.Sprintf("Error rendering markdown: %v", err))
 			} else {
 				m.viewport.SetContent(rendered)

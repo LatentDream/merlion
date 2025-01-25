@@ -59,7 +59,7 @@ func main() {
 
 	if _, err := p.Run(); err != nil {
 		_ = closer()
-		log.Fatal("Error running program: %v", err)
+		log.Fatalf("Error running program: %v", err)
 	}
 	_ = closer()
 }

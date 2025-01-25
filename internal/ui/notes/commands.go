@@ -73,7 +73,7 @@ func (m *Model) openEditor(content string) tea.Cmd {
 			req := note.ToCreateRequest()
 			_, err := m.client.UpdateNote(note.NoteID, req)
 			if err != nil {
-				log.Error("Not able to save the note %s", note.NoteID)
+				log.Errorf("Not able to save the note %s", note.NoteID)
 				return editorFinishedMsg{fmt.Errorf("failed to save the edited content: %w", err)}
 			}
 		}
@@ -107,7 +107,7 @@ type notesLoadedMsg = NotesLoadedMsg
 func (m Model) loadNotes() tea.Cmd {
 	return func() tea.Msg {
 		if m.client == nil {
-			log.Fatal("In CMD - Trying to load notes without any client")
+			log.Fatalf("In CMD - Trying to load notes without any client")
 		}
 		notes, err := m.client.ListNotes()
 		return notesLoadedMsg{Notes: notes, Err: err}

@@ -105,7 +105,7 @@ func (c *Client) doRequest(method, path string, body interface{}) ([]byte, error
 
 // Note operations
 func (c *Client) ListNotes() ([]Note, error) {
-	log.Debug("Listing Notes")
+	log.Debugf("Listing Notes")
 	respBody, err := c.doRequest(http.MethodGet, "notes", nil)
 	if err != nil {
 		return nil, err
@@ -120,7 +120,7 @@ func (c *Client) ListNotes() ([]Note, error) {
 }
 
 func (c *Client) GetNote(noteID string) (*Note, error) {
-	log.Debug("Get Note %s", noteID)
+	log.Debugf("Get Note %s", noteID)
 	respBody, err := c.doRequest(http.MethodGet, fmt.Sprintf("notes/%s", noteID), nil)
 	if err != nil {
 		return nil, err
@@ -141,7 +141,7 @@ func (c *Client) GetNote(noteID string) (*Note, error) {
 }
 
 func (c *Client) CreateNote(req CreateNoteRequest) (*Note, error) {
-	log.Debug("Creating Note")
+	log.Debugf("Creating Note")
 	respBody, err := c.doRequest(http.MethodPost, "notes", req)
 	if err != nil {
 		return nil, err
@@ -156,7 +156,7 @@ func (c *Client) CreateNote(req CreateNoteRequest) (*Note, error) {
 }
 
 func (c *Client) UpdateNote(noteID string, req CreateNoteRequest) (*Note, error) {
-	log.Debug("Updating Note %s", noteID)
+	log.Debugf("Updating Note %s", noteID)
 	respBody, err := c.doRequest(http.MethodPut, fmt.Sprintf("notes/%s", noteID), req)
 	if err != nil {
 		return nil, err
@@ -171,7 +171,7 @@ func (c *Client) UpdateNote(noteID string, req CreateNoteRequest) (*Note, error)
 }
 
 func (c *Client) DeleteNote(noteID string) error {
-	log.Debug("Deleting Note %s", noteID)
+	log.Debugf("Deleting Note %s", noteID)
 	_, err := c.doRequest(http.MethodDelete, fmt.Sprintf("notes/%s", noteID), nil)
 	return err
 }
@@ -181,7 +181,7 @@ func (c *Client) Login() error {
 	if c.credentials == nil {
 		return fmt.Errorf("no credentials provided")
 	}
-	log.Debug("Login %s", c.credentials.Email)
+	log.Debugf("Login %s", c.credentials.Email)
 
 	// Attempt login
 	_, err := c.doRequest(http.MethodPost, "users/login", map[string]string{
