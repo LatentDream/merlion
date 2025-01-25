@@ -26,7 +26,7 @@ type View interface {
 	Init() tea.Cmd
 	Update(tea.Msg) (View, tea.Cmd)
 	View() string
-	SetClient(*api.Client)
+	SetClient(*api.Client) tea.Cmd
 }
 
 // Global CMD to switch View

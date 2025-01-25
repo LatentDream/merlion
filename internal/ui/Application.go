@@ -53,11 +53,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.views[m.state].Init()
 	case navigation.LoginMsg:
 		m.client = msg.Client
+		var cmds []tea.Cmd
 		for _, view := range m.views {
-			view.SetClient(msg.Client)
+			if cmd := view.SetClient(msg.Client); cmd != nil {
+				cmds = append(cmds, cmd)
+			}
 		}
 		m.state = navigation.NoteUI
-		return m, m.views[m.state].Init()
+		cmds = append(cmds, m.views[m.state].Init())
+		return m, tea.Batch(cmds...)
 	}
 
 	view, cmd := m.views[m.state].Update(msg)

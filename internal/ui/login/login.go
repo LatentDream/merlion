@@ -60,8 +60,8 @@ func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.
 	}
 }
 
-func (m Model) SetClient(client *api.Client) {
-	// empty
+func (m Model) SetClient(client *api.Client) tea.Cmd {
+	return nil
 }
 
 func (m Model) Init() tea.Cmd {

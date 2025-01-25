@@ -106,6 +106,9 @@ type notesLoadedMsg = NotesLoadedMsg
 
 func (m Model) loadNotes() tea.Cmd {
 	return func() tea.Msg {
+		if m.client == nil {
+			log.Fatal("In CMD - Trying to load notes without any client")
+		}
 		notes, err := m.client.ListNotes()
 		log.Info("Note loaded")
 		return notesLoadedMsg{Notes: notes, Err: err}

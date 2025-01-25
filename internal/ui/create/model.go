@@ -18,8 +18,9 @@ type Model struct {
 	client       *api.Client
 }
 
-func (m Model) SetClient(client *api.Client) {
+func (m Model) SetClient(client *api.Client) tea.Cmd {
 	m.client = client
+	return nil
 }
 
 type DoneMsg struct {

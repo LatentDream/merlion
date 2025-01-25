@@ -106,14 +106,18 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 }
 
 func (m Model) Init() tea.Cmd {
-	return tea.Batch(
-		spinner.Tick,
-		m.loadNotes(),
-	)
+	if m.client != nil {
+		return tea.Batch(
+			spinner.Tick,
+			m.loadNotes(),
+		)
+	}
+	return spinner.Tick
 }
 
-func (m Model) SetClient(client *api.Client) {
+func (m Model) SetClient(client *api.Client) tea.Cmd {
 	m.client = client
+	return m.loadNotes()
 }
 
 func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
