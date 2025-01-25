@@ -252,14 +252,15 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 				if i := m.list.SelectedItem(); i != nil {
 					note := i.(item).note
 					if note.Content == nil {
-						// Set loading state
-						m.viewport.SetContent("Loading note content...")
+						// We don't have the content locally.. fetch
 						m.loading = true
 						// Fetch the note content
 						return m, fetchNoteContent(m.client, note.NoteID)
 					} else {
+						// We have the content, render..
 						rendered, err := m.renderer.Render(*note.Content)
 						if err != nil {
+							log.Error("Error rendering markdown: %v", err)
 							m.viewport.SetContent(fmt.Sprintf("Error rendering markdown: %v", err))
 						} else {
 							m.viewport.SetContent(rendered)
@@ -289,8 +290,16 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			note := i.(item).note
 			content := string(msg)
 			note.Content = &content
+
+			// Update the item in the model's list
+			currentIndex := m.list.Index()
+			items := m.list.Items()
+			items[currentIndex] = item{note: note}
+			m.list.SetItems(items)
+
 			rendered, err := m.renderer.Render(content)
 			if err != nil {
+				log.Errorf("Error rendering markdown: %v", err)
 				m.viewport.SetContent(fmt.Sprintf("Error rendering markdown: %v", err))
 			} else {
 				m.viewport.SetContent(rendered)

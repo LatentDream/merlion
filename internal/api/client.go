@@ -72,6 +72,7 @@ func (c *Client) doRequest(method, path string, body interface{}) ([]byte, error
 	url := fmt.Sprintf("%s/%s", baseURL, path)
 	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
+		log.Errorf("creating request: %w", err)
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
 
@@ -128,6 +129,12 @@ func (c *Client) GetNote(noteID string) (*Note, error) {
 	var note Note
 	if err := json.Unmarshal(respBody, &note); err != nil {
 		return nil, fmt.Errorf("unmarshaling response: %w", err)
+	}
+
+	if note.Content == nil {
+		// Display nil as a value to the user
+		noContent := "No Content"
+		note.Content = &noContent
 	}
 
 	return &note, nil
