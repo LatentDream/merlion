@@ -5,10 +5,10 @@ import (
 	"merlion/internal/api"
 	"merlion/internal/auth"
 	"merlion/internal/styles"
+	"merlion/internal/ui/create"
 	"merlion/internal/ui/login"
 	"merlion/internal/ui/navigation"
 	NotesUI "merlion/internal/ui/notes"
-	"merlion/internal/ui/create"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
@@ -22,7 +22,16 @@ type Model struct {
 }
 
 func (m Model) Init() tea.Cmd {
-	return nil
+	switch m.state {
+	case navigation.LoginUI:
+		return m.login.Init()
+	case navigation.NoteUI:
+		return m.notes.Init()
+	case navigation.CreateUI:
+		return m.create.Init()
+	default:
+		return nil
+	}
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

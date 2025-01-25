@@ -2,12 +2,12 @@ package Notes
 
 import (
 	"fmt"
-	"log"
 
 	"merlion/internal/api"
 	"merlion/internal/styles"
 	styledDelegate "merlion/internal/styles/components/delegate"
 	"merlion/internal/ui/create"
+	"merlion/internal/ui/navigation"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -54,7 +54,6 @@ type Model struct {
 	themeManager *styles.ThemeManager
 	client       *api.Client
 	createModel  create.Model
-	activeView   ViewState
 }
 
 func NewModel(client *api.Client, themeManager *styles.ThemeManager) (Model, error) {
@@ -102,14 +101,13 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) (Model, err
 		styles:       s,
 		themeManager: themeManager,
 		client:       client,
-		activeView:   MainView,
 	}, nil
 }
 
 func (m Model) Init() tea.Cmd {
 	return tea.Batch(
 		spinner.Tick,
-		m.loadNotes,
+		m.loadNotes(),
 	)
 }
 
@@ -130,13 +128,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, spinnerCmd)
 
 	case notesLoadedMsg:
-		m.loading = false
+		if msg.Err != nil {
+			return m, nil
+		}
 		items := make([]list.Item, len(msg.Notes))
 		for i, note := range msg.Notes {
 			items[i] = item{note: note}
 		}
 		m.list.SetItems(items)
-		return m, spinner.Tick
+		return m, nil
 
 	case list.FilterMatchesMsg:
 		m.list, cmd = m.list.Update(msg)
@@ -210,21 +210,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		}
 
-		// If we're actively in another view, don't handle any other keypresses
-		if m.activeView != MainView {
-			// Handle navigation based on focused pane
-			if m.activeView == CreateView {
-				var updatedModel tea.Model
-				updatedModel, cmd = m.createModel.Update(msg)
-				m.createModel = updatedModel.(create.Model)
-				cmds = append(cmds, cmd)
-				return m, cmd
-			} else {
-				log.Fatal("Don't know what we are looking at anymore")
-				return m, cmd
-			}
-		}
-
 		switch {
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
@@ -242,8 +227,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 
 		case key.Matches(msg, m.keys.NewNote):
-			m.activeView = CreateView
-			return m, nil
+			cmd = navigation.SwitchUICmd(navigation.CreateUI)
+			return m, cmd
 
 		case key.Matches(msg, m.keys.Back):
 			m.focusedPane = noteList
@@ -306,20 +291,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		return m, nil
-
-	case create.DoneMsg:
-		// TODO: WIP
-		m.activeView = MainView
-		if msg.Err != nil {
-			// Handle error
-			return m, nil
-		}
-		if msg.Note.Title != "" {
-			// Refresh notes list
-			return m, nil
-		}
-		return m, nil
-
 	}
 
 	return m, tea.Batch(cmds...)
@@ -332,10 +303,6 @@ func (i item) Description() string {
 func (i item) FilterValue() string { return i.note.Title }
 
 func (m Model) View() string {
-	if m.activeView == CreateView {
-		return m.createModel.View()
-	}
-
 	// Set up renderer style
 	var rendererStyle lipgloss.Style
 	if m.focusedPane == markdown {

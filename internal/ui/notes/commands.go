@@ -5,7 +5,6 @@ import (
 	"merlion/internal/api"
 	"os"
 
-	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/x/editor"
@@ -100,14 +99,14 @@ func fetchNoteContent(client *api.Client, noteId string) tea.Cmd {
 
 type NotesLoadedMsg struct {
 	Notes []api.Note
+	Err   error
 }
 
 type notesLoadedMsg = NotesLoadedMsg
 
-func (m Model) loadNotes() tea.Msg {
-	items := make([]list.Item, len(m.list.Items()))
-	for i, item := range m.list.Items() {
-		items[i] = item
+func (m Model) loadNotes() tea.Cmd {
+	return func() tea.Msg {
+		notes, err := m.client.ListNotes()
+		return notesLoadedMsg{Notes: notes, Err: err}
 	}
-	return notesLoadedMsg{Notes: nil}
 }
