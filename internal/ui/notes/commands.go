@@ -45,16 +45,15 @@ func (m *Model) openEditor(content string) tea.Cmd {
 
 	// Return command that will execute editor
 	return tea.ExecProcess(cmd, func(err error) tea.Msg {
-		defer os.Remove(tmpfile.Name())
-
 		if err != nil {
-			return editorFinishedMsg{fmt.Errorf("editor failed: %w", err)}
+			// Don't delete the file, instead show where it is
+			return editorFinishedMsg{fmt.Errorf("editor failed: %w\nRecovery file location: %s", err, tmpfile.Name())}
 		}
 
 		// Read the edited content
 		newContent, err := os.ReadFile(tmpfile.Name())
 		if err != nil {
-			return editorFinishedMsg{fmt.Errorf("failed to read edited content: %w", err)}
+			return editorFinishedMsg{fmt.Errorf("failed to read edited content: %w\nRecovery file location: %s", err, tmpfile.Name())}
 		}
 
 		// Update note content through your API
@@ -62,22 +61,25 @@ func (m *Model) openEditor(content string) tea.Cmd {
 			note := i.(item).note
 			content := string(newContent)
 			note.Content = &content
-
 			// Update the item in the model's list
 			currentIndex := m.list.Index()
 			items := m.list.Items()
 			items[currentIndex] = item{note: note}
 			m.list.SetItems(items)
 
-			// Update the note to
+			// Update the note to backend
 			req := note.ToCreateRequest()
 			_, err := m.client.UpdateNote(note.NoteID, req)
 			if err != nil {
 				log.Errorf("Not able to save the note %s", note.NoteID)
-				return editorFinishedMsg{fmt.Errorf("failed to save the edited content: %w", err)}
+				return editorFinishedMsg{fmt.Errorf("failed to save the edited content: %w\nRecovery file location: %s", err, tmpfile.Name())}
 			}
 		}
 
+		// Only remove the file on successful completion
+		if err := os.Remove(tmpfile.Name()); err != nil {
+			log.Errorf("Failed to remove temporary file %s: %v", tmpfile.Name(), err)
+		}
 		return editorFinishedMsg{nil}
 	})
 }
