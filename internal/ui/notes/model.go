@@ -313,7 +313,11 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 func (i item) Title() string { return i.note.Title }
 func (i item) Description() string {
-	return fmt.Sprintf("Created: %s", i.note.CreatedAt.Format("2006-01-02"))
+	if i.note.IsFavorite {
+		return fmt.Sprintf("★ Created: %s", i.note.CreatedAt.Format("2006-01-02"))
+	} else {
+		return fmt.Sprintf("Created: %s", i.note.CreatedAt.Format("2006-01-02"))
+	}
 }
 func (i item) FilterValue() string { return i.note.Title }
 
