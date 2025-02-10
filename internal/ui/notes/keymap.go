@@ -15,6 +15,8 @@ type keyMap struct {
 	Left        key.Binding
 	Right       key.Binding
 	ClearFilter key.Binding
+	NextTab     key.Binding
+	PrevTab     key.Binding
 	PageUp      key.Binding
 	PageDown    key.Binding
 	Select      key.Binding
@@ -42,13 +44,21 @@ var keys = keyMap{
 		key.WithKeys("right", "l"),
 		key.WithHelp("→/l", "View note"),
 	),
+	NextTab: key.NewBinding(
+		key.WithKeys("tab"),
+		key.WithHelp("tab", "Next Tab"),
+	),
+	PrevTab: key.NewBinding(
+		key.WithKeys("shift+tab"),
+		key.WithHelp("shift+tab", "Previous Tab"),
+	),
 	PageUp: key.NewBinding(
-		key.WithKeys("pgup"),
-		key.WithHelp("pgup", "Page up"),
+		key.WithKeys("pgup", "ctrl+u"),
+		key.WithHelp("pgup/ctrl+u", "Page up"),
 	),
 	PageDown: key.NewBinding(
-		key.WithKeys("pgdown"),
-		key.WithHelp("pgdn", "Page down"),
+		key.WithKeys("pgdown", "ctrl+d"),
+		key.WithHelp("pgdn/ctrl+d", "Page down"),
 	),
 	Select: key.NewBinding(
 		key.WithKeys("enter"),

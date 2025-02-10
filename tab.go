@@ -1,137 +1,174 @@
 package main
 
 import (
-    "github.com/charmbracelet/bubbles/list"
-    tea "github.com/charmbracelet/bubbletea"
-    "github.com/charmbracelet/lipgloss"
+	"fmt"
+
+	"github.com/charmbracelet/bubbles/list"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
-// Item represents a list item
+// Model represents the application state
+type Model struct {
+	list       list.Model
+	filterTabs []string
+	activeTab  int
+	width     int
+	height    int
+}
+
+// Define your list item
 type Item struct {
-    title, desc string
+	title, desc string
 }
 
 func (i Item) Title() string       { return i.title }
 func (i Item) Description() string { return i.desc }
 func (i Item) FilterValue() string { return i.title }
 
-type model struct {
-    lists     []list.Model
-    activeTab int
-    tabs      []string
-    delegate  list.DefaultDelegate
+// Initialize the model
+func initialModel() Model {
+	// Create some sample items for the list
+	items := []list.Item{
+		Item{title: "Item 1", desc: "Description 1"},
+		Item{title: "Item 2", desc: "Description 2"},
+		Item{title: "Item 3", desc: "Description 3"},
+		// Add more items as needed
+	}
+
+	// Initialize the list
+	l := list.New(items, list.NewDefaultDelegate(), 0, 0)
+    l.SetShowTitle(false)
+	l.Title = "My List"
+
+	// Create tabs
+	tabs := []string{
+		"All Items",
+		"Active",
+		"Completed",
+		"Important",
+		"Archived",
+		"Flagged",
+		"Recent",
+		"Shared",
+		"Personal",
+		"Work",
+	}
+
+	return Model{
+		list:       l,
+		filterTabs: tabs,
+		activeTab:  0,
+		width:      50, // Default width
+		height:     30,  // Default height
+	}
 }
 
-func initialModel() model {
-    var lists []list.Model
-    delegate := list.NewDefaultDelegate()
-    
-    // Create main list items
-    mainItems := []list.Item{
-        Item{title: "config.go", desc: "Main configuration file"},
-        Item{title: "server.go", desc: "Server implementation"},
-        Item{title: "handlers.go", desc: "HTTP handlers"},
-        Item{title: "database.go", desc: "Database operations"},
-    }
-    
-    // Create targets list items
-    targetItems := []list.Item{
-        Item{title: "build", desc: "Build the project"},
-        Item{title: "test", desc: "Run all tests"},
-        Item{title: "deploy", desc: "Deploy to production"},
-        Item{title: "lint", desc: "Run linters"},
-    }
-    
-    // Create main list
-    mainList := list.New(mainItems, delegate, 0, 0)
-    mainList.SetShowTitle(true)
-    mainList.SetShowStatusBar(true)
-    mainList.SetFilteringEnabled(true)
-    mainList.Title = "main"
-    
-    // Create targets list
-    targetsList := list.New(targetItems, delegate, 0, 0)
-    targetsList.SetShowTitle(true)
-    targetsList.SetShowStatusBar(true)
-    targetsList.SetFilteringEnabled(true)
-    targetsList.Title = "targets"
-    
-    lists = append(lists, mainList, targetsList)
-    
-    return model{
-        lists:     lists,
-        activeTab: 0,
-        tabs:      []string{"main", "targets"},
-        delegate:  delegate,
-    }
+func (m Model) Init() tea.Cmd {
+	return nil
 }
 
-func (m model) Init() tea.Cmd {
-    return nil
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		m.list.SetWidth(msg.Width)
+		m.list.SetHeight(msg.Height - 3) // Reserve space for tabs
+		return m, nil
+
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "q":
+			return m, tea.Quit
+		case "left", "h":
+			if m.activeTab > 0 {
+				m.activeTab--
+			}
+		case "right", "l":
+			if m.activeTab < len(m.filterTabs)-1 {
+				m.activeTab++
+			}
+		}
+	}
+
+	var cmd tea.Cmd
+	m.list, cmd = m.list.Update(msg)
+	return m, cmd
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-    switch msg := msg.(type) {
-    case tea.KeyMsg:
-        switch msg.String() {
-        case "tab":
-            m.activeTab = (m.activeTab + 1) % len(m.tabs)
-            return m, nil
-        case "shift+tab":
-            m.activeTab--
-            if m.activeTab < 0 {
-                m.activeTab = len(m.tabs) - 1
-            }
-            return m, nil
-        case "q", "ctrl+c":
-            return m, tea.Quit
-        }
-    }
+func (m Model) View() string {
+	if m.width == 0 {
+		return "Loading..."
+	}
 
-    var cmd tea.Cmd
-    m.lists[m.activeTab], cmd = m.lists[m.activeTab].Update(msg)
-    return m, cmd
+	// Style definitions
+	inactiveTabStyle := lipgloss.NewStyle().
+		Background(lipgloss.Color("#3C3C3C")).
+		Foreground(lipgloss.Color("#FFFFFF")).
+		Padding(0, 2)
+
+	activeTabStyle := lipgloss.NewStyle().
+		Background(lipgloss.Color("#8A2BE2")). // Purple for active tab
+		Foreground(lipgloss.Color("#FFFFFF")).
+		Padding(0, 2)
+
+	// Calculate visible tabs
+	availableWidth := m.width - 4 // Account for borders and padding
+	var visibleTabs []string
+	var startIdx, endIdx int
+	currentWidth := 0
+
+	// First, try to center the active tab
+	startIdx = max(0, m.activeTab-2)
+	for i := startIdx; i < len(m.filterTabs); i++ {
+		tabWidth := len(m.filterTabs[i]) + 4 // Add padding
+		if currentWidth+tabWidth > availableWidth {
+			break
+		}
+		currentWidth += tabWidth
+		endIdx = i + 1
+	}
+
+	visibleTabs = m.filterTabs[startIdx:endIdx]
+
+	// Build tab bar
+	var tabBar string
+	if startIdx > 0 {
+		tabBar += inactiveTabStyle.Render("←")
+	}
+
+	for i, tab := range visibleTabs {
+		actualIdx := startIdx + i
+		if actualIdx == m.activeTab {
+			tabBar += activeTabStyle.Render(tab)
+		} else {
+			tabBar += inactiveTabStyle.Render(tab)
+		}
+	}
+
+	if endIdx < len(m.filterTabs) {
+		tabBar += inactiveTabStyle.Render("→")
+	}
+
+	// Combine tab bar with list
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		tabBar,
+		m.list.View(),
+	)
 }
 
-func (m model) View() string {
-    // Style definitions
-    inactiveTabStyle := lipgloss.NewStyle().
-        Background(lipgloss.Color("#3C3C3C")).
-        Foreground(lipgloss.Color("#FFFFFF")).
-        Padding(0, 2)
-
-    activeTabStyle := lipgloss.NewStyle().
-        Background(lipgloss.Color("#8A2BE2")). // Purple for active tab
-        Foreground(lipgloss.Color("#FFFFFF")).
-        Padding(0, 2)
-
-    // Build tab bar
-    var tabBar string
-    for i, tab := range m.tabs {
-        if i == m.activeTab {
-            tabBar += activeTabStyle.Render(tab)
-        } else {
-            tabBar += inactiveTabStyle.Render(tab)
-        }
-    }
-
-    // Add a separator line below tabs
-    separator := lipgloss.NewStyle().
-        Foreground(lipgloss.Color("#3C3C3C")).
-        Render("─")
-
-    // Return the complete view
-    return lipgloss.JoinVertical(
-        lipgloss.Left,
-        tabBar,
-        separator,
-        m.lists[m.activeTab].View(),
-    )
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 func main() {
-    p := tea.NewProgram(initialModel())
-    if _, err := p.Run(); err != nil {
-        panic(err)
-    }
+	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Error running program: %v", err)
+	}
 }

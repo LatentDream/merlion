@@ -157,6 +157,17 @@ func (tm *ThemeManager) Styles() *Styles {
 			PaddingLeft(1).
 			PaddingRight(1),
 
+		ActiveTab: lipgloss.NewStyle().
+			Bold(true).
+			Foreground(theme.Background).
+			Background(theme.Primary).
+			Padding(0, 2),
+
+		InactiveTab: lipgloss.NewStyle().
+			// Background(lipgloss.Color(theme.MutedColor)).
+			Foreground(lipgloss.Color(theme.MutedColor)).
+			Padding(0, 2),
+
 		SelectedItem: lipgloss.NewStyle().
 			Foreground(theme.Primary).
 			Bold(true),

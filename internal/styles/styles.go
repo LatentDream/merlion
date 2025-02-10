@@ -13,6 +13,8 @@ type Styles struct {
 	Muted     lipgloss.Style
 
 	TitleBar        lipgloss.Style
+	ActiveTab       lipgloss.Style
+	InactiveTab     lipgloss.Style
 	SelectedItem    lipgloss.Style
 	ActiveContent   lipgloss.Style
 	InactiveContent lipgloss.Style

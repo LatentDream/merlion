@@ -5,6 +5,7 @@ import (
 
 	"merlion/internal/api"
 	"merlion/internal/styles"
+	"merlion/internal/styles/components/Tabs"
 	styledDelegate "merlion/internal/styles/components/delegate"
 	"merlion/internal/ui/create"
 	"merlion/internal/ui/navigation"
@@ -41,6 +42,7 @@ const (
 
 type Model struct {
 	list         list.Model
+	fileterTabs  Tabs.Tabs
 	viewport     viewport.Model
 	renderer     *glamour.TermRenderer
 	spinner      spinner.Model
@@ -79,12 +81,15 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 
 	l := list.New([]list.Item{}, delegate, 0, 0)
 	l.Title = "Notes"
-	l.SetShowTitle(true)
+	l.SetShowTitle(false)
 	l.SetShowStatusBar(false)
 	l.SetFilteringEnabled(false)
 	l.SetShowStatusBar(true)
 	l.SetFilteringEnabled(true)
 	l.Styles.Title = s.TitleBar
+
+	filterTabs := []string{"Notes", "Favorites", "Tags"}
+	tabs := Tabs.New(filterTabs, themeManager)
 
 	// Initialize main content viewport
 	vp := viewport.New(0, 0)
@@ -92,6 +97,7 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 	// Initialize help viewport with themed styles
 	return Model{
 		list:         l,
+		fileterTabs:  tabs,
 		viewport:     vp,
 		renderer:     renderer,
 		spinner:      sp,
@@ -185,11 +191,12 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		contentWidth := availableWidth - listWidth
 
 		// Left side height accounting for any vertical spacing
-		listHeight := m.height
+		listHeight := m.height - Tabs.TabsHeight
 
 		// Update component dimensions
 		m.list.SetWidth(listWidth)
 		m.list.SetHeight(listHeight)
+		m.fileterTabs.SetWidth(listWidth)
 
 		m.viewport.Width = contentWidth
 		m.viewport.Height = m.height
@@ -226,6 +233,16 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		case key.Matches(msg, m.keys.Right):
 			if m.focusedPane == noteList {
 				m.focusedPane = markdown
+			}
+
+		case key.Matches(msg, m.keys.NextTab):
+			if m.focusedPane == noteList {
+				m.fileterTabs.NextTab()
+			}
+
+		case key.Matches(msg, m.keys.PrevTab):
+			if m.focusedPane == noteList {
+				m.fileterTabs.PrevTab()
 			}
 
 		case key.Matches(msg, m.keys.ClearFilter):
@@ -354,11 +371,15 @@ func (m Model) View() string {
 			),
 		)
 	} else {
-		// Apply the style to both the container and the list
-		listView = listStyle.Render(m.list.View())
+		combinedView := lipgloss.JoinVertical(
+			lipgloss.Left,
+			m.fileterTabs.View(),
+			m.list.View(),
+		)
+		listView = listStyle.Render(combinedView)
 	}
 
-	// Combine list and help section vertically
+	// Combine left container(s)
 	leftSide := lipgloss.JoinVertical(
 		lipgloss.Left,
 		listView,
