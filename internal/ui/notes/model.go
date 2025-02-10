@@ -232,7 +232,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			m.list.ResetFilter()
 			return m, nil
 
-		case key.Matches(msg, m.keys.NewNote):
+		case key.Matches(msg, m.keys.Create):
 			cmd = navigation.SwitchUICmd(navigation.CreateUI)
 			return m, cmd
 

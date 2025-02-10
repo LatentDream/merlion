@@ -22,7 +22,7 @@ type keyMap struct {
 	Edit        key.Binding
 	Quit        key.Binding
 	ToggleTheme key.Binding
-	NewNote		key.Binding
+	Create      key.Binding
 }
 
 var keys = keyMap{
@@ -37,10 +37,6 @@ var keys = keyMap{
 	Left: key.NewBinding(
 		key.WithKeys("left", "h"),
 		key.WithHelp("←/h", "Back to list"),
-	),
-	ClearFilter: key.NewBinding(
-		key.WithKeys("c"),
-		key.WithHelp("c", "Clear filter"),
 	),
 	Right: key.NewBinding(
 		key.WithKeys("right", "l"),
@@ -62,6 +58,10 @@ var keys = keyMap{
 		key.WithKeys("e"),
 		key.WithHelp("e", "Edit"),
 	),
+	ClearFilter: key.NewBinding(
+		key.WithKeys("esc"),
+		key.WithHelp("esc", "Clear filter"),
+	),
 	Back: key.NewBinding(
 		key.WithKeys("esc"),
 		key.WithHelp("esc", "Back"),
@@ -74,11 +74,10 @@ var keys = keyMap{
 		key.WithKeys("ctrl+t"),
 		key.WithHelp("ctrl+t", "Toggle theme"),
 	),
-	NewNote: key.NewBinding(
-		key.WithKeys("n"),
-		key.WithHelp("n", "New"),
+	Create: key.NewBinding(
+		key.WithKeys("c"),
+		key.WithHelp("c", "New"),
 	),
-
 }
 
 // Key Map Handler Helper ---
