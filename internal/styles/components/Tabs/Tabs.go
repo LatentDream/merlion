@@ -42,8 +42,6 @@ func (t *Tabs) Update(msg tea.Msg) tea.Cmd {
 	case tea.WindowSizeMsg:
 		t.SetWidth(msg.Width)
 		return nil
-	case tea.KeyMsg:
-		return t.HandleKeyMsg(msg)
 	}
 
 	var cmd tea.Cmd
@@ -54,16 +52,16 @@ func (t *Tabs) renderTabs() string {
 	if t.width == 0 {
 		return ""
 	}
-
 	style := t.themeManager.Styles()
-
 	availableWidth := t.width - 4 // borders and padding
 	var visibleTabs []string
 	var startIdx, endIdx int
 	currentWidth := 0
 
-	// Center the active tab when possible
+	// Start with active tab centered
 	startIdx = max(0, t.ActiveTab-2)
+
+	// First pass: calculate initial visible range
 	for i := startIdx; i < len(t.Tabs); i++ {
 		tabWidth := len(t.Tabs[i]) + 4 // Add padding
 		if currentWidth+tabWidth > availableWidth {
@@ -71,6 +69,47 @@ func (t *Tabs) renderTabs() string {
 		}
 		currentWidth += tabWidth
 		endIdx = i + 1
+	}
+
+	// Adjust if active tab would be hidden off the right
+	if t.ActiveTab >= endIdx {
+		hiddenTabs := t.ActiveTab - endIdx + 1
+		startIdx += hiddenTabs
+		currentWidth = 0
+		endIdx = startIdx
+
+		// Recalculate visible tabs from new start
+		for i := startIdx; i < len(t.Tabs); i++ {
+			tabWidth := len(t.Tabs[i]) + 4
+			if currentWidth+tabWidth > availableWidth {
+				break
+			}
+			currentWidth += tabWidth
+			endIdx = i + 1
+		}
+	}
+
+	// Calculate total width and center if possible
+	totalWidth := 0
+	for i := startIdx; i < endIdx; i++ {
+		totalWidth += len(t.Tabs[i]) + 4
+	}
+
+	// Adjust start index to center tabs if possible
+	if endIdx-startIdx > 3 {
+		leftSpace := (availableWidth - totalWidth) / 2
+		if leftSpace > 0 {
+			// Try to shift tabs left to center them
+			for i := startIdx; i > 0; i-- {
+				tabWidth := len(t.Tabs[i-1]) + 4
+				if leftSpace < tabWidth {
+					break
+				}
+				startIdx = i - 1
+				totalWidth += tabWidth
+				leftSpace -= tabWidth
+			}
+		}
 	}
 
 	visibleTabs = t.Tabs[startIdx:endIdx]
@@ -128,24 +167,4 @@ func (t *Tabs) PrevTab() {
 	} else {
 		t.ActiveTab = len(t.Tabs) - 1
 	}
-}
-
-// HandleKeyMsg handles keyboard messages
-func (t *Tabs) HandleKeyMsg(msg tea.KeyMsg) tea.Cmd {
-	// TODO: Should be taken in input / Or handle by parent, but ok for now
-	switch msg.String() {
-	case "u":
-		if t.ActiveTab > 0 {
-			t.ActiveTab--
-			return nil
-		}
-	case "i":
-		if t.ActiveTab < len(t.Tabs)-1 {
-			t.ActiveTab++
-			return nil
-		}
-	}
-
-	var cmd tea.Cmd
-	return cmd
 }
