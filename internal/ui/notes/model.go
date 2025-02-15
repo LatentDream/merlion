@@ -184,6 +184,8 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 		// Refresh the viewport content after successful edit
 		if i := m.noteList.SelectedItem(); i != nil {
+			// NOTE: Content should be edited on the master list only
+			// -> and refresh the list after
 			note := i.(item).note
 			rendered, err := m.renderer.Render(*note.Content)
 			if err != nil {
@@ -351,6 +353,8 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			items := m.noteList.Items()
 			items[currentIndex] = item{note: note}
 			m.noteList.SetItems(items)
+			// NOTE: Content should be edited on the master list only
+			// -> and refresh the list after
 			updated := false
 			for i, n := range m.allNotes {
 				if n.NoteID == note.NoteID {
