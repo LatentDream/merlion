@@ -129,7 +129,6 @@ func (m Model) SetClient(client *api.Client) tea.Cmd {
 
 func createNoteItems(notes []api.Note, filter string) []list.Item {
 	if filter == "Favorites" {
-		log.Debug("Setting fav note")
 		filteredNotes := make([]api.Note, 0)
 		for _, note := range notes {
 			if note.IsFavorite {
@@ -142,7 +141,6 @@ func createNoteItems(notes []api.Note, filter string) []list.Item {
 		}
 		return items
 	} else {
-		log.Debug("Setting All the note")
 		items := make([]list.Item, len(notes))
 		for i, note := range notes {
 			items[i] = item{note: note}
@@ -192,6 +190,18 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 				m.viewport.SetContent(fmt.Sprintf("Error rendering markdown: %v", err))
 			} else {
 				m.viewport.SetContent(rendered)
+			}
+			updated := false
+			for i, n := range m.allNotes {
+				if n.NoteID == note.NoteID {
+					n.Content = note.Content
+					m.allNotes[i] = n
+					updated = true
+					break
+				}
+			}
+			if !updated {
+				log.Fatalf("Master list didn't get updated after Editor Finish")
 			}
 		}
 		return m, nil
@@ -341,6 +351,18 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			items := m.noteList.Items()
 			items[currentIndex] = item{note: note}
 			m.noteList.SetItems(items)
+			updated := false
+			for i, n := range m.allNotes {
+				if n.NoteID == note.NoteID {
+					n.Content = &content
+					m.allNotes[i] = n
+					updated = true
+					break
+				}
+			}
+			if !updated {
+				log.Fatalf("Master list didn't get updated after downloading content")
+			}
 
 			rendered, err := m.renderer.Render(content)
 			if err != nil {
