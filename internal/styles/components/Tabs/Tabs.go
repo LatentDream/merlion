@@ -152,19 +152,21 @@ func max(a, b int) int {
 }
 
 // NextTab moves to the next tab if available
-func (t *Tabs) NextTab() {
+func (t *Tabs) NextTab() string {
 	if t.ActiveTab < len(t.Tabs)-1 {
 		t.ActiveTab++
 	} else {
 		t.ActiveTab = 0
 	}
+	return t.Tabs[t.ActiveTab]
 }
 
 // PrevTab moves to the previous tab if available
-func (t *Tabs) PrevTab() {
+func (t *Tabs) PrevTab() string {
 	if t.ActiveTab > 0 {
 		t.ActiveTab--
 	} else {
 		t.ActiveTab = len(t.Tabs) - 1
 	}
+	return t.Tabs[t.ActiveTab]
 }

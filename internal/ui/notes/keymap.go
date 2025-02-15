@@ -95,12 +95,12 @@ func toggleTheme(m *Model) {
 	m.styles = m.themeManager.NextTheme()
 
 	// Update only the necessary styles instead of recreating components
-	m.list.Styles.Title = m.styles.TitleBar
+	m.noteList.Styles.Title = m.styles.TitleBar
 	m.spinner.Style = lipgloss.NewStyle().Foreground(m.themeManager.Current().Primary)
 
 	// Update the delegate's styles without recreating the entire list
 	m.listDelegate.UpdateStyles(m.themeManager)
-	m.list.SetDelegate(m.listDelegate)
+	m.noteList.SetDelegate(m.listDelegate)
 
 	// Update the renderer
 	renderer, err := glamour.NewTermRenderer(
@@ -114,7 +114,7 @@ func toggleTheme(m *Model) {
 		m.renderer = renderer
 
 		// Re-render
-		if i := m.list.SelectedItem(); i != nil {
+		if i := m.noteList.SelectedItem(); i != nil {
 			note := i.(item).note
 			content := "Please reload the notes"
 			if note.Content != nil {

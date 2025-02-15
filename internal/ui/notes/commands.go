@@ -57,15 +57,15 @@ func (m *Model) openEditor(content string) tea.Cmd {
 		}
 
 		// Update note content through your API
-		if i := m.list.SelectedItem(); i != nil {
+		if i := m.noteList.SelectedItem(); i != nil {
 			note := i.(item).note
 			content := string(newContent)
 			note.Content = &content
 			// Update the item in the model's list
-			currentIndex := m.list.Index()
-			items := m.list.Items()
+			currentIndex := m.noteList.Index()
+			items := m.noteList.Items()
 			items[currentIndex] = item{note: note}
-			m.list.SetItems(items)
+			m.noteList.SetItems(items)
 
 			// Update the note to backend
 			req := note.ToCreateRequest()

@@ -41,7 +41,8 @@ const (
 )
 
 type Model struct {
-	list         list.Model
+	noteList     list.Model
+	allNotes     []api.Note
 	fileterTabs  Tabs.Tabs
 	viewport     viewport.Model
 	renderer     *glamour.TermRenderer
@@ -96,7 +97,7 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 
 	// Initialize help viewport with themed styles
 	return Model{
-		list:         l,
+		noteList:     l,
 		fileterTabs:  tabs,
 		viewport:     vp,
 		renderer:     renderer,
@@ -126,6 +127,30 @@ func (m Model) SetClient(client *api.Client) tea.Cmd {
 	return m.loadNotes()
 }
 
+func createNoteItems(notes []api.Note, filter string) []list.Item {
+	if filter == "Favorites" {
+		log.Debug("Setting fav note")
+		filteredNotes := make([]api.Note, 0)
+		for _, note := range notes {
+			if note.IsFavorite {
+				filteredNotes = append(filteredNotes, note)
+			}
+		}
+		items := make([]list.Item, len(filteredNotes))
+		for i, note := range filteredNotes {
+			items[i] = item{note: note}
+		}
+		return items
+	} else {
+		log.Debug("Setting All the note")
+		items := make([]list.Item, len(notes))
+		for i, note := range notes {
+			items[i] = item{note: note}
+		}
+		return items
+	}
+}
+
 func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
@@ -142,16 +167,15 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		if msg.Err != nil {
 			return m, nil
 		}
-		items := make([]list.Item, len(msg.Notes))
-		for i, note := range msg.Notes {
-			items[i] = item{note: note}
-		}
-		m.list.SetItems(items)
+		m.allNotes = msg.Notes
+		items := createNoteItems(msg.Notes, "")
+		m.noteList.SetItems(items)
+
 		m.loading = false
 		return m, nil
 
 	case list.FilterMatchesMsg:
-		m.list, cmd = m.list.Update(msg)
+		m.noteList, cmd = m.noteList.Update(msg)
 		return m, cmd
 
 	case editorFinishedMsg:
@@ -161,7 +185,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		}
 
 		// Refresh the viewport content after successful edit
-		if i := m.list.SelectedItem(); i != nil {
+		if i := m.noteList.SelectedItem(); i != nil {
 			note := i.(item).note
 			rendered, err := m.renderer.Render(*note.Content)
 			if err != nil {
@@ -194,15 +218,15 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		listHeight := m.height - Tabs.TabsHeight
 
 		// Update component dimensions
-		m.list.SetWidth(listWidth)
-		m.list.SetHeight(listHeight)
+		m.noteList.SetWidth(listWidth)
+		m.noteList.SetHeight(listHeight)
 		m.fileterTabs.SetWidth(listWidth)
 
 		m.viewport.Width = contentWidth
 		m.viewport.Height = m.height
 
 		// Update content if selected
-		if i := m.list.SelectedItem(); i != nil {
+		if i := m.noteList.SelectedItem(); i != nil {
 			note := i.(item).note
 			if note.Content != nil {
 				rendered, err := m.renderer.Render(*note.Content)
@@ -218,8 +242,8 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 	case tea.KeyMsg:
 		// If we're actively filtering, don't handle any other keypresses
-		if m.list.FilterState() == list.Filtering {
-			m.list, cmd = m.list.Update(msg)
+		if m.noteList.FilterState() == list.Filtering {
+			m.noteList, cmd = m.noteList.Update(msg)
 			return m, cmd
 		}
 
@@ -237,16 +261,20 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.NextTab):
 			if m.focusedPane == noteList {
-				m.fileterTabs.NextTab()
+				activeTabName := m.fileterTabs.NextTab()
+				items := createNoteItems(m.allNotes, activeTabName)
+				m.noteList.SetItems(items)
 			}
 
 		case key.Matches(msg, m.keys.PrevTab):
 			if m.focusedPane == noteList {
-				m.fileterTabs.PrevTab()
+				activeTabName := m.fileterTabs.PrevTab()
+				items := createNoteItems(m.allNotes, activeTabName)
+				m.noteList.SetItems(items)
 			}
 
 		case key.Matches(msg, m.keys.ClearFilter):
-			m.list.ResetFilter()
+			m.noteList.ResetFilter()
 			return m, nil
 
 		case key.Matches(msg, m.keys.Create):
@@ -257,7 +285,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			m.focusedPane = noteList
 
 		case key.Matches(msg, m.keys.Edit):
-			if i := m.list.SelectedItem(); i != nil {
+			if i := m.noteList.SelectedItem(); i != nil {
 				note := i.(item).note
 				if note.Content != nil {
 					return m, m.openEditor(*note.Content)
@@ -266,7 +294,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.Select):
 			if m.focusedPane == noteList {
-				if i := m.list.SelectedItem(); i != nil {
+				if i := m.noteList.SelectedItem(); i != nil {
 					note := i.(item).note
 					if note.Content == nil {
 						// We don't have the content locally.. fetch
@@ -293,7 +321,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 		// Handle navigation based on focused pane
 		if m.focusedPane == noteList {
-			m.list, cmd = m.list.Update(msg)
+			m.noteList, cmd = m.noteList.Update(msg)
 			cmds = append(cmds, cmd)
 		} else {
 			// Handle markdown viewport scrolling
@@ -303,16 +331,16 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 	case noteContentMsg:
 		m.loading = false
-		if i := m.list.SelectedItem(); i != nil {
+		if i := m.noteList.SelectedItem(); i != nil {
 			note := i.(item).note
 			content := string(msg)
 			note.Content = &content
 
 			// Update the item in the model's list
-			currentIndex := m.list.Index()
-			items := m.list.Items()
+			currentIndex := m.noteList.Index()
+			items := m.noteList.Items()
 			items[currentIndex] = item{note: note}
-			m.list.SetItems(items)
+			m.noteList.SetItems(items)
 
 			rendered, err := m.renderer.Render(content)
 			if err != nil {
@@ -358,8 +386,8 @@ func (m Model) View() string {
 	var listView string
 	if m.loading {
 		loadingStyle := lipgloss.NewStyle().
-			Width(m.list.Width()).
-			Height(m.list.Height()).
+			Width(m.noteList.Width()).
+			Height(m.noteList.Height()).
 			Align(lipgloss.Center).
 			AlignVertical(lipgloss.Center)
 
@@ -374,7 +402,7 @@ func (m Model) View() string {
 		combinedView := lipgloss.JoinVertical(
 			lipgloss.Left,
 			m.fileterTabs.View(),
-			m.list.View(),
+			m.noteList.View(),
 		)
 		listView = listStyle.Render(combinedView)
 	}
