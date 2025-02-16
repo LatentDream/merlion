@@ -40,10 +40,32 @@ const (
 	CreateView ViewState = "create"
 )
 
+type TabKind int
+
+const (
+	AllNotes TabKind = iota
+	Favorites
+	WorkLogs
+)
+
+// String implements the Displayable interface
+func (t TabKind) String() string {
+	switch t {
+	case AllNotes:
+		return "All Notes"
+	case Favorites:
+		return "Favorites"
+	case WorkLogs:
+		return "Work Logs"
+	default:
+		return "Unknown"
+	}
+}
+
 type Model struct {
 	noteList     list.Model
 	allNotes     []api.Note
-	fileterTabs  Tabs.Tabs
+	fileterTabs  Tabs.Tabs[TabKind]
 	viewport     viewport.Model
 	renderer     *glamour.TermRenderer
 	spinner      spinner.Model
@@ -89,7 +111,7 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 	l.SetFilteringEnabled(true)
 	l.Styles.Title = s.TitleBar
 
-	filterTabs := []string{"All Notes", "Favorites", "Work Logs"}
+	filterTabs := []TabKind{AllNotes, Favorites, WorkLogs}
 	tabs := Tabs.New(filterTabs, themeManager)
 
 	// Initialize main content viewport
@@ -127,15 +149,15 @@ func (m Model) SetClient(client *api.Client) tea.Cmd {
 	return m.loadNotes()
 }
 
-func createNoteItems(notes []api.Note, filter string) []list.Item {
+func createNoteItems(notes []api.Note, filter TabKind) []list.Item {
 	filteredNotes := make([]api.Note, 0)
-	if filter == "Favorites" {
+	if filter == Favorites {
 		for _, note := range notes {
 			if note.IsFavorite {
 				filteredNotes = append(filteredNotes, note)
 			}
 		}
-	} else if filter == "Work Logs" {
+	} else if filter == WorkLogs {
 		for _, note := range notes {
 			if note.IsWorkLog {
 				filteredNotes = append(filteredNotes, note)
@@ -168,7 +190,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			return m, nil
 		}
 		m.allNotes = msg.Notes
-		items := createNoteItems(msg.Notes, "")
+		items := createNoteItems(msg.Notes, AllNotes)
 		m.noteList.SetItems(items)
 
 		m.loading = false

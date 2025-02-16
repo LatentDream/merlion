@@ -8,9 +8,13 @@ import (
 
 const TabsHeight = 1
 
+type Displayable interface {
+	String() string
+}
+
 // Tabs represents a list with tabs
-type Tabs struct {
-	Tabs         []string
+type Tabs[T Displayable] struct {
+	Tabs         []T
 	ActiveTab    int
 	width        int
 	height       int
@@ -19,11 +23,11 @@ type Tabs struct {
 }
 
 // New creates a new TabbedList
-func New(
-	tabs []string,
+func New[T Displayable](
+	tabs []T,
 	themeManager *styles.ThemeManager,
-) Tabs {
-	return Tabs{
+) Tabs[T] {
+	return Tabs[T]{
 		Tabs:         tabs,
 		ActiveTab:    0,
 		themeManager: themeManager,
@@ -32,12 +36,12 @@ func New(
 }
 
 // SetSize sets the size of the tabbed list
-func (t *Tabs) SetWidth(width int) {
+func (t *Tabs[T]) SetWidth(width int) {
 	t.width = width
 }
 
 // Update handles the Bubble Tea update loop
-func (t *Tabs) Update(msg tea.Msg) tea.Cmd {
+func (t *Tabs[T]) Update(msg tea.Msg) tea.Cmd {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		t.SetWidth(msg.Width)
@@ -48,13 +52,13 @@ func (t *Tabs) Update(msg tea.Msg) tea.Cmd {
 	return cmd
 }
 
-func (t *Tabs) renderTabs() string {
+func (t *Tabs[T]) renderTabs() string {
 	if t.width == 0 {
 		return ""
 	}
 	style := t.themeManager.Styles()
 	availableWidth := t.width - 4 // borders and padding
-	var visibleTabs []string
+	var visibleTabs []T
 	var startIdx, endIdx int
 	currentWidth := 0
 
@@ -63,7 +67,7 @@ func (t *Tabs) renderTabs() string {
 
 	// First pass: calculate initial visible range
 	for i := startIdx; i < len(t.Tabs); i++ {
-		tabWidth := len(t.Tabs[i]) + 4 // Add padding
+		tabWidth := len(t.Tabs[i].String()) + 4 // Add padding
 		if currentWidth+tabWidth > availableWidth {
 			break
 		}
@@ -80,7 +84,7 @@ func (t *Tabs) renderTabs() string {
 
 		// Recalculate visible tabs from new start
 		for i := startIdx; i < len(t.Tabs); i++ {
-			tabWidth := len(t.Tabs[i]) + 4
+			tabWidth := len(t.Tabs[i].String()) + 4
 			if currentWidth+tabWidth > availableWidth {
 				break
 			}
@@ -92,7 +96,7 @@ func (t *Tabs) renderTabs() string {
 	// Calculate total width and center if possible
 	totalWidth := 0
 	for i := startIdx; i < endIdx; i++ {
-		totalWidth += len(t.Tabs[i]) + 4
+		totalWidth += len(t.Tabs[i].String()) + 4
 	}
 
 	// Adjust start index to center tabs if possible
@@ -101,7 +105,7 @@ func (t *Tabs) renderTabs() string {
 		if leftSpace > 0 {
 			// Try to shift tabs left to center them
 			for i := startIdx; i > 0; i-- {
-				tabWidth := len(t.Tabs[i-1]) + 4
+				tabWidth := len(t.Tabs[i-1].String()) + 4
 				if leftSpace < tabWidth {
 					break
 				}
@@ -123,9 +127,9 @@ func (t *Tabs) renderTabs() string {
 	for i, tab := range visibleTabs {
 		actualIdx := startIdx + i
 		if actualIdx == t.ActiveTab {
-			tabBar += style.ActiveTab.Render(tab)
+			tabBar += style.ActiveTab.Render(tab.String())
 		} else {
-			tabBar += style.InactiveTab.Render(tab)
+			tabBar += style.InactiveTab.Render(tab.String())
 		}
 	}
 
@@ -137,7 +141,7 @@ func (t *Tabs) renderTabs() string {
 }
 
 // View renders the component
-func (t *Tabs) View() string {
+func (t *Tabs[T]) View() string {
 	if t.width == 0 {
 		return ""
 	}
@@ -152,7 +156,7 @@ func max(a, b int) int {
 }
 
 // NextTab moves to the next tab if available
-func (t *Tabs) NextTab() string {
+func (t *Tabs[T]) NextTab() T {
 	if t.ActiveTab < len(t.Tabs)-1 {
 		t.ActiveTab++
 	} else {
@@ -162,7 +166,7 @@ func (t *Tabs) NextTab() string {
 }
 
 // PrevTab moves to the previous tab if available
-func (t *Tabs) PrevTab() string {
+func (t *Tabs[T]) PrevTab() T {
 	if t.ActiveTab > 0 {
 		t.ActiveTab--
 	} else {
