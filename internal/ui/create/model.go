@@ -29,11 +29,12 @@ func (m Model) SetClient(client *api.Client) tea.Cmd {
 func NewModel(client *api.Client, themeManager *styles.ThemeManager) navigation.View {
 	title := textinput.New()
 	title.Placeholder = "Note title"
+	title.Prompt = "Title: "
 	title.Focus()
 	title.CharLimit = 156
 	title.Width = 40
-	isFavoriteInput := components.NewRadioInput("Favorite")
-	isWorkLogInput := components.NewRadioInput("Work Log")
+	isFavoriteInput := components.NewRadioInput("Favorite", themeManager)
+	isWorkLogInput := components.NewRadioInput("Work Log", themeManager)
 
 	return Model{
 		title:           title,
@@ -59,10 +60,10 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			if m.title.Focused() {
 				m.title.Blur()
 				m.isFavoriteInput.Focus()
-			} else if m.isFavoriteInput.IsFocused() {
+			} else if m.isFavoriteInput.Focused {
 				m.isFavoriteInput.Blur()
 				m.isWorkLogInput.Focus()
-			} else if m.isWorkLogInput.IsFocused() {
+			} else if m.isWorkLogInput.Focused {
 				m.isWorkLogInput.Blur()
 				m.title.Focus()
 			}
@@ -71,10 +72,10 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			if m.title.Focused() {
 				m.title.Blur()
 				m.isWorkLogInput.Focus()
-			} else if m.isWorkLogInput.IsFocused() {
+			} else if m.isWorkLogInput.Focused {
 				m.isWorkLogInput.Blur()
 				m.isFavoriteInput.Focus()
-			} else if m.isFavoriteInput.IsFocused() {
+			} else if m.isFavoriteInput.Focused {
 				m.isFavoriteInput.Blur()
 				m.title.Focus()
 			}
@@ -83,7 +84,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			return m, navigation.SwitchUICmd(navigation.NoteUI)
 		case "enter":
 
-			if m.isFavoriteInput.IsFocused() || m.isWorkLogInput.IsFocused() {
+			if m.isFavoriteInput.Focused || m.isWorkLogInput.Focused {
 				// Update radio inputs to handle their own enter key
 				var cmd tea.Cmd
 				m.isFavoriteInput, cmd = m.isFavoriteInput.Update(msg)
@@ -113,11 +114,14 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 }
 
 func (m Model) View() string {
-	formStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(m.themeManager.Current().Primary).
+	styles := m.themeManager.Styles()
+
+	formStyle := styles.ActiveContent.
 		Padding(1, 2).
 		Width(50)
+
+	title := styles.Title.Render("Create Note")
+	help := styles.Help.Render("enter: save/toggle • tab: next • esc: cancel")
 
 	return lipgloss.Place(
 		m.width,
@@ -127,14 +131,15 @@ func (m Model) View() string {
 		formStyle.Render(
 			lipgloss.JoinVertical(
 				lipgloss.Left,
-				"Create New Note",
+				title,
 				"",
-				"Title:",
 				m.title.View(),
-				"",
-				m.isFavoriteInput.View(),
-				m.isWorkLogInput.View(),
-				"enter: save • esc: cancel",
+				lipgloss.JoinHorizontal(
+					lipgloss.Left,
+					m.isFavoriteInput.View(),
+					m.isWorkLogInput.View(),
+				),
+				help,
 			),
 		),
 	)

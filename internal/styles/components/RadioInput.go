@@ -1,23 +1,25 @@
 package components
 
 import (
+	"merlion/internal/styles"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type RadioInput struct {
-	label    string
-	checked  bool
-	focused  bool
-	style    lipgloss.Style
-	onChange func(bool)
+	label        string
+	checked      bool
+	Focused      bool
+	themeManager *styles.ThemeManager
+	onChange     func(bool)
 }
 
-func NewRadioInput(label string) RadioInput {
+func NewRadioInput(label string, tm *styles.ThemeManager) RadioInput {
 	return RadioInput{
-		label:   label,
-		checked: false,
-		style:   lipgloss.NewStyle(),
+		label:        label,
+		checked:      false,
+		themeManager: tm,
 	}
 }
 
@@ -41,29 +43,18 @@ func (r *RadioInput) OnChange(fn func(bool)) {
 
 // Focus focuses the radio input
 func (r *RadioInput) Focus() {
-	r.focused = true
+	r.Focused = true
 }
 
 // Blur removes focus from the radio input
 func (r *RadioInput) Blur() {
-	r.focused = false
-}
-
-// IsFocused returns whether the radio input is focused
-func (r RadioInput) IsFocused() bool {
-	return r.focused
-}
-
-// WithStyle sets the style for the radio input
-func (r RadioInput) WithStyle(style lipgloss.Style) RadioInput {
-	r.style = style
-	return r
+	r.Focused = false
 }
 
 func (r RadioInput) Update(msg tea.Msg) (RadioInput, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if !r.focused {
+		if !r.Focused {
 			return r, nil
 		}
 
@@ -79,15 +70,22 @@ func (r RadioInput) Update(msg tea.Msg) (RadioInput, tea.Cmd) {
 }
 
 func (r RadioInput) View() string {
+	style := r.themeManager.Styles()
 	checkbox := "[ ]"
 	if r.checked {
 		checkbox = "[✓]"
 	}
+	checkboxStyle := style.Input.BorderStyle(lipgloss.HiddenBorder())
+	labelStyle := style.Text
 
-	// If focused, we can add a different style
-	if r.focused {
-		return r.style.Copy().Bold(true).Render(checkbox + " " + r.label)
+	if r.Focused {
+		checkboxStyle = checkboxStyle.Foreground(style.SelectedItem.GetForeground())
+		labelStyle = style.SelectedItem
 	}
 
-	return r.style.Render(checkbox + " " + r.label)
+	return lipgloss.JoinHorizontal(
+		lipgloss.Center,
+		checkboxStyle.Render(checkbox),
+		labelStyle.Render(r.label),
+	)
 }

@@ -10,6 +10,7 @@ type Styles struct {
 	Input     lipgloss.Style
 	Error     lipgloss.Style
 	Success   lipgloss.Style
+	Text      lipgloss.Style
 	Muted     lipgloss.Style
 
 	TitleBar        lipgloss.Style

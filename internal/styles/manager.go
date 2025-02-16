@@ -147,6 +147,9 @@ func (tm *ThemeManager) Styles() *Styles {
 			PaddingTop(1).
 			PaddingBottom(1),
 
+		Text: lipgloss.NewStyle().
+			Foreground(theme.Foreground),
+
 		Muted: lipgloss.NewStyle().
 			Foreground(theme.MutedColor),
 
