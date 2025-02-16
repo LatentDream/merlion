@@ -3,6 +3,7 @@ package create
 import (
 	"merlion/internal/api"
 	"merlion/internal/styles"
+	"merlion/internal/styles/components"
 	"merlion/internal/ui/navigation"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -11,11 +12,13 @@ import (
 )
 
 type Model struct {
-	title        textinput.Model
-	width        int
-	height       int
-	themeManager *styles.ThemeManager
-	client       *api.Client
+	title           textinput.Model
+	width           int
+	height          int
+	isFavoriteInput components.RadioInput
+	isWorkLogInput  components.RadioInput
+	themeManager    *styles.ThemeManager
+	client          *api.Client
 }
 
 func (m Model) SetClient(client *api.Client) tea.Cmd {
@@ -29,32 +32,75 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) navigation.
 	title.Focus()
 	title.CharLimit = 156
 	title.Width = 40
+	isFavoriteInput := components.NewRadioInput("Favorite")
+	isWorkLogInput := components.NewRadioInput("Work Log")
 
 	return Model{
-		title:        title,
-		themeManager: themeManager,
-		client:       client,
+		title:           title,
+		isFavoriteInput: isFavoriteInput,
+		isWorkLogInput:  isWorkLogInput,
+		themeManager:    themeManager,
+		client:          client,
 	}
 }
 
 func (m Model) Init() tea.Cmd {
-	return textinput.Blink
+	return tea.Batch(
+		textinput.Blink,
+		tea.WindowSize(),
+	)
 }
 
 func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
+		case "tab":
+			if m.title.Focused() {
+				m.title.Blur()
+				m.isFavoriteInput.Focus()
+			} else if m.isFavoriteInput.IsFocused() {
+				m.isFavoriteInput.Blur()
+				m.isWorkLogInput.Focus()
+			} else if m.isWorkLogInput.IsFocused() {
+				m.isWorkLogInput.Blur()
+				m.title.Focus()
+			}
+			return m, nil
+		case "shift+tab":
+			if m.title.Focused() {
+				m.title.Blur()
+				m.isWorkLogInput.Focus()
+			} else if m.isWorkLogInput.IsFocused() {
+				m.isWorkLogInput.Blur()
+				m.isFavoriteInput.Focus()
+			} else if m.isFavoriteInput.IsFocused() {
+				m.isFavoriteInput.Blur()
+				m.title.Focus()
+			}
+			return m, nil
 		case "esc":
 			return m, navigation.SwitchUICmd(navigation.NoteUI)
 		case "enter":
-			// TODO: input validation - need a title
-			note := api.Note{
-				Title: m.title.Value(),
+
+			if m.isFavoriteInput.IsFocused() || m.isWorkLogInput.IsFocused() {
+				// Update radio inputs to handle their own enter key
+				var cmd tea.Cmd
+				m.isFavoriteInput, cmd = m.isFavoriteInput.Update(msg)
+				m.isWorkLogInput, _ = m.isWorkLogInput.Update(msg)
+				return m, cmd
 			}
-			// TODO: Handle potential Error returned
-			m.client.CreateNote(note.ToCreateRequest())
-			return m, navigation.SwitchUICmd(navigation.NoteUI)
+			if m.title.Focused() {
+				// TODO: input validation - need a title
+				note := api.Note{
+					Title:      m.title.Value(),
+					IsFavorite: m.isFavoriteInput.IsChecked(),
+					IsWorkLog:  m.isFavoriteInput.IsChecked(),
+				}
+				// TODO: Handle potential Error returned
+				m.client.CreateNote(note.ToCreateRequest())
+				return m, navigation.SwitchUICmd(navigation.NoteUI)
+			}
 		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -86,6 +132,8 @@ func (m Model) View() string {
 				"Title:",
 				m.title.View(),
 				"",
+				m.isFavoriteInput.View(),
+				m.isWorkLogInput.View(),
 				"enter: save • esc: cancel",
 			),
 		),
