@@ -89,7 +89,7 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 	l.SetFilteringEnabled(true)
 	l.Styles.Title = s.TitleBar
 
-	filterTabs := []string{"Notes", "Favorites", "Tags"}
+	filterTabs := []string{"All Notes", "Favorites", "Work Logs"}
 	tabs := Tabs.New(filterTabs, themeManager)
 
 	// Initialize main content viewport
@@ -128,25 +128,27 @@ func (m Model) SetClient(client *api.Client) tea.Cmd {
 }
 
 func createNoteItems(notes []api.Note, filter string) []list.Item {
+	filteredNotes := make([]api.Note, 0)
 	if filter == "Favorites" {
-		filteredNotes := make([]api.Note, 0)
 		for _, note := range notes {
 			if note.IsFavorite {
 				filteredNotes = append(filteredNotes, note)
 			}
 		}
-		items := make([]list.Item, len(filteredNotes))
-		for i, note := range filteredNotes {
-			items[i] = item{note: note}
+	} else if filter == "Work Logs" {
+		for _, note := range notes {
+			if note.IsWorkLog {
+				filteredNotes = append(filteredNotes, note)
+			}
 		}
-		return items
 	} else {
-		items := make([]list.Item, len(notes))
-		for i, note := range notes {
-			items[i] = item{note: note}
-		}
-		return items
+		filteredNotes = notes
 	}
+	items := make([]list.Item, len(filteredNotes))
+	for i, note := range filteredNotes {
+		items[i] = item{note: note}
+	}
+	return items
 }
 
 func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
