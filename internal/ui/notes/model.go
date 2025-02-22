@@ -253,13 +253,13 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		m.width = msg.Width - 4
 		m.height = msg.Height - 2
 
-		// Account for padding and borders in the style
-		horizontalPadding := m.styles.ActiveContent.GetHorizontalPadding() +
-			m.styles.ActiveContent.GetHorizontalBorderSize()
-		availableWidth := m.width - horizontalPadding
-
 		if msg.Width >= LargeScreenBreakpoint {
 			m.viewType = large
+
+			// Account for padding and borders in the style
+			horizontalPadding := m.styles.ActiveContent.GetHorizontalPadding() +
+				m.styles.ActiveContent.GetHorizontalBorderSize()
+			availableWidth := m.width - horizontalPadding
 
 			// Split the view with adjusted measurements
 			listWidth := availableWidth / ViewRatio
@@ -275,6 +275,11 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 		} else {
 			m.viewType = small
+
+			// Account for padding and borders in the style
+			horizontalPadding := m.styles.MobileContent.GetHorizontalPadding() +
+				m.styles.MobileContent.GetHorizontalBorderSize()
+			availableWidth := m.width - horizontalPadding
 
 			listWidth := availableWidth
 			listHeight := m.height - Tabs.TabsHeight
@@ -501,9 +506,8 @@ func (m Model) desktopView() string {
 
 func (m Model) mobileView() string {
 	var style lipgloss.Style
-	style = m.styles.ActiveContent.
-		Width(m.width).
-		Border(lipgloss.HiddenBorder())
+	style = m.styles.MobileContent.
+		Width(m.width)
 
 	if m.focusedPane == markdown {
 		return style.Render(m.viewport.View())

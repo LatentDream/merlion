@@ -18,6 +18,7 @@ type Styles struct {
 	InactiveTab     lipgloss.Style
 	SelectedItem    lipgloss.Style
 	ActiveContent   lipgloss.Style
+	MobileContent   lipgloss.Style
 	InactiveContent lipgloss.Style
 	Controls        lipgloss.Style
 	Help            lipgloss.Style

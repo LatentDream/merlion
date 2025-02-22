@@ -183,6 +183,13 @@ func (tm *ThemeManager) Styles() *Styles {
 			Width(0).
 			Inherit(baseContainer),
 
+		MobileContent: lipgloss.NewStyle().
+			Border(lipgloss.HiddenBorder()).
+			PaddingLeft(0).
+			PaddingRight(0).
+			Width(0).
+			Inherit(baseContainer),
+
 		InactiveContent: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(theme.BorderColor).
