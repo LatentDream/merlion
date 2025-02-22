@@ -25,6 +25,7 @@ type keyMap struct {
 	Quit        key.Binding
 	ToggleTheme key.Binding
 	Create      key.Binding
+	Delete      key.Binding
 }
 
 var keys = keyMap{
@@ -43,6 +44,10 @@ var keys = keyMap{
 	Right: key.NewBinding(
 		key.WithKeys("right", "l"),
 		key.WithHelp("→/l", "View note"),
+	),
+	Delete: key.NewBinding(
+		key.WithKeys("delete"),
+		key.WithHelp("del", "Delete"),
 	),
 	NextTab: key.NewBinding(
 		key.WithKeys("tab"),
@@ -116,7 +121,7 @@ func toggleTheme(m *Model) {
 		// Re-render
 		if i := m.noteList.SelectedItem(); i != nil {
 			note := i.(item).note
-			content := "Please reload the notes"
+			content := "`Enter` to Load the note"
 			if note.Content != nil {
 				content = *note.Content
 			}

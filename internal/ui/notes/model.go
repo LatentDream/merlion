@@ -246,10 +246,6 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		if !m.ready {
 			m.ready = true
 		}
-		log.Info(
-			"width", msg.Width,
-			"height", msg.Height,
-		)
 		m.width = msg.Width - 4
 		m.height = msg.Height - 2
 
@@ -349,6 +345,21 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		case key.Matches(msg, m.keys.Create):
 			cmd = navigation.SwitchUICmd(navigation.CreateUI)
 			return m, cmd
+
+		case key.Matches(msg, m.keys.Delete):
+			if i := m.noteList.SelectedItem(); i != nil {
+				note := i.(item).note
+				cmd = navigation.AskConfirmationCmd(
+					"Are you sure you want to delete this note ?",
+					note.Title,
+					navigation.DangerLvl,
+					func() {
+						m.client.DeleteNote(note.NoteID)
+					},
+					navigation.NoteUI,
+				)
+				return m, cmd
+			}
 
 		case key.Matches(msg, m.keys.Back):
 			m.focusedPane = noteList

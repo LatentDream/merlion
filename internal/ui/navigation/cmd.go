@@ -4,7 +4,6 @@ import (
 	"merlion/internal/api"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/log"
 )
 
 type CurrentUI int
