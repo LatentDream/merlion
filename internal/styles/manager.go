@@ -122,8 +122,8 @@ func (tm *ThemeManager) Styles() *Styles {
 
 		Title: lipgloss.NewStyle().
 			Bold(true).
-			Foreground(theme.Primary).
-			Background(theme.Selection).
+			Foreground(theme.Background).
+			Background(theme.Primary).
 			PaddingLeft(1).
 			PaddingRight(1),
 
@@ -153,10 +153,10 @@ func (tm *ThemeManager) Styles() *Styles {
 		Muted: lipgloss.NewStyle().
 			Foreground(theme.MutedColor),
 
-		TitleBar: lipgloss.NewStyle().
+		TitleMuted: lipgloss.NewStyle().
 			Bold(true).
 			Foreground(theme.Background).
-			Background(theme.Primary).
+			Background(theme.MutedColor).
 			PaddingLeft(1).
 			PaddingRight(1),
 

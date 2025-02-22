@@ -100,7 +100,7 @@ func toggleTheme(m *Model) {
 	m.styles = m.themeManager.NextTheme()
 
 	// Update only the necessary styles instead of recreating components
-	m.noteList.Styles.Title = m.styles.TitleBar
+	m.noteList.Styles.Title = m.styles.Title
 	m.spinner.Style = lipgloss.NewStyle().Foreground(m.themeManager.Current().Primary)
 
 	// Update the delegate's styles without recreating the entire list

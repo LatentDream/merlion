@@ -10,6 +10,7 @@ import (
 	styledDelegate "merlion/internal/styles/components/delegate"
 	"merlion/internal/ui/create"
 	"merlion/internal/ui/navigation"
+	"merlion/internal/ui/notes/info"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
@@ -76,6 +77,7 @@ type Model struct {
 	allNotes     []api.Note
 	fileterTabs  Tabs.Tabs[TabKind]
 	viewport     viewport.Model
+	noteInfo     info.Model
 	renderer     *glamour.TermRenderer
 	spinner      spinner.Model
 	keys         keyMap
@@ -119,10 +121,12 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 	l.SetFilteringEnabled(false)
 	l.SetShowStatusBar(true)
 	l.SetFilteringEnabled(true)
-	l.Styles.Title = s.TitleBar
+	l.Styles.Title = s.Title
 
 	filterTabs := []TabKind{AllNotes, Favorites, WorkLogs}
 	tabs := Tabs.New(filterTabs, themeManager)
+
+	noteInfo := info.New(themeManager)
 
 	// Initialize main content viewport
 	vp := viewport.New(0, 0)
@@ -132,6 +136,7 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 		noteList:     l,
 		fileterTabs:  tabs,
 		viewport:     vp,
+		noteInfo:     noteInfo,
 		renderer:     renderer,
 		spinner:      sp,
 		keys:         keys,
@@ -271,7 +276,8 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 			contentWidth := availableWidth - listWidth
 			m.viewport.Width = contentWidth
-			m.viewport.Height = m.height
+			m.viewport.Height = m.height - 2
+			m.noteInfo.Width = contentWidth
 
 		} else {
 			m.viewType = small
@@ -290,6 +296,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			contentWidth := availableWidth
 			m.viewport.Width = contentWidth
 			m.viewport.Height = m.height
+			m.noteInfo.Width = contentWidth
 		}
 		// Update content if selected
 		if i := m.noteList.SelectedItem(); i != nil {
@@ -380,6 +387,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			if m.focusedPane == noteList {
 				if i := m.noteList.SelectedItem(); i != nil {
 					note := i.(item).note
+					m.noteInfo.SetNote(&note)
 					if note.Content == nil {
 						// We don't have the content locally.. fetch
 						m.loading = true
@@ -510,11 +518,20 @@ func (m Model) desktopView() string {
 		listView,
 	)
 
+	rightSide :=
+		rendererStyle.Render(
+			lipgloss.JoinVertical(
+				lipgloss.Left,
+				m.viewport.View(),
+				m.noteInfo.View(),
+			),
+		)
+
 	// Join left side with content viewport horizontally
 	return lipgloss.JoinHorizontal(
 		lipgloss.Left,
 		leftSide,
-		rendererStyle.Render(m.viewport.View()),
+		rightSide,
 	)
 
 }
@@ -525,7 +542,13 @@ func (m Model) mobileView() string {
 		Width(m.width)
 
 	if m.focusedPane == markdown {
-		return style.Render(m.viewport.View())
+		return style.Render(
+			lipgloss.JoinVertical(
+				lipgloss.Left,
+				m.viewport.View(),
+				m.noteInfo.View(),
+			),
+		)
 	} else {
 		if m.loading {
 			loadingStyle := lipgloss.NewStyle().
