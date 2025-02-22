@@ -4,6 +4,7 @@ import (
 	"merlion/internal/api"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/log"
 )
 
 type CurrentUI int
@@ -12,6 +13,14 @@ const (
 	NoteUI CurrentUI = iota
 	CreateUI
 	LoginUI
+	Dialog
+)
+
+type Level int
+
+const (
+	InfoLvl Level = iota
+	DangerLvl
 )
 
 type SwitchUIMsg struct {
@@ -20,6 +29,14 @@ type SwitchUIMsg struct {
 
 type LoginMsg struct {
 	Client *api.Client
+}
+
+type OpenDialogMsg struct {
+	Title     string
+	Subtitle  string
+	Level     Level
+	OnConfirm func()
+	ReturnUI  CurrentUI
 }
 
 type View interface {
@@ -40,5 +57,11 @@ func SwitchUICmd(newState CurrentUI) tea.Cmd {
 func LoginCmd(client *api.Client) tea.Cmd {
 	return func() tea.Msg {
 		return LoginMsg{Client: client}
+	}
+}
+
+func AskConfirmationCmd(title string, subtitle string, level Level, onConfirm func(), returnUI CurrentUI) tea.Cmd {
+	return func() tea.Msg {
+		return OpenDialogMsg{Title: title, Subtitle: subtitle, Level: level, OnConfirm: onConfirm, ReturnUI: returnUI}
 	}
 }

@@ -80,7 +80,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 				m.title.Focus()
 			}
 			return m, nil
-		case "esc":
+		case "esc", "q":
 			return m, navigation.SwitchUICmd(navigation.NoteUI)
 		case "enter":
 
