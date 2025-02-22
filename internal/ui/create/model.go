@@ -96,7 +96,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 				note := api.Note{
 					Title:      m.title.Value(),
 					IsFavorite: m.isFavoriteInput.IsChecked(),
-					IsWorkLog:  m.isFavoriteInput.IsChecked(),
+					IsWorkLog:  m.isWorkLogInput.IsChecked(),
 				}
 				// TODO: Handle potential Error returned
 				m.client.CreateNote(note.ToCreateRequest())
