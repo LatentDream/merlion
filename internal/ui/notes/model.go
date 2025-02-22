@@ -27,7 +27,15 @@ const (
 	markdown
 )
 
+type ViewType int
+
+const (
+	large ViewType = iota
+	small
+)
+
 const ViewRatio = 4
+const LargeScreenBreakpoint = 140
 
 type item struct {
 	note api.Note
@@ -80,6 +88,7 @@ type Model struct {
 	themeManager *styles.ThemeManager
 	client       *api.Client
 	createModel  create.Model
+	viewType     ViewType
 }
 
 func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
@@ -131,6 +140,7 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 		styles:       s,
 		themeManager: themeManager,
 		client:       client,
+		viewType:     large,
 	}
 }
 
@@ -236,31 +246,46 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		if !m.ready {
 			m.ready = true
 		}
+		log.Info(
+			"width", msg.Width,
+			"height", msg.Height,
+		)
 		m.width = msg.Width - 4
 		m.height = msg.Height - 2
 
 		// Account for padding and borders in the style
 		horizontalPadding := m.styles.ActiveContent.GetHorizontalPadding() +
 			m.styles.ActiveContent.GetHorizontalBorderSize()
-
-		// Calculate available width after accounting for style spacing
 		availableWidth := m.width - horizontalPadding
 
-		// Split the view with adjusted measurements
-		listWidth := availableWidth / ViewRatio
-		contentWidth := availableWidth - listWidth
+		if msg.Width >= LargeScreenBreakpoint {
+			m.viewType = large
 
-		// Left side height accounting for any vertical spacing
-		listHeight := m.height - Tabs.TabsHeight
+			// Split the view with adjusted measurements
+			listWidth := availableWidth / ViewRatio
+			listHeight := m.height - Tabs.TabsHeight
 
-		// Update component dimensions
-		m.noteList.SetWidth(listWidth)
-		m.noteList.SetHeight(listHeight)
-		m.fileterTabs.SetWidth(listWidth)
+			m.noteList.SetWidth(listWidth)
+			m.noteList.SetHeight(listHeight)
+			m.fileterTabs.SetWidth(listWidth)
 
-		m.viewport.Width = contentWidth
-		m.viewport.Height = m.height
+			contentWidth := availableWidth - listWidth
+			m.viewport.Width = contentWidth
+			m.viewport.Height = m.height
 
+		} else {
+			m.viewType = small
+
+			listWidth := availableWidth
+			listHeight := m.height - Tabs.TabsHeight
+			m.noteList.SetWidth(listWidth)
+			m.noteList.SetHeight(listHeight)
+			m.fileterTabs.SetWidth(listWidth)
+
+			contentWidth := availableWidth
+			m.viewport.Width = contentWidth
+			m.viewport.Height = m.height
+		}
 		// Update content if selected
 		if i := m.noteList.SelectedItem(); i != nil {
 			note := i.(item).note
@@ -311,6 +336,9 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.ClearFilter):
 			m.noteList.ResetFilter()
+			if m.focusedPane == markdown {
+				m.focusedPane = noteList
+			}
 			return m, nil
 
 		case key.Matches(msg, m.keys.Create):
@@ -416,8 +444,7 @@ func (i item) Description() string {
 }
 func (i item) FilterValue() string { return i.note.Title }
 
-func (m Model) View() string {
-	// Set up renderer style
+func (m Model) desktopView() string {
 	var rendererStyle lipgloss.Style
 	if m.focusedPane == markdown {
 		rendererStyle = m.styles.ActiveContent
@@ -469,4 +496,46 @@ func (m Model) View() string {
 		leftSide,
 		rendererStyle.Render(m.viewport.View()),
 	)
+
+}
+
+func (m Model) mobileView() string {
+	var style lipgloss.Style
+	style = m.styles.ActiveContent.
+		Width(m.width).
+		Border(lipgloss.HiddenBorder())
+
+	if m.focusedPane == markdown {
+		return style.Render(m.viewport.View())
+	} else {
+		if m.loading {
+			loadingStyle := lipgloss.NewStyle().
+				Width(m.width).
+				Height(m.noteList.Height()).
+				Align(lipgloss.Center).
+				AlignVertical(lipgloss.Center)
+			return loadingStyle.Render(
+				lipgloss.JoinHorizontal(
+					lipgloss.Center,
+					m.spinner.View(),
+					" Loading notes...",
+				),
+			)
+		} else {
+			combinedView := lipgloss.JoinVertical(
+				lipgloss.Left,
+				m.fileterTabs.View(),
+				m.noteList.View(),
+			)
+			return style.Render(combinedView)
+		}
+	}
+}
+
+func (m Model) View() string {
+	if m.viewType == large {
+		return m.desktopView()
+	} else {
+		return m.mobileView()
+	}
 }
