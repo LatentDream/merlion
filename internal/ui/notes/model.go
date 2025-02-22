@@ -2,6 +2,7 @@ package Notes
 
 import (
 	"fmt"
+	"sort"
 
 	"merlion/internal/api"
 	"merlion/internal/styles"
@@ -173,6 +174,9 @@ func createNoteItems(notes []api.Note, filter TabKind) []list.Item {
 				filteredNotes = append(filteredNotes, note)
 			}
 		}
+		sort.Slice(filteredNotes, func(i, j int) bool {
+			return filteredNotes[j].CreatedAt.Before(filteredNotes[i].CreatedAt)
+		})
 	} else {
 		filteredNotes = notes
 	}
