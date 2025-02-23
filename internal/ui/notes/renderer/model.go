@@ -25,7 +25,7 @@ const (
 // All operations on a note need to be handle
 // by the caller
 type Model struct {
-	note         *api.Note
+	Note         *api.Note
 	width        int
 	height       int
 	viewport     viewport.Model
@@ -56,7 +56,7 @@ func New(themeManager *styles.ThemeManager) Model {
 	sp.Style = lipgloss.NewStyle().Foreground(themeManager.Current().Primary)
 
 	return Model{
-		note:         nil,
+		Note:         nil,
 		themeManager: themeManager,
 		renderer:     renderer,
 		viewport:     vp,
@@ -69,19 +69,19 @@ func (m *Model) ToggleHideInfo() {
 }
 
 func (m *Model) SetNote(note *api.Note) {
-	m.note = note
+	m.Note = note
 }
 
 func (m *Model) Render() {
-	if m.note == nil {
+	if m.Note == nil {
 		m.viewport.SetContent("Welcome to Merlion")
 		return
 	}
-	if m.note.Content == nil {
+	if m.Note.Content == nil {
 		m.viewport.SetContent("No Content Availalble")
 		return
 	}
-	rendered, err := m.renderer.Render(*m.note.Content)
+	rendered, err := m.renderer.Render(*m.Note.Content)
 	if err != nil {
 		m.SetErrorMessage(fmt.Sprintf("Error rendering markdown: %v", err))
 	} else {
@@ -153,31 +153,31 @@ func (m Model) View() string {
 		Width(m.width)
 
 	var infoBar string
-	if m.note != nil {
+	if m.Note != nil {
 		tags := ""
-		if len(m.note.Tags) > 0 {
+		if len(m.Note.Tags) > 0 {
 			tags += " | Tags:"
-			for _, tag := range m.note.Tags {
+			for _, tag := range m.Note.Tags {
 				tags += " " + upperFirst(tag)
 			}
 		}
 		worklog := ""
-		if m.note.IsWorkLog {
+		if m.Note.IsWorkLog {
 			worklog = " | Work Log"
 		}
 		favorite := ""
-		if m.note.IsFavorite {
+		if m.Note.IsFavorite {
 			favorite = " | ★ "
 		}
 		infoBar = lipgloss.JoinHorizontal(
 			lipgloss.Left,
-			styles.TitleMuted.Render(m.note.Title),
+			styles.TitleMuted.Render(m.Note.Title),
 			styles.Muted.Render(tags),
 			styles.Muted.Render(worklog),
 			styles.Muted.Render(favorite),
 		)
 	} else {
-		infoBar = "Please select a note"
+		infoBar = ""
 	}
 
 	m.viewport.Width = m.width

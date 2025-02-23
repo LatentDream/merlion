@@ -322,14 +322,23 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			return m, cmd
 
 		case key.Matches(msg, m.keys.Delete):
-			if i := m.noteList.SelectedItem(); i != nil {
-				note := i.(item).note
+			var noteToDelete api.Note
+			if m.focusedPane == noteList {
+				if i := m.noteList.SelectedItem(); i != nil {
+					noteToDelete = i.(item).note
+				}
+			} else {
+				if m.noteRenderer.Note != nil {
+					noteToDelete = *m.noteRenderer.Note
+				}
+			}
+			if noteToDelete.NoteID != "" {
 				cmd = navigation.AskConfirmationCmd(
 					"Are you sure you want to delete this note ?",
-					note.Title,
+					noteToDelete.Title,
 					navigation.DangerLvl,
 					func() {
-						m.client.DeleteNote(note.NoteID)
+						m.client.DeleteNote(noteToDelete.NoteID)
 					},
 					navigation.NoteUI,
 				)

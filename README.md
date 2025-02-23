@@ -46,7 +46,7 @@ Or "manually"
 ---
 
 ## Tmux-i-fy it
-I usually run the app with `<tmux-leader>m` which simply open a Windows with it & kill the window on close
+I usually run the app with `<tmux-leader>m` which simply open a window with Merlion & kill the window on exit
 
 **To do so:**
 1. Create a simple script 
