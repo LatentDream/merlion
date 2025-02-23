@@ -10,14 +10,12 @@ import (
 	styledDelegate "merlion/internal/styles/components/delegate"
 	"merlion/internal/ui/create"
 	"merlion/internal/ui/navigation"
-	"merlion/internal/ui/notes/info"
+	"merlion/internal/ui/notes/renderer"
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 )
@@ -76,9 +74,7 @@ type Model struct {
 	noteList     list.Model
 	allNotes     []api.Note
 	fileterTabs  Tabs.Tabs[TabKind]
-	viewport     viewport.Model
-	noteInfo     info.Model
-	renderer     *glamour.TermRenderer
+	noteRenderer renderer.Model
 	spinner      spinner.Model
 	keys         keyMap
 	focusedPane  focusedPanel
@@ -97,15 +93,6 @@ type Model struct {
 func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 	s := themeManager.Styles()
 
-	// Initialize glamour for markdown rendering
-	renderer, err := glamour.NewTermRenderer(
-		glamour.WithStyles(themeManager.GetRendererStyle()),
-		glamour.WithWordWrap(int(themeManager.Theme.WordWrap)),
-	)
-	if err != nil {
-		log.Fatalf("failed to initialize markdown renderer: %v", err)
-	}
-
 	// Initialize spinner with themed color
 	sp := spinner.New()
 	sp.Spinner = spinner.Dot
@@ -113,7 +100,6 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 
 	// Initialize list with themed styles
 	delegate := styledDelegate.New(themeManager)
-
 	l := list.New([]list.Item{}, delegate, 0, 0)
 	l.Title = "Notes"
 	l.SetShowTitle(false)
@@ -126,18 +112,13 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 	filterTabs := []TabKind{AllNotes, Favorites, WorkLogs}
 	tabs := Tabs.New(filterTabs, themeManager)
 
-	noteInfo := info.New(themeManager)
-
-	// Initialize main content viewport
-	vp := viewport.New(0, 0)
+	noteRenderer := renderer.New(themeManager)
 
 	// Initialize help viewport with themed styles
 	return Model{
 		noteList:     l,
 		fileterTabs:  tabs,
-		viewport:     vp,
-		noteInfo:     noteInfo,
-		renderer:     renderer,
+		noteRenderer: noteRenderer,
 		spinner:      sp,
 		keys:         keys,
 		focusedPane:  noteList,
@@ -221,7 +202,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 	case editorFinishedMsg:
 		if msg.err != nil {
-			m.viewport.SetContent(fmt.Sprintf("Error editing note: %v", msg.err))
+			m.noteRenderer.SetErrorMessage(fmt.Sprintf("Error editing note: %v", msg.err))
 			return m, nil
 		}
 
@@ -230,12 +211,8 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			// NOTE: Content should be edited on the master list only
 			// -> and refresh the list after
 			note := i.(item).note
-			rendered, err := m.renderer.Render(*note.Content)
-			if err != nil {
-				m.viewport.SetContent(fmt.Sprintf("Error rendering markdown: %v", err))
-			} else {
-				m.viewport.SetContent(rendered)
-			}
+			m.noteRenderer.SetNote(&note)
+			m.noteRenderer.Render()
 			updated := false
 			for i, n := range m.allNotes {
 				if n.NoteID == note.NoteID {
@@ -275,9 +252,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			m.fileterTabs.SetWidth(listWidth)
 
 			contentWidth := availableWidth - listWidth
-			m.viewport.Width = contentWidth
-			m.viewport.Height = m.height - 2
-			m.noteInfo.Width = contentWidth
+			m.noteRenderer.SetSize(contentWidth, m.height)
 
 		} else {
 			m.viewType = small
@@ -294,24 +269,10 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			m.fileterTabs.SetWidth(listWidth)
 
 			contentWidth := availableWidth
-			m.viewport.Width = contentWidth
-			m.viewport.Height = m.height
-			m.noteInfo.Width = contentWidth
+			m.noteRenderer.SetSize(contentWidth, m.height)
 		}
 		// Update content if selected
-		if i := m.noteList.SelectedItem(); i != nil {
-			note := i.(item).note
-			if note.Content != nil {
-				rendered, err := m.renderer.Render(*note.Content)
-				if err != nil {
-					m.viewport.SetContent(fmt.Sprintf("Error rendering markdown: %v", err))
-				} else {
-					m.viewport.SetContent(rendered)
-				}
-			} else {
-				m.viewport.SetContent("No content available")
-			}
-		}
+		m.noteRenderer.Render()
 
 	case tea.KeyMsg:
 		// If we're actively filtering, don't handle any other keypresses
@@ -345,6 +306,9 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 				items := createNoteItems(m.allNotes, activeTabName)
 				m.noteList.SetItems(items)
 			}
+
+		case key.Matches(msg, m.keys.ToggleInfo):
+			m.noteRenderer.ToggleHideInfo()
 
 		case key.Matches(msg, m.keys.ClearFilter):
 			m.noteList.ResetFilter()
@@ -387,22 +351,13 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			if m.focusedPane == noteList {
 				if i := m.noteList.SelectedItem(); i != nil {
 					note := i.(item).note
-					m.noteInfo.SetNote(&note)
 					if note.Content == nil {
 						// We don't have the content locally.. fetch
 						m.loading = true
-						// Fetch the note content
 						return m, fetchNoteContent(m.client, note.NoteID)
-					} else {
-						// We have the content, render..
-						rendered, err := m.renderer.Render(*note.Content)
-						if err != nil {
-							log.Errorf("Error rendering markdown: %v", err)
-							m.viewport.SetContent(fmt.Sprintf("Error rendering markdown: %v", err))
-						} else {
-							m.viewport.SetContent(rendered)
-						}
 					}
+					m.noteRenderer.SetNote(&note)
+					m.noteRenderer.Render()
 					m.focusedPane = markdown
 				}
 			}
@@ -417,16 +372,19 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			cmds = append(cmds, cmd)
 		} else {
 			// Handle markdown viewport scrolling
-			m.viewport, cmd = m.viewport.Update(msg)
+			m.noteRenderer, cmd = m.noteRenderer.Update(msg)
 			cmds = append(cmds, cmd)
 		}
 
 	case noteContentMsg:
-		m.loading = false
 		if i := m.noteList.SelectedItem(); i != nil {
 			note := i.(item).note
-			content := string(msg)
+			if note.NoteID != msg.NoteId {
+				log.Fatalf("Receive a Content of a un-selected note")
+			}
+			content := msg.Content
 			note.Content = &content
+			m.noteRenderer.SetNote(&note)
 
 			// Update the item in the model's list
 			currentIndex := m.noteList.Index()
@@ -447,15 +405,10 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			if !updated {
 				log.Fatalf("Master list didn't get updated after downloading content")
 			}
-
-			rendered, err := m.renderer.Render(content)
-			if err != nil {
-				log.Errorf("Error rendering markdown: %v", err)
-				m.viewport.SetContent(fmt.Sprintf("Error rendering markdown: %v", err))
-			} else {
-				m.viewport.SetContent(rendered)
-			}
+			m.focusedPane = markdown
+			m.noteRenderer.Render()
 		}
+		m.loading = false
 		return m, nil
 	}
 
@@ -488,46 +441,20 @@ func (m Model) desktopView() string {
 		listStyle = m.styles.InactiveContent.Width(m.width / ViewRatio)
 	}
 
-	var listView string
-	if m.loading {
-		loadingStyle := lipgloss.NewStyle().
-			Width(m.noteList.Width()).
-			Height(m.noteList.Height()).
-			Align(lipgloss.Center).
-			AlignVertical(lipgloss.Center)
-
-		listView = loadingStyle.Render(
-			lipgloss.JoinHorizontal(
-				lipgloss.Center,
-				m.spinner.View(),
-				" Loading notes...",
-			),
-		)
-	} else {
-		combinedView := lipgloss.JoinVertical(
-			lipgloss.Left,
-			m.fileterTabs.View(),
-			m.noteList.View(),
-		)
-		listView = listStyle.Render(combinedView)
-	}
-
-	// Combine left container(s)
-	leftSide := lipgloss.JoinVertical(
+	combinedView := lipgloss.JoinVertical(
 		lipgloss.Left,
-		listView,
+		m.fileterTabs.View(),
+		m.noteList.View(),
 	)
 
-	rightSide :=
-		rendererStyle.Render(
-			lipgloss.JoinVertical(
-				lipgloss.Left,
-				m.viewport.View(),
-				m.noteInfo.View(),
-			),
-		)
+	leftSide := lipgloss.JoinVertical(
+		lipgloss.Left,
+		listStyle.Render(combinedView),
+	)
+	rightSide := rendererStyle.Render(
+		m.noteRenderer.View(),
+	)
 
-	// Join left side with content viewport horizontally
 	return lipgloss.JoinHorizontal(
 		lipgloss.Left,
 		leftSide,
@@ -542,39 +469,34 @@ func (m Model) mobileView() string {
 		Width(m.width)
 
 	if m.focusedPane == markdown {
-		return style.Render(
-			lipgloss.JoinVertical(
-				lipgloss.Left,
-				m.viewport.View(),
-				m.noteInfo.View(),
-			),
-		)
+		return style.Render(m.noteRenderer.View())
 	} else {
-		if m.loading {
-			loadingStyle := lipgloss.NewStyle().
-				Width(m.width).
-				Height(m.noteList.Height()).
-				Align(lipgloss.Center).
-				AlignVertical(lipgloss.Center)
-			return loadingStyle.Render(
-				lipgloss.JoinHorizontal(
-					lipgloss.Center,
-					m.spinner.View(),
-					" Loading notes...",
-				),
-			)
-		} else {
-			combinedView := lipgloss.JoinVertical(
-				lipgloss.Left,
-				m.fileterTabs.View(),
-				m.noteList.View(),
-			)
-			return style.Render(combinedView)
-		}
+		combinedView := lipgloss.JoinVertical(
+			lipgloss.Left,
+			m.fileterTabs.View(),
+			m.noteList.View(),
+		)
+		return style.Render(combinedView)
 	}
 }
 
 func (m Model) View() string {
+
+	if m.loading {
+		loadingStyle := lipgloss.NewStyle().
+			Width(m.width).
+			Height(m.noteList.Height()).
+			Align(lipgloss.Center).
+			AlignVertical(lipgloss.Center)
+		return loadingStyle.Render(
+			lipgloss.JoinHorizontal(
+				lipgloss.Center,
+				m.spinner.View(),
+				"Loading...",
+			),
+		)
+	}
+
 	if m.viewType == large {
 		return m.desktopView()
 	} else {

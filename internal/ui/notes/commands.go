@@ -86,7 +86,10 @@ func (m *Model) openEditor(content string) tea.Cmd {
 
 // Fetch Notes ---
 
-type noteContentMsg string
+type noteContentMsg struct {
+	NoteId  string
+	Content string
+}
 type errMsg struct{ err error }
 
 func fetchNoteContent(client *api.Client, noteId string) tea.Cmd {
@@ -95,7 +98,7 @@ func fetchNoteContent(client *api.Client, noteId string) tea.Cmd {
 		if err != nil {
 			return errMsg{err}
 		}
-		return noteContentMsg(*res.Content)
+		return noteContentMsg{NoteId: res.NoteID, Content: *res.Content}
 	}
 }
 
