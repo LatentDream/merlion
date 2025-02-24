@@ -127,6 +127,13 @@ func (tm *ThemeManager) Styles() *Styles {
 			PaddingLeft(1).
 			PaddingRight(1),
 
+		Subtitle: lipgloss.NewStyle().
+			Bold(true).
+			Foreground(theme.Background).
+			Background(theme.Secondary).
+			PaddingLeft(1).
+			PaddingRight(1),
+
 		Container: baseContainer,
 
 		Highlight: lipgloss.NewStyle().
@@ -207,6 +214,6 @@ func (tm *ThemeManager) Styles() *Styles {
 			PaddingBottom(1),
 
 		Help: lipgloss.NewStyle().
-			Foreground(theme.MutedColor),
+			Foreground(theme.HelpColor),
 	}
 }

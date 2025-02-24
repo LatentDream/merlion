@@ -5,6 +5,7 @@ import "github.com/charmbracelet/lipgloss"
 type Styles struct {
 	App       lipgloss.Style
 	Title     lipgloss.Style
+	Subtitle  lipgloss.Style
 	Container lipgloss.Style
 	Highlight lipgloss.Style
 	Input     lipgloss.Style
@@ -13,7 +14,7 @@ type Styles struct {
 	Text      lipgloss.Style
 	Muted     lipgloss.Style
 
-	TitleMuted        lipgloss.Style
+	TitleMuted      lipgloss.Style
 	ActiveTab       lipgloss.Style
 	InactiveTab     lipgloss.Style
 	SelectedItem    lipgloss.Style

@@ -23,6 +23,7 @@ type Theme struct {
 	BorderColor    lipgloss.Color
 	HighlightColor lipgloss.Color
 	MutedColor     lipgloss.Color
+	HelpColor      lipgloss.Color
 
 	// Specific Renderer elements
 	Margin     uint
@@ -46,6 +47,7 @@ var (
 		BorderColor:    lipgloss.Color("#504945"),
 		HighlightColor: lipgloss.Color("#d79921"),
 		MutedColor:     lipgloss.Color("#a89984"),
+		HelpColor:     lipgloss.Color("#494949"),
 		Margin:         2,
 		ListIndent:     4,
 		WordWrap:       130,
@@ -67,6 +69,7 @@ var (
 		BorderColor:    lipgloss.Color("#24283b"),
 		HighlightColor: lipgloss.Color("#ff9e64"),
 		MutedColor:     lipgloss.Color("#787c99"),
+		HelpColor:     lipgloss.Color("#494949"),
 		Margin:         2,
 		ListIndent:     4,
 		WordWrap:       130,

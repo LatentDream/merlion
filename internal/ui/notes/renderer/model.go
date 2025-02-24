@@ -74,11 +74,32 @@ func (m *Model) SetNote(note *api.Note) {
 
 func (m *Model) Render() {
 	if m.Note == nil {
-		m.viewport.SetContent("Welcome to Merlion")
+		welcomeMsg := m.themeManager.Styles().Text.Render("Welcome to Merlion")
+		instructionMsg := m.themeManager.Styles().Help.Render("Select a Note or [c]reate one")
+
+		welcomeLength := lipgloss.Width(welcomeMsg)
+		instructionLength := lipgloss.Width(instructionMsg)
+
+		verticalPadding := (m.viewport.Height - 2) / 2 // -2 for two message lines
+		welcomePadding := strings.Repeat(" ", (m.viewport.Width-welcomeLength)/2)
+		instructionPadding := strings.Repeat(" ", (m.viewport.Width-instructionLength)/2)
+
+		content := strings.Repeat("\n", verticalPadding) +
+			welcomePadding + welcomeMsg + "\n" +
+			instructionPadding + instructionMsg
+
+		m.viewport.SetContent(content)
 		return
 	}
 	if m.Note.Content == nil {
-		m.viewport.SetContent("No Content Availalble")
+		welcomeMsg := m.themeManager.Styles().Muted.Render("No Content")
+		msgLenght := lipgloss.Width(welcomeMsg)
+		verticalPadding := (m.viewport.Height - 2) / 2 // -2 for two message lines
+		msgPadding := strings.Repeat(" ", (m.viewport.Width-msgLenght)/2)
+		content := strings.Repeat("\n", verticalPadding) +
+			msgPadding + welcomeMsg + "\n"
+
+		m.viewport.SetContent(content)
 		return
 	}
 	rendered, err := m.renderer.Render(*m.Note.Content)
