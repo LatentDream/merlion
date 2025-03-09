@@ -6,8 +6,8 @@ import (
 	"merlion/internal/styles"
 	"merlion/internal/ui/create"
 	"merlion/internal/ui/dialog"
-	"merlion/internal/ui/edit"
 	"merlion/internal/ui/login"
+	"merlion/internal/ui/manage"
 	"merlion/internal/ui/navigation"
 	NotesUI "merlion/internal/ui/notes"
 
@@ -36,8 +36,8 @@ func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.
 	views[navigation.CreateUI] = create.NewModel(client, themeManager)
 	views[navigation.LoginUI] = login.NewModel(credentialsManager, themeManager)
 	views[navigation.NoteUI] = NotesUI.NewModel(client, themeManager)
-	views[navigation.Dialog] = dialog.NewModel(client, themeManager)
-	views[navigation.EditUI] = edit.NewModel(client, themeManager)
+	views[navigation.DialogUI] = dialog.NewModel(client, themeManager)
+	views[navigation.ManageUI] = manage.NewModel(client, themeManager)
 
 	return Model{
 		state:  initialUI,
@@ -69,7 +69,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Batch(cmds...)
 
 	case navigation.OpenDialogMsg:
-		m.state = navigation.Dialog
+		m.state = navigation.DialogUI
+		view, cmd := m.views[m.state].Update(msg)
+		m.views[m.state] = view
+		return m, tea.Batch(cmd, tea.WindowSize())
+
+	case navigation.OpenManageMsg:
+		m.state = navigation.ManageUI
 		view, cmd := m.views[m.state].Update(msg)
 		m.views[m.state] = view
 		return m, tea.Batch(cmd, tea.WindowSize())

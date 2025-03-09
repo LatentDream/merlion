@@ -1,4 +1,4 @@
-package edit
+package manage
 
 import (
 	"merlion/internal/api"
@@ -11,6 +11,7 @@ import (
 type Model struct {
 	width        int
 	height       int
+	noteId       *string
 	themeManager *styles.ThemeManager
 	client       *api.Client
 }
@@ -21,6 +22,7 @@ func NewModel(
 ) navigation.View {
 	return Model{
 		client:       client,
+		noteId:       nil,
 		themeManager: themeManager,
 	}
 }
@@ -30,11 +32,31 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
-	return m, nil
+	switch msg := msg.(type) {
+
+	case navigation.OpenManageMsg:
+		m.noteId = &msg.NoteId
+
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "esc", "q":
+			return m, navigation.SwitchUICmd(navigation.NoteUI)
+		}
+
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+	}
+
+	var cmd tea.Cmd
+	return m, cmd
 }
 
 func (m Model) View() string {
-	return ""
+	if m.noteId == nil {
+		return "Please select a note to manage it's metadata"
+	}
+	return *m.noteId
 }
 
 func (m Model) SetClient(client *api.Client) tea.Cmd {

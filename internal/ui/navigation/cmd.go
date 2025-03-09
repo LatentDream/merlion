@@ -12,8 +12,8 @@ const (
 	NoteUI CurrentUI = iota
 	CreateUI
 	LoginUI
-	EditUI
-	Dialog
+	ManageUI
+	DialogUI
 )
 
 type Level int
@@ -37,6 +37,10 @@ type OpenDialogMsg struct {
 	Level     Level
 	OnConfirm func()
 	ReturnUI  CurrentUI
+}
+
+type OpenManageMsg struct {
+	NoteId string
 }
 
 type View interface {
@@ -63,5 +67,11 @@ func LoginCmd(client *api.Client) tea.Cmd {
 func AskConfirmationCmd(title string, subtitle string, level Level, onConfirm func(), returnUI CurrentUI) tea.Cmd {
 	return func() tea.Msg {
 		return OpenDialogMsg{Title: title, Subtitle: subtitle, Level: level, OnConfirm: onConfirm, ReturnUI: returnUI}
+	}
+}
+
+func OpenManageViewCmd(noteId string) tea.Cmd {
+	return func() tea.Msg {
+		return OpenManageMsg{NoteId: noteId}
 	}
 }

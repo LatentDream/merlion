@@ -18,6 +18,7 @@ type keyMap struct {
 	Select             key.Binding
 	Back               key.Binding
 	Edit               key.Binding
+	Manage			   key.Binding
 	Quit               key.Binding
 	ToggleTheme        key.Binding
 	ToggleInfo         key.Binding
@@ -71,6 +72,10 @@ var keys = keyMap{
 	Edit: key.NewBinding(
 		key.WithKeys("e"),
 		key.WithHelp("e", "Edit"),
+	),
+	Manage: key.NewBinding(
+		key.WithKeys("m"),
+		key.WithHelp("m", "Manage note info"),
 	),
 	ClearFilter: key.NewBinding(
 		key.WithKeys("esc"),
