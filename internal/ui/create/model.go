@@ -12,9 +12,9 @@ import (
 )
 
 type Model struct {
-	title           textinput.Model
 	width           int
 	height          int
+	title           textinput.Model
 	isFavoriteInput components.RadioInput
 	isWorkLogInput  components.RadioInput
 	themeManager    *styles.ThemeManager
@@ -80,10 +80,11 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 				m.title.Focus()
 			}
 			return m, nil
+
 		case "esc", "q":
 			return m, navigation.SwitchUICmd(navigation.NoteUI)
-		case "enter":
 
+		case "enter":
 			if m.isFavoriteInput.Focused || m.isWorkLogInput.Focused {
 				// Update radio inputs to handle their own enter key
 				var cmd tea.Cmd

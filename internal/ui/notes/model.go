@@ -368,9 +368,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		case key.Matches(msg, m.keys.Manage):
 			if i := m.noteList.SelectedItem(); i != nil {
 				note := i.(item).note
-				if note.Content != nil {
-					return m, navigation.OpenManageViewCmd(note.NoteID)
-				}
+				return m, navigation.OpenManageViewCmd(note.NoteID)
 			}
 
 		case key.Matches(msg, m.keys.Select):
