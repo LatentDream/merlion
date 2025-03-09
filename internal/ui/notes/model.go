@@ -71,23 +71,24 @@ func (t TabKind) String() string {
 }
 
 type Model struct {
-	noteList     list.Model
-	allNotes     []api.Note
-	fileterTabs  Tabs.Tabs[TabKind]
-	noteRenderer renderer.Model
-	spinner      spinner.Model
-	keys         keyMap
-	focusedPane  focusedPanel
-	width        int
-	height       int
-	ready        bool
-	loading      bool
-	listDelegate *styledDelegate.StyledDelegate
-	styles       *styles.Styles
-	themeManager *styles.ThemeManager
-	client       *api.Client
-	createModel  create.Model
-	viewType     ViewType
+	noteList        list.Model
+	allNotes        []api.Note
+	fileterTabs     Tabs.Tabs[TabKind]
+	noteRenderer    renderer.Model
+	spinner         spinner.Model
+	keys            keyMap
+	focusedPane     focusedPanel
+	width           int
+	height          int
+	ready           bool
+	loading         bool
+	listDelegate    *styledDelegate.StyledDelegate
+	styles          *styles.Styles
+	themeManager    *styles.ThemeManager
+	client          *api.Client
+	createModel     create.Model
+	viewType        ViewType
+	compactViewOnly bool
 }
 
 func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
@@ -116,18 +117,19 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 
 	// Initialize help viewport with themed styles
 	return Model{
-		noteList:     l,
-		fileterTabs:  tabs,
-		noteRenderer: noteRenderer,
-		spinner:      sp,
-		keys:         keys,
-		focusedPane:  noteList,
-		loading:      true,
-		listDelegate: delegate,
-		styles:       s,
-		themeManager: themeManager,
-		client:       client,
-		viewType:     large,
+		noteList:        l,
+		fileterTabs:     tabs,
+		noteRenderer:    noteRenderer,
+		spinner:         sp,
+		keys:            keys,
+		focusedPane:     noteList,
+		loading:         true,
+		listDelegate:    delegate,
+		styles:          s,
+		themeManager:    themeManager,
+		client:          client,
+		viewType:        large,
+		compactViewOnly: themeManager.Config.CompactViewOnly,
 	}
 }
 
@@ -235,7 +237,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		m.width = msg.Width - 4
 		m.height = msg.Height - 2
 
-		if msg.Width >= LargeScreenBreakpoint {
+		if msg.Width >= LargeScreenBreakpoint && !m.compactViewOnly {
 			m.viewType = large
 
 			// Account for padding and borders in the style
@@ -294,7 +296,6 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			}
 
 		case key.Matches(msg, m.keys.NextTab):
-			log.Info("Next called")
 			if m.focusedPane == noteList {
 				activeTabName := m.fileterTabs.NextTab()
 				items := createNoteItems(m.allNotes, activeTabName)
@@ -312,8 +313,11 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			m.noteRenderer.ToggleHideInfo()
 
 		case key.Matches(msg, m.keys.ToggleInfoPosition):
-			log.Info("Toggle called")
 			m.noteRenderer.ToggleHidePosition()
+
+		case key.Matches(msg, m.keys.ToggleCompactView):
+			m.ToggleFullscreen()
+			return m, tea.WindowSize()
 
 		case key.Matches(msg, m.keys.ClearFilter):
 			m.noteList.ResetFilter()
@@ -438,6 +442,12 @@ func (i item) Description() string {
 	}
 }
 func (i item) FilterValue() string { return i.note.Title }
+
+func (m *Model) ToggleFullscreen() {
+	newConf := !m.compactViewOnly
+	m.compactViewOnly = newConf
+	m.themeManager.SetCompactViewOnly(newConf)
+}
 
 func (m Model) desktopView() string {
 	var rendererStyle lipgloss.Style

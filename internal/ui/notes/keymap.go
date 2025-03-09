@@ -22,6 +22,7 @@ type keyMap struct {
 	ToggleTheme        key.Binding
 	ToggleInfo         key.Binding
 	ToggleInfoPosition key.Binding
+	ToggleCompactView  key.Binding
 	Create             key.Binding
 	Delete             key.Binding
 }
@@ -94,6 +95,10 @@ var keys = keyMap{
 	ToggleInfoPosition: key.NewBinding(
 		key.WithKeys("ctrl+p"),
 		key.WithHelp("ctrl+p", "Toggle Note Info Position"),
+	),
+	ToggleCompactView: key.NewBinding(
+		key.WithKeys("ctrl+f"),
+		key.WithHelp("ctrl+f", "Toggle Compact view only (large screen only)"),
 	),
 	Create: key.NewBinding(
 		key.WithKeys("c"),

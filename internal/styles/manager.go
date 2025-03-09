@@ -11,10 +11,10 @@ import (
 )
 
 type Config struct {
-	Theme      string `json:"theme"`
-	InfoHidden bool   `json:"infoHidden"`
-	InfoBottom bool   `json:"infoBottom"`
-	FullScreen bool   `json:"fullScreen"`
+	Theme           string `json:"theme"`
+	InfoHidden      bool   `json:"infoHidden"`
+	InfoBottom      bool   `json:"infoBottom"`
+	CompactViewOnly bool   `json:"compactViewOnly"`
 }
 
 type ThemeManager struct {
@@ -27,10 +27,10 @@ func NewThemeManager(configDir string) (*ThemeManager, error) {
 	tm := &ThemeManager{
 		configDir: configDir,
 		Config: Config{
-			Theme:      "neotokyo",
-			InfoHidden: false,
-			InfoBottom: false,
-			FullScreen: false,
+			Theme:           "neotokyo",
+			InfoHidden:      false,
+			InfoBottom:      true,
+			CompactViewOnly: false,
 		},
 		Theme: NeoTokyo,
 	}
@@ -129,6 +129,11 @@ func (tm *ThemeManager) SetInfoHidden(hide bool) error {
 
 func (tm *ThemeManager) SetInfoBottom(hide bool) error {
 	tm.Config.InfoBottom = hide
+	return tm.SaveConfig()
+}
+
+func (tm *ThemeManager) SetCompactViewOnly(compact bool) error {
+	tm.Config.CompactViewOnly = compact
 	return tm.SaveConfig()
 }
 
