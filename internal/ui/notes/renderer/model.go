@@ -55,12 +55,19 @@ func New(themeManager *styles.ThemeManager) Model {
 	sp.Spinner = spinner.Dot
 	sp.Style = lipgloss.NewStyle().Foreground(themeManager.Current().Primary)
 
+	position := Top
+	if themeManager.Config.InfoBottom {
+		position = Bottom
+	}
+
 	return Model{
 		Note:         nil,
 		themeManager: themeManager,
 		renderer:     renderer,
 		viewport:     vp,
 		spinner:      sp,
+		infoHide:     themeManager.Config.InfoHidden,
+		infoPos:      position,
 	}
 }
 
