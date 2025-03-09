@@ -15,33 +15,17 @@
 **Want to try it?**
 > It's free, *for now at least*
 > 1. Create an account [Merlion.dev](https://merlion.dev)
-> 2. Build the project
-> 3. Compile and run the project
+> 2. Build the project `go build -o merlion ./cmd/merlion`
+> 3. Run the project `./merlion`
 
 **What does it look like?**
 > You'll have to try it to see it
 > - It has Gruvbox & NeoTokyo Theme if that can convince you
 > - `ctrl+t` to switch between them :)
-> - Will attach some pictures to the readme soon enough
+> - I'll attach some pictures to the readme soon enough
 
 **Where's the backend code?**
 > Private at the moment
-
-## Build
-0. If you have [just](https://just.systems/man/en/introduction.html):
-    ```sh
-    just
-    ```
-Or "manually"
-1. Build
-    ```sh
-    go build -o merlion ./cmd/merlion
-    ```
-
-2. Run
-    ```
-    ./merlion
-    ```
 
 ---
 
