@@ -65,7 +65,22 @@ func New(themeManager *styles.ThemeManager) Model {
 }
 
 func (m *Model) ToggleHideInfo() {
-	m.infoHide = !m.infoHide
+	hideInfo := !m.infoHide
+	m.infoHide = hideInfo
+	m.themeManager.SetInfoHidden(hideInfo)
+}
+
+func (m *Model) ToggleHidePosition() {
+	if m.infoPos == Bottom {
+		m.infoPos = Top
+		m.themeManager.SetInfoBottom(false)
+	} else {
+		m.infoPos = Bottom
+		m.themeManager.SetInfoBottom(true)
+	}
+	if m.infoHide {
+		m.ToggleHideInfo()
+	}
 }
 
 func (m *Model) SetNote(note *api.Note) {
@@ -141,11 +156,7 @@ func (m Model) Init() tea.Cmd {
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
-	log.Info("Msg: ", msg)
-	log.Info("Viewport heights before:", "content", m.viewport.ScrollPercent(), "visible", m.viewport.Height)
-	// Handle regular viewport updates
 	m.viewport, cmd = m.viewport.Update(msg)
-	log.Info("Viewport heights after:", "content", m.viewport.ScrollPercent(), "visible", m.viewport.Height)
 	return m, cmd
 }
 

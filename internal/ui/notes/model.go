@@ -294,6 +294,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			}
 
 		case key.Matches(msg, m.keys.NextTab):
+			log.Info("Next called")
 			if m.focusedPane == noteList {
 				activeTabName := m.fileterTabs.NextTab()
 				items := createNoteItems(m.allNotes, activeTabName)
@@ -309,6 +310,10 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.ToggleInfo):
 			m.noteRenderer.ToggleHideInfo()
+
+		case key.Matches(msg, m.keys.ToggleInfoPosition):
+			log.Info("Toggle called")
+			m.noteRenderer.ToggleHidePosition()
 
 		case key.Matches(msg, m.keys.ClearFilter):
 			m.noteList.ResetFilter()

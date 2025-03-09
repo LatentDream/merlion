@@ -6,23 +6,24 @@ import (
 )
 
 type keyMap struct {
-	Up          key.Binding
-	Down        key.Binding
-	Left        key.Binding
-	Right       key.Binding
-	ClearFilter key.Binding
-	NextTab     key.Binding
-	PrevTab     key.Binding
-	PageUp      key.Binding
-	PageDown    key.Binding
-	Select      key.Binding
-	Back        key.Binding
-	Edit        key.Binding
-	Quit        key.Binding
-	ToggleTheme key.Binding
-	ToggleInfo  key.Binding
-	Create      key.Binding
-	Delete      key.Binding
+	Up                 key.Binding
+	Down               key.Binding
+	Left               key.Binding
+	Right              key.Binding
+	ClearFilter        key.Binding
+	NextTab            key.Binding
+	PrevTab            key.Binding
+	PageUp             key.Binding
+	PageDown           key.Binding
+	Select             key.Binding
+	Back               key.Binding
+	Edit               key.Binding
+	Quit               key.Binding
+	ToggleTheme        key.Binding
+	ToggleInfo         key.Binding
+	ToggleInfoPosition key.Binding
+	Create             key.Binding
+	Delete             key.Binding
 }
 
 var keys = keyMap{
@@ -89,6 +90,10 @@ var keys = keyMap{
 	ToggleInfo: key.NewBinding(
 		key.WithKeys("i"),
 		key.WithHelp("i", "Toggle Note Info"),
+	),
+	ToggleInfoPosition: key.NewBinding(
+		key.WithKeys("ctrl+p"),
+		key.WithHelp("ctrl+p", "Toggle Note Info Position"),
 	),
 	Create: key.NewBinding(
 		key.WithKeys("c"),

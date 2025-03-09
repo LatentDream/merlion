@@ -10,63 +10,81 @@ import (
 	"github.com/charmbracelet/log"
 )
 
+type Config struct {
+	Theme      string `json:"theme"`
+	InfoHidden bool   `json:"infoHidden"`
+	InfoBottom bool   `json:"infoBottom"`
+	FullScreen bool   `json:"fullScreen"`
+}
+
 type ThemeManager struct {
 	configDir string
 	Theme     Theme
+	Config    Config
 }
 
 func NewThemeManager(configDir string) (*ThemeManager, error) {
 	tm := &ThemeManager{
 		configDir: configDir,
-		Theme:     NeoTokyo, // Default theme
+		Config: Config{
+			Theme:      "neotokyo",
+			InfoHidden: false,
+			InfoBottom: false,
+			FullScreen: false,
+		},
+		Theme: NeoTokyo,
 	}
 
-	// Load saved theme if exists
-	if err := tm.loadTheme(); err != nil {
-		// If no saved theme, save the default
-		if err := tm.SaveTheme(); err != nil {
-			return nil, fmt.Errorf("saving default theme: %w", err)
+	// Load saved config if exists
+	if err := tm.loadConfig(); err != nil {
+		// If no saved config, save the default
+		if err := tm.SaveConfig(); err != nil {
+			return nil, fmt.Errorf("saving default config: %w", err)
 		}
 	}
 
 	return tm, nil
 }
 
-func (tm *ThemeManager) loadTheme() error {
-	data, err := os.ReadFile(filepath.Join(tm.configDir, "theme.json"))
+func (tm *ThemeManager) loadConfig() error {
+	data, err := os.ReadFile(filepath.Join(tm.configDir, "config.json"))
 	if err != nil {
+		log.Errorf("Error loading config: %w", err)
 		return err
 	}
 
-	var themeName string
-	if err := json.Unmarshal(data, &themeName); err != nil {
-		return fmt.Errorf("unmarshaling theme: %w", err)
+	var config Config
+	if err := json.Unmarshal(data, &config); err != nil {
+		return fmt.Errorf("unmarshaling config: %w", err)
 	}
 
-	switch themeName {
+	tm.Config = config
+
+	// Set the theme based on the config value
+	switch tm.Config.Theme {
 	case "gruvbox":
 		tm.Theme = Gruvbox
 	case "neotokyo":
 		tm.Theme = NeoTokyo
 	default:
-		return fmt.Errorf("unknown theme: %s", themeName)
+		return fmt.Errorf("unknown theme: %s", tm.Config.Theme)
 	}
 
 	return nil
 }
 
-func (tm *ThemeManager) SaveTheme() error {
-	data, err := json.Marshal(tm.Theme.Name)
+func (tm *ThemeManager) SaveConfig() error {
+	data, err := json.Marshal(tm.Config)
 	if err != nil {
-		return fmt.Errorf("marshaling theme: %w", err)
+		return fmt.Errorf("marshaling config: %w", err)
 	}
 
 	if err := os.WriteFile(
-		filepath.Join(tm.configDir, "theme.json"),
+		filepath.Join(tm.configDir, "config.json"),
 		data,
 		0600,
 	); err != nil {
-		return fmt.Errorf("writing theme file: %w", err)
+		return fmt.Errorf("writing config file: %w", err)
 	}
 
 	return nil
@@ -100,8 +118,18 @@ func (tm *ThemeManager) SetTheme(name string) error {
 	default:
 		return fmt.Errorf("unknown theme: %s", name)
 	}
+	tm.Config.Theme = name
+	return tm.SaveConfig()
+}
 
-	return tm.SaveTheme()
+func (tm *ThemeManager) SetInfoHidden(hide bool) error {
+	tm.Config.InfoHidden = hide
+	return tm.SaveConfig()
+}
+
+func (tm *ThemeManager) SetInfoBottom(hide bool) error {
+	tm.Config.InfoBottom = hide
+	return tm.SaveConfig()
 }
 
 // Create the styles that use the current theme
