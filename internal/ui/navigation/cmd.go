@@ -12,6 +12,7 @@ const (
 	NoteUI CurrentUI = iota
 	CreateUI
 	LoginUI
+	EditUI
 	Dialog
 )
 
