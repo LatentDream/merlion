@@ -22,6 +22,10 @@ type Tabs[T Displayable] struct {
 	themeManager *styles.ThemeManager
 }
 
+func (t *Tabs[T]) CurrentTab() T {
+	return t.Tabs[t.ActiveTab]
+}
+
 // New creates a new TabbedList
 func New[T Displayable](
 	tabs []T,

@@ -192,7 +192,8 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			return m, nil
 		}
 		m.allNotes = msg.Notes
-		items := createNoteItems(msg.Notes, AllNotes)
+		currTab := m.fileterTabs.CurrentTab()
+		items := createNoteItems(msg.Notes, currTab)
 		m.noteList.SetItems(items)
 
 		m.loading = false
@@ -368,6 +369,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		case key.Matches(msg, m.keys.Manage):
 			if i := m.noteList.SelectedItem(); i != nil {
 				note := i.(item).note
+				m.loading = true
 				return m, navigation.OpenManageViewCmd(note.NoteID)
 			}
 
