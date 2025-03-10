@@ -96,7 +96,7 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 
 	// Initialize spinner with themed color
 	sp := spinner.New()
-	sp.Spinner = spinner.Dot
+	sp.Spinner = spinner.MiniDot
 	sp.Style = lipgloss.NewStyle().Foreground(themeManager.Current().Primary)
 
 	// Initialize list with themed styles
@@ -524,7 +524,7 @@ func (m Model) View() string {
 			lipgloss.JoinHorizontal(
 				lipgloss.Center,
 				m.spinner.View(),
-				"Loading...",
+				" Loading...",
 			),
 		)
 	}
