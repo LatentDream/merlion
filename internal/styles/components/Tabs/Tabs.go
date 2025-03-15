@@ -16,8 +16,7 @@ type Displayable interface {
 type Tabs[T Displayable] struct {
 	Tabs         []T
 	ActiveTab    int
-	width        int
-	height       int
+	Width        int
 	ShowArrows   bool
 	themeManager *styles.ThemeManager
 }
@@ -26,7 +25,6 @@ func (t *Tabs[T]) CurrentTab() T {
 	return t.Tabs[t.ActiveTab]
 }
 
-// New creates a new TabbedList
 func New[T Displayable](
 	tabs []T,
 	themeManager *styles.ThemeManager,
@@ -39,29 +37,13 @@ func New[T Displayable](
 	}
 }
 
-// SetSize sets the size of the tabbed list
-func (t *Tabs[T]) SetWidth(width int) {
-	t.width = width
-}
-
-// Update handles the Bubble Tea update loop
-func (t *Tabs[T]) Update(msg tea.Msg) tea.Cmd {
-	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		t.SetWidth(msg.Width)
-		return nil
-	}
-
-	var cmd tea.Cmd
-	return cmd
-}
 
 func (t *Tabs[T]) renderTabs() string {
-	if t.width == 0 {
+	if t.Width == 0 {
 		return ""
 	}
 	style := t.themeManager.Styles()
-	availableWidth := t.width - 4 // borders and padding
+	availableWidth := t.Width - 4 // borders and padding
 	var visibleTabs []T
 	var startIdx, endIdx int
 	currentWidth := 0
@@ -146,7 +128,7 @@ func (t *Tabs[T]) renderTabs() string {
 
 // View renders the component
 func (t *Tabs[T]) View() string {
-	if t.width == 0 {
+	if t.Width == 0 {
 		return ""
 	}
 	return t.renderTabs()

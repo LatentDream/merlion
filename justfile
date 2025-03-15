@@ -1,5 +1,8 @@
+default:
+    just --list
+
 # Build and execute
-build-run:
+dev:
     just build
     just run
 

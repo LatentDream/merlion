@@ -252,7 +252,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 			m.noteList.SetWidth(listWidth)
 			m.noteList.SetHeight(listHeight)
-			m.fileterTabs.SetWidth(listWidth)
+			m.fileterTabs.Width = listWidth
 
 			contentWidth := availableWidth - listWidth
 			m.noteRenderer.SetSize(contentWidth, m.height)
@@ -269,7 +269,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			listHeight := m.height - Tabs.TabsHeight
 			m.noteList.SetWidth(listWidth)
 			m.noteList.SetHeight(listHeight)
-			m.fileterTabs.SetWidth(listWidth)
+			m.fileterTabs.Width = listWidth
 
 			contentWidth := availableWidth
 			m.noteRenderer.SetSize(contentWidth, m.height)
