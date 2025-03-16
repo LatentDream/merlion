@@ -7,6 +7,7 @@ import (
 	"merlion/internal/api"
 	"merlion/internal/styles"
 	"merlion/internal/styles/components/Tabs"
+	"merlion/internal/controls"
 	styledDelegate "merlion/internal/styles/components/delegate"
 	"merlion/internal/ui/create"
 	"merlion/internal/ui/navigation"
@@ -76,7 +77,7 @@ type Model struct {
 	fileterTabs     Tabs.Tabs[TabKind]
 	noteRenderer    renderer.Model
 	spinner         spinner.Model
-	keys            keyMap
+	keys            controls.KeyMap
 	focusedPane     focusedPanel
 	width           int
 	height          int
@@ -121,7 +122,7 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 		fileterTabs:     tabs,
 		noteRenderer:    noteRenderer,
 		spinner:         sp,
-		keys:            keys,
+		keys:            controls.Keys,
 		focusedPane:     noteList,
 		loading:         true,
 		listDelegate:    delegate,
