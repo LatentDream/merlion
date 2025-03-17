@@ -2,8 +2,6 @@ package Tabs
 
 import (
 	"merlion/internal/styles"
-
-	tea "github.com/charmbracelet/bubbletea"
 )
 
 const TabsHeight = 1

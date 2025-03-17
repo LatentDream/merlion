@@ -36,7 +36,7 @@ type Model struct {
 	spinner      spinner.Model
 }
 
-func New(themeManager *styles.ThemeManager) Model {
+func New( themeManager *styles.ThemeManager) Model {
 
 	// Initialize glamour for markdown rendering
 	renderer, err := glamour.NewTermRenderer(

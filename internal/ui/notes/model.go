@@ -5,9 +5,10 @@ import (
 	"sort"
 
 	"merlion/internal/api"
-	"merlion/internal/styles"
-	"merlion/internal/styles/components/Tabs"
 	"merlion/internal/controls"
+	"merlion/internal/styles"
+	grouplist "merlion/internal/styles/components/GroupList"
+	"merlion/internal/styles/components/Tabs"
 	styledDelegate "merlion/internal/styles/components/delegate"
 	"merlion/internal/ui/create"
 	"merlion/internal/ui/navigation"
@@ -55,6 +56,7 @@ const (
 	AllNotes TabKind = iota
 	Favorites
 	WorkLogs
+	Tags
 )
 
 // String implements the Displayable interface
@@ -66,6 +68,8 @@ func (t TabKind) String() string {
 		return "Favorites"
 	case WorkLogs:
 		return "Work Logs"
+	case Tags:
+		return "Tags"
 	default:
 		return "Unknown"
 	}
@@ -90,6 +94,7 @@ type Model struct {
 	createModel     create.Model
 	viewType        ViewType
 	compactViewOnly bool
+	tagsList        grouplist.Model
 }
 
 func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
@@ -111,10 +116,12 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 	l.SetFilteringEnabled(true)
 	l.Styles.Title = s.Title
 
-	filterTabs := []TabKind{AllNotes, Favorites, WorkLogs}
+	filterTabs := []TabKind{AllNotes, Favorites, WorkLogs, Tags}
 	tabs := Tabs.New(filterTabs, themeManager)
 
 	noteRenderer := renderer.New(themeManager)
+
+	gl := grouplist.New([]grouplist.Group{}, delegate, themeManager)
 
 	// Initialize help viewport with themed styles
 	return Model{
@@ -131,17 +138,18 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 		client:          client,
 		viewType:        large,
 		compactViewOnly: themeManager.Config.CompactViewOnly,
+		tagsList:        gl,
 	}
 }
 
 func (m Model) Init() tea.Cmd {
 	if m.client != nil {
 		return tea.Batch(
-			spinner.Tick,
+			m.spinner.Tick,
 			m.loadNotes(),
 		)
 	}
-	return spinner.Tick
+	return m.spinner.Tick
 }
 
 func (m Model) SetClient(client *api.Client) tea.Cmd {
@@ -196,6 +204,19 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		currTab := m.fileterTabs.CurrentTab()
 		items := createNoteItems(msg.Notes, currTab)
 		m.noteList.SetItems(items)
+
+		groups := []grouplist.Group{}
+		favGroup := grouplist.Group{
+			Name:  "fav",
+			Items: createNoteItems(msg.Notes, Favorites),
+		}
+		groups = append(groups, favGroup)
+		workGroup := grouplist.Group{
+			Name:  "work",
+			Items: createNoteItems(msg.Notes, WorkLogs),
+		}
+		groups = append(groups, workGroup)
+		m.tagsList.SetGroups(groups)
 
 		m.loading = false
 		return m, nil
@@ -253,6 +274,8 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 			m.noteList.SetWidth(listWidth)
 			m.noteList.SetHeight(listHeight)
+			m.tagsList.SetWidth(listWidth)
+			m.tagsList.SetHeight(listHeight)
 			m.fileterTabs.Width = listWidth
 
 			contentWidth := availableWidth - listWidth
@@ -270,6 +293,8 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			listHeight := m.height - Tabs.TabsHeight
 			m.noteList.SetWidth(listWidth)
 			m.noteList.SetHeight(listHeight)
+			m.tagsList.SetWidth(listWidth)
+			m.tagsList.SetHeight(listHeight)
 			m.fileterTabs.Width = listWidth
 
 			contentWidth := availableWidth
@@ -376,16 +401,30 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.Select):
 			if m.focusedPane == noteList {
-				if i := m.noteList.SelectedItem(); i != nil {
-					note := i.(item).note
-					if note.Content == nil {
-						// We don't have the content locally.. fetch
-						m.loading = true
-						return m, fetchNoteContent(m.client, note.NoteID)
+				if m.fileterTabs.CurrentTab() == Tags {
+					if i := m.tagsList.SelectedItem(); i != nil {
+						note := i.(item).note
+						if note.Content == nil {
+							// We don't have the content locally.. fetch
+							m.loading = true
+							return m, fetchNoteContent(m.client, note.NoteID)
+						}
+						m.noteRenderer.SetNote(&note)
+						m.noteRenderer.Render()
+						m.focusedPane = markdown
 					}
-					m.noteRenderer.SetNote(&note)
-					m.noteRenderer.Render()
-					m.focusedPane = markdown
+				} else {
+					if i := m.noteList.SelectedItem(); i != nil {
+						note := i.(item).note
+						if note.Content == nil {
+							// We don't have the content locally.. fetch
+							m.loading = true
+							return m, fetchNoteContent(m.client, note.NoteID)
+						}
+						m.noteRenderer.SetNote(&note)
+						m.noteRenderer.Render()
+						m.focusedPane = markdown
+					}
 				}
 			}
 
@@ -394,7 +433,10 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		}
 
 		// Handle navigation based on focused pane
-		if m.focusedPane == noteList {
+		if m.focusedPane == noteList && m.fileterTabs.CurrentTab() == Tags {
+			m.tagsList, cmd = m.tagsList.Update(msg)
+			cmds = append(cmds, cmd)
+		} else if m.focusedPane == noteList {
 			m.noteList, cmd = m.noteList.Update(msg)
 			cmds = append(cmds, cmd)
 		} else {
@@ -474,10 +516,17 @@ func (m Model) desktopView() string {
 		listStyle = m.styles.InactiveContent.Width(m.width / ViewRatio)
 	}
 
+	var listView string
+	if m.fileterTabs.CurrentTab() == Tags {
+		listView = m.tagsList.View()
+	} else {
+		listView = m.noteList.View()
+	}
+
 	combinedView := lipgloss.JoinVertical(
 		lipgloss.Left,
 		m.fileterTabs.View(),
-		m.noteList.View(),
+		listView,
 	)
 
 	leftSide := lipgloss.JoinVertical(
@@ -504,10 +553,17 @@ func (m Model) mobileView() string {
 	if m.focusedPane == markdown {
 		return style.Render(m.noteRenderer.View())
 	} else {
+		var listView string
+		if m.fileterTabs.CurrentTab() == Tags {
+			listView = m.tagsList.View()
+		} else {
+			listView = m.noteList.View()
+		}
+
 		combinedView := lipgloss.JoinVertical(
 			lipgloss.Left,
 			m.fileterTabs.View(),
-			m.noteList.View(),
+			listView,
 		)
 		return style.Render(combinedView)
 	}
