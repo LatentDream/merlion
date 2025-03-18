@@ -70,15 +70,27 @@ func (m Model) Init() tea.Cmd {
 	return tea.WindowSize()
 }
 
+func (m *Model) prevGroup() {
+	if m.selectedGroup > 0 {
+		m.selectedGroup -= 1
+	}
+}
+func (m *Model) nextGroup() {
+	if m.selectedGroup < len(m.Groups)-1 {
+		m.selectedGroup += 1
+	}
+}
+
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
+
 		case key.Matches(msg, m.keys.Up):
 			if m.selectedGroup >= 0 {
 				if m.opennedGroup == nil {
-					m.selectedGroup -= 1
+					m.prevGroup()
 				} else if m.selectedGroup == (*m.opennedGroup+1) && len(m.Groups[*m.opennedGroup].Items) == 0 {
 					m.selectedGroup = *m.opennedGroup
 				} else if m.selectedGroup == (*m.opennedGroup+1) && m.selectedItem == nil {
@@ -87,11 +99,11 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 					m.selectedItem = &lastItemIdx
 				} else if m.selectedGroup == *m.opennedGroup && m.selectedItem == nil {
 					if m.selectedGroup != 0 {
-						m.selectedGroup -= 1
+						m.prevGroup()
 					}
 				} else if m.selectedGroup == *m.opennedGroup {
 					if len(m.Groups[*m.opennedGroup].Items) == 0 {
-						m.selectedGroup -= 0
+						m.prevGroup()
 					} else if m.selectedItem == nil {
 						m.selectedGroup = *m.opennedGroup
 						lastItemIdx := len(m.Groups[*m.opennedGroup].Items) - 1
@@ -102,15 +114,16 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 						*m.selectedItem -= 1
 					}
 				} else {
-					m.selectedGroup -= 1
+					m.prevGroup()
 				}
 			}
+
 		case key.Matches(msg, m.keys.Down):
 			if m.selectedGroup <= len(m.Groups)-1 {
 				if m.opennedGroup == nil {
-					m.selectedGroup += 1
+					m.nextGroup()
 				} else if m.selectedGroup != *m.opennedGroup {
-					m.selectedGroup += 1
+					m.nextGroup()
 				} else {
 					if m.selectedItem == nil && len(m.Groups[m.selectedGroup].Items) == 0 {
 						m.selectedGroup += 1
@@ -118,13 +131,16 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 						var value int = 0
 						m.selectedItem = &value
 					} else if *m.selectedItem == (len(m.Groups[m.selectedGroup].Items) - 1) {
-						m.selectedItem = nil
-						m.selectedGroup += 1
+						if m.selectedGroup != len(m.Groups)-1 {
+							m.selectedItem = nil
+							m.nextGroup()
+						}
 					} else {
 						*m.selectedItem += 1
 					}
 				}
 			}
+
 		case key.Matches(msg, m.keys.Select):
 			if m.selectedItem == nil {
 				if m.opennedGroup != nil && m.selectedGroup == *m.opennedGroup {
