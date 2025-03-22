@@ -11,7 +11,6 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/log"
 )
 
 type Group struct {
@@ -25,6 +24,8 @@ type Model struct {
 	opennedGroup  *int
 	selectedGroup int
 	selectedItem  *int
+	page          int
+	scrollOffset  int
 
 	// Control
 	keys controls.KeyMap
@@ -43,6 +44,8 @@ func New(groups []Group, delegate *delegate.StyledDelegate, tm *styles.ThemeMana
 		themeManager: tm,
 		keys:         controls.Keys,
 		delegate:     *delegate,
+		page:         0,
+		scrollOffset: 0,
 	}
 }
 
@@ -74,6 +77,8 @@ func (m *Model) SetGroups(groups []Group) {
 	m.opennedGroup = nil
 	m.selectedGroup = 0
 	m.selectedItem = nil
+	m.page = 0
+	m.scrollOffset = 0
 }
 
 func (m Model) Init() tea.Cmd {
@@ -85,7 +90,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
-
 		case key.Matches(msg, m.keys.Up):
 			m.handleUpNavigation()
 
@@ -94,10 +98,63 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.Select):
 			m.handleSelectItem()
+
+		case key.Matches(msg, m.keys.PageUp):
+			if m.page > 0 {
+				m.page--
+			}
+
+		case key.Matches(msg, m.keys.PageDown):
+			// Calculate available height for items
+			headerHeight := 0
+			for i := 0; i <= m.selectedGroup; i++ {
+				headerHeight++ // Group header
+				if m.opennedGroup != nil && *m.opennedGroup == i {
+					headerHeight += 3 // Notes header + border + spacing
+				}
+			}
+			availableHeight := m.height - headerHeight
+			itemsPerPage := availableHeight / (m.delegate.Height() + m.delegate.Spacing())
+			maxPages := (len(m.Groups[m.selectedGroup].Items) + itemsPerPage - 1) / itemsPerPage
+			if m.page < maxPages-1 {
+				m.page++
+			}
 		}
 	}
 
 	return m, cmd
+}
+
+func (m *Model) ensureItemVisible() {
+	if m.selectedItem == nil || m.opennedGroup == nil {
+		return
+	}
+
+	// Calculate available height for items
+	headerHeight := 0
+	for i := 0; i <= m.selectedGroup; i++ {
+		headerHeight++ // Group header
+		if m.opennedGroup != nil && *m.opennedGroup == i {
+			headerHeight += 3 // Notes header + border + spacing
+		}
+	}
+	availableHeight := m.height - headerHeight
+	itemsPerPage := availableHeight / (m.delegate.Height() + m.delegate.Spacing())
+	
+	// Calculate the position of the selected item relative to the current page
+	relativePos := *m.selectedItem - (m.page * itemsPerPage)
+	
+	// If the item is below the visible area
+	if relativePos >= itemsPerPage {
+		m.page = *m.selectedItem / itemsPerPage
+		m.scrollOffset = 0
+	}
+	
+	// If the item is above the visible area
+	if relativePos < 0 {
+		m.page = *m.selectedItem / itemsPerPage
+		m.scrollOffset = 0
+	}
 }
 
 func (m Model) populatedView() string {
@@ -114,32 +171,43 @@ func (m Model) populatedView() string {
 		return styles.Muted.Render("No items.")
 	}
 
-	if len(items) > 0 {
-		// TODO: start, end := m.Paginator.GetSliceBounds(len(items))
-		start := 0
-		end := len(items) - 1
-		docs := items[start:end]
+	// Calculate available height for items
+	// Account for:
+	// - Group headers (1 line each)
+	// - Notes header (2 lines)
+	// - Borders (2 lines)
+	// - Spacing between groups (1 line)
+	headerHeight := 0
+	for i := 0; i <= m.selectedGroup; i++ {
+		headerHeight++ // Group header
+		if m.opennedGroup != nil && *m.opennedGroup == i {
+			headerHeight += 3 // Notes header + border + spacing
+		}
+	}
+	availableHeight := m.height - headerHeight
 
-		for i, item := range docs {
-			m.delegate.RenderGroupItems(&b, m, i+start, item)
-			if i != len(docs)-1 {
-				fmt.Fprint(&b, strings.Repeat("\n", m.delegate.Spacing()+1))
-			}
+	// Calculate pagination based on available height
+	itemsPerPage := availableHeight / (m.delegate.Height() + m.delegate.Spacing())
+	start := m.page * itemsPerPage
+	end := start + itemsPerPage
+	if end > len(items) {
+		end = len(items)
+	}
+
+	// Render items for current page
+	for i, item := range items[start:end] {
+		m.delegate.RenderGroupItems(&b, m, i+start, item)
+		if i != end-start-1 {
+			fmt.Fprint(&b, strings.Repeat("\n", m.delegate.Spacing()+1))
 		}
 	}
 
-	// TODO:
-	// If there aren't enough items to fill up this page (always the last page)
-	// then we need to add some newlines to fill up the space where items would
-	// have been.
-	// itemsOnPage := m.Paginator.ItemsOnPage(len(items))
-	// if itemsOnPage < m.Paginator.PerPage {
-	// 	n := (m.Paginator.PerPage - itemsOnPage) * (m.delegate.Height() + m.delegate.Spacing())
-	// 	if len(items) == 0 {
-	// 		n -= m.delegate.Height() - 1
-	// 	}
-	// 	fmt.Fprint(&b, strings.Repeat("\n", n))
-	// }
+	// Add padding if needed
+	itemsOnPage := end - start
+	if itemsOnPage < itemsPerPage {
+		n := (itemsPerPage - itemsOnPage) * (m.delegate.Height() + m.delegate.Spacing())
+		fmt.Fprint(&b, strings.Repeat("\n", n))
+	}
 
 	return b.String()
 }
@@ -180,33 +248,12 @@ func (t Model) View() string {
 
 			// Sub-header for notes
 			noteIndent := indent + "  "
-			s.WriteString(noteIndent + styles.Subtitle.Render("NOTES") + "\n")
-			s.WriteString(noteIndent + lipgloss.NewStyle().Foreground(theme.BorderColor).Render(strings.Repeat("─", t.width-len(noteIndent))) + "\n")
 
 			// List notes for this tag
 			if len(tag.Items) == 0 {
 				s.WriteString(noteIndent + lipgloss.NewStyle().Foreground(theme.MutedColor).Render("No notes for this tag") + "\n")
 			} else {
-				for i, _ := range tag.Items {
-					// log.Debug(i)
-					// s.WriteString(t.populatedView())
-
-					// Prepare note display (truncate title if too long)
-					// noteTitle := fmt.Sprintf("%d", i)
-					// maxTitleLength := t.width - len(noteIndent) - 5 // Account for indent, bullet and spacing
-					// // Apply word wrap if configured in theme
-					// if theme.WordWrap > 0 && uint(len(noteTitle)) > theme.WordWrap {
-					// 	noteTitle = noteTitle[:theme.WordWrap] + "..."
-					// } else if len(noteTitle) > maxTitleLength {
-					// 	noteTitle = noteTitle[:maxTitleLength] + "..."
-					// }
-					// // Style based on selection state
-					// if t.selectedItem != nil && i == *t.selectedItem {
-					// 	s.WriteString(noteIndent + styles.Highlight.Render("• "+noteTitle) + "\n")
-					// } else {
-					// 	s.WriteString(noteIndent + styles.Text.Render("• "+noteTitle) + "\n")
-					// }
-				}
+				s.WriteString(t.populatedView())
 			}
 			s.WriteString("\n")
 		}

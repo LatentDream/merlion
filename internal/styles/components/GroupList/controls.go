@@ -3,11 +3,16 @@ package grouplist
 func (m *Model) prevGroup() {
 	if m.selectedGroup > 0 {
 		m.selectedGroup -= 1
+		m.page = 0
+		m.scrollOffset = 0
 	}
 }
+
 func (m *Model) nextGroup() {
 	if m.selectedGroup < len(m.Groups)-1 {
 		m.selectedGroup += 1
+		m.page = 0
+		m.scrollOffset = 0
 	}
 }
 
@@ -24,6 +29,7 @@ func (m *Model) handleUpNavigation() {
 			m.prevGroup()
 			lastItemIdx := len(m.Groups[*m.opennedGroup].Items) - 1
 			m.selectedItem = &lastItemIdx
+			m.ensureItemVisible()
 		} else if m.selectedGroup == *m.opennedGroup && m.selectedItem == nil {
 			// Current group + we are on the tag => move to previous group
 			m.prevGroup()
@@ -37,12 +43,14 @@ func (m *Model) handleUpNavigation() {
 				m.selectedGroup = *m.opennedGroup
 				lastItemIdx := len(m.Groups[*m.opennedGroup].Items) - 1
 				m.selectedItem = &lastItemIdx
+				m.ensureItemVisible()
 			} else if *m.selectedItem == 0 {
 				// First item => unselect item & stay on tag
 				m.selectedItem = nil
 			} else {
 				// Prev Item
 				*m.selectedItem -= 1
+				m.ensureItemVisible()
 			}
 		} else {
 			// Safety
@@ -67,6 +75,7 @@ func (m *Model) handleDownNavigation() {
 				// On the Group => First item
 				var value int = 0
 				m.selectedItem = &value
+				m.ensureItemVisible()
 			} else if *m.selectedItem == (len(m.Groups[m.selectedGroup].Items) - 1) {
 				// Last item => Next group
 				if m.selectedGroup != len(m.Groups)-1 {
@@ -76,6 +85,7 @@ func (m *Model) handleDownNavigation() {
 			} else {
 				// Middle item => Next item
 				*m.selectedItem += 1
+				m.ensureItemVisible()
 			}
 		}
 	}
@@ -89,5 +99,7 @@ func (m *Model) handleSelectItem() {
 			m.opennedGroup = &m.selectedGroup
 			m.selectedItem = nil
 		}
+		m.page = 0
+		m.scrollOffset = 0
 	}
 }
