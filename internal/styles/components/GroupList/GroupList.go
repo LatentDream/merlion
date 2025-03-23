@@ -9,6 +9,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/paginator"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -35,9 +36,15 @@ type Model struct {
 	height       int
 	themeManager *styles.ThemeManager
 	delegate     delegate.StyledDelegate
+	paginator    paginator.Model
 }
 
 func New(groups []Group, delegate *delegate.StyledDelegate, tm *styles.ThemeManager) Model {
+	p := paginator.New()
+	p.Type = paginator.Dots
+	p.ActiveDot = lipgloss.NewStyle().Foreground(tm.Current().Primary).Render("•")
+	p.InactiveDot = lipgloss.NewStyle().Foreground(tm.Current().MutedColor).Render("•")
+
 	return Model{
 		Groups:       groups,
 		opennedGroup: nil,
@@ -46,6 +53,7 @@ func New(groups []Group, delegate *delegate.StyledDelegate, tm *styles.ThemeMana
 		delegate:     *delegate,
 		page:         0,
 		scrollOffset: 0,
+		paginator:    p,
 	}
 }
 
@@ -86,7 +94,8 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
-	var cmd tea.Cmd
+	var cmds []tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
@@ -102,6 +111,7 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.PageUp):
 			if m.page > 0 {
 				m.page--
+				m.paginator.PrevPage()
 			}
 
 		case key.Matches(msg, m.keys.PageDown):
@@ -118,11 +128,19 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			maxPages := (len(m.Groups[m.selectedGroup].Items) + itemsPerPage - 1) / itemsPerPage
 			if m.page < maxPages-1 {
 				m.page++
+				m.paginator.NextPage()
 			}
 		}
 	}
 
-	return m, cmd
+	// Update paginator
+	var paginatorCmd tea.Cmd
+	m.paginator, paginatorCmd = m.paginator.Update(msg)
+	if paginatorCmd != nil {
+		cmds = append(cmds, paginatorCmd)
+	}
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m *Model) ensureItemVisible() {
@@ -141,18 +159,26 @@ func (m *Model) ensureItemVisible() {
 	availableHeight := m.height - headerHeight
 	itemsPerPage := availableHeight / (m.delegate.Height() + m.delegate.Spacing())
 	
+	// Update paginator total pages
+	if m.opennedGroup != nil {
+		totalItems := len(m.Groups[*m.opennedGroup].Items)
+		m.paginator.SetTotalPages((totalItems + itemsPerPage - 1) / itemsPerPage)
+	}
+	
 	// Calculate the position of the selected item relative to the current page
 	relativePos := *m.selectedItem - (m.page * itemsPerPage)
 	
 	// If the item is below the visible area
 	if relativePos >= itemsPerPage {
 		m.page = *m.selectedItem / itemsPerPage
+		m.paginator.Page = m.page
 		m.scrollOffset = 0
 	}
 	
 	// If the item is above the visible area
 	if relativePos < 0 {
 		m.page = *m.selectedItem / itemsPerPage
+		m.paginator.Page = m.page
 		m.scrollOffset = 0
 	}
 }
@@ -177,6 +203,7 @@ func (m Model) populatedView() string {
 	// - Notes header (2 lines)
 	// - Borders (2 lines)
 	// - Spacing between groups (1 line)
+	// - Paginator (1 line)
 	headerHeight := 0
 	for i := 0; i <= m.selectedGroup; i++ {
 		headerHeight++ // Group header
@@ -184,7 +211,7 @@ func (m Model) populatedView() string {
 			headerHeight += 3 // Notes header + border + spacing
 		}
 	}
-	availableHeight := m.height - headerHeight
+	availableHeight := m.height - headerHeight - 1 // Reserve 1 line for paginator
 
 	// Calculate pagination based on available height
 	itemsPerPage := availableHeight / (m.delegate.Height() + m.delegate.Spacing())
@@ -193,6 +220,11 @@ func (m Model) populatedView() string {
 	if end > len(items) {
 		end = len(items)
 	}
+
+	// Update paginator settings
+	m.paginator.PerPage = itemsPerPage
+	m.paginator.SetTotalPages(len(items))
+	m.paginator.Page = m.page
 
 	// Render items for current page
 	for i, item := range items[start:end] {
@@ -208,6 +240,12 @@ func (m Model) populatedView() string {
 		n := (itemsPerPage - itemsOnPage) * (m.delegate.Height() + m.delegate.Spacing())
 		fmt.Fprint(&b, strings.Repeat("\n", n))
 	}
+
+	// Add paginator at the bottom with page info
+	paginatorStyle := lipgloss.NewStyle().
+		PaddingLeft(2).
+		Foreground(m.themeManager.Current().MutedColor)
+	fmt.Fprint(&b, "\n"+paginatorStyle.Render(m.paginator.View()))
 
 	return b.String()
 }
@@ -279,3 +317,4 @@ func (t Model) View() string {
 
 	return s.String()
 }
+
