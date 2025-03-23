@@ -225,25 +225,41 @@ func (t Model) View() string {
 	// List all tags
 	for i, tag := range t.Groups {
 		noteCount := len(tag.Items)
-		tagDisplay := fmt.Sprintf("%s (%d)", tag.Name, noteCount)
 
 		// indication on open/closed state
 		prefix := indent
-		if t.opennedGroup != nil && *t.opennedGroup == i {
-			prefix = indent[:len(indent)-1] + "▼ "
-		} else {
-			prefix = indent[:len(indent)-1] + "▶ "
+		if i == t.selectedGroup {
+			// When selected, reduce the indent by 2 to compensate for the border
+			prefix = prefix[2:]
 		}
+		if t.opennedGroup != nil && *t.opennedGroup == i {
+			prefix = prefix[:len(prefix)-1] + "▼ "
+		} else {
+			prefix = prefix[:len(prefix)-1] + "▶ "
+		}
+
+		// Create title and description
+		title := prefix + tag.Name
+		desc := fmt.Sprintf("%d items", noteCount)
 
 		// Style based on selection state
 		if i == t.selectedGroup {
-			s.WriteString(styles.Highlight.Render(prefix+tagDisplay) + "\n")
+			titleStyle := lipgloss.NewStyle().
+				Border(lipgloss.NormalBorder(), false, false, false, true).
+				BorderForeground(theme.Primary).
+				Padding(0, 0, 0, 1)
+			descStyle := titleStyle.Foreground(theme.Secondary)
+			s.WriteString(titleStyle.Render(title) + "\n")
+			s.WriteString(descStyle.Render(indent[2:] + desc) + "\n")
 		} else {
-			s.WriteString(styles.Text.Render(prefix+tagDisplay) + "\n")
+			s.WriteString(styles.Text.Render(title) + "\n")
+			s.WriteString(styles.Muted.Render(indent + desc) + "\n")
 		}
 
 		// If this tag is open, list its notes
 		if t.opennedGroup != nil && *t.opennedGroup == i {
+			// Add separator for open tag
+			s.WriteString(lipgloss.NewStyle().Foreground(theme.BorderColor).Render(strings.Repeat("─", t.width)) + "\n")
 			s.WriteString("\n")
 
 			// Sub-header for notes
@@ -256,6 +272,8 @@ func (t Model) View() string {
 				s.WriteString(t.populatedView())
 			}
 			s.WriteString("\n")
+			// Add bottom separator after items
+			s.WriteString(lipgloss.NewStyle().Foreground(theme.BorderColor).Render(strings.Repeat("─", t.width)) + "\n")
 		}
 	}
 
