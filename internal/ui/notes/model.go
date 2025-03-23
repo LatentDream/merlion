@@ -7,8 +7,8 @@ import (
 	"merlion/internal/api"
 	"merlion/internal/controls"
 	"merlion/internal/styles"
-	grouplist "merlion/internal/styles/components/GroupList"
-	"merlion/internal/styles/components/Tabs"
+	grouplist "merlion/internal/styles/components/groupList"
+	tabs "merlion/internal/styles/components/tabs"
 	styledDelegate "merlion/internal/styles/components/delegate"
 	"merlion/internal/ui/create"
 	"merlion/internal/ui/navigation"
@@ -78,7 +78,7 @@ func (t TabKind) String() string {
 type Model struct {
 	noteList        list.Model
 	allNotes        []api.Note
-	fileterTabs     Tabs.Tabs[TabKind]
+	fileterTabs     tabs.Tabs[TabKind]
 	noteRenderer    renderer.Model
 	spinner         spinner.Model
 	keys            controls.KeyMap
@@ -117,7 +117,7 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 	l.Styles.Title = s.Title
 
 	filterTabs := []TabKind{AllNotes, Favorites, WorkLogs, Tags}
-	tabs := Tabs.New(filterTabs, themeManager)
+	tabs := tabs.New(filterTabs, themeManager)
 
 	noteRenderer := renderer.New(themeManager)
 
@@ -192,16 +192,8 @@ func createTagGroups(notes []api.Note) []grouplist.Group {
 			newItem := item{note: note}
 
 			if items, exists := groups[tag]; exists {
-				// This is the key fix: assign back to groups[tag]
-				items = append(items, newItem)
-				items = append(items, newItem)
-				items = append(items, newItem)
-				items = append(items, newItem)
-				items = append(items, newItem)
-				items = append(items, newItem)
 				groups[tag] = append(items, newItem)
 			} else {
-				// Initialize with the new item directly
 				groups[tag] = []list.Item{newItem}
 			}
 		}
@@ -294,7 +286,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 			// Split the view with adjusted measurements
 			listWidth := availableWidth / ViewRatio
-			listHeight := m.height - Tabs.TabsHeight
+			listHeight := m.height - tabs.TabsHeight
 
 			m.noteList.SetWidth(listWidth)
 			m.noteList.SetHeight(listHeight)
@@ -314,7 +306,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			availableWidth := m.width - horizontalPadding
 
 			listWidth := availableWidth
-			listHeight := m.height - Tabs.TabsHeight
+			listHeight := m.height - tabs.TabsHeight
 			m.noteList.SetWidth(listWidth)
 			m.noteList.SetHeight(listHeight)
 			m.tagsList.SetWidth(listWidth)

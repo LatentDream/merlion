@@ -4,6 +4,7 @@ import (
 	"merlion/internal/api"
 	"merlion/internal/styles"
 	"merlion/internal/styles/components"
+	taginput "merlion/internal/styles/components/tagInput"
 	"merlion/internal/ui/navigation"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -15,6 +16,7 @@ type Model struct {
 	width           int
 	height          int
 	title           textinput.Model
+	tagInput        taginput.Model
 	isFavoriteInput components.RadioInput
 	isWorkLogInput  components.RadioInput
 	themeManager    *styles.ThemeManager
@@ -26,20 +28,29 @@ func (m Model) SetClient(client *api.Client) tea.Cmd {
 	return nil
 }
 
-func NewModel(client *api.Client, themeManager *styles.ThemeManager) navigation.View {
+func NewModel(
+	client *api.Client,
+	themeManager *styles.ThemeManager,
+) navigation.View {
 	title := textinput.New()
 	title.Placeholder = "Note title"
-	title.Prompt = "Title: "
 	title.Focus()
 	title.CharLimit = 156
 	title.Width = 40
 	isFavoriteInput := components.NewRadioInput("Favorite", themeManager)
 	isWorkLogInput := components.NewRadioInput("Work Log", themeManager)
 
+	// Find all tags
+	tags := client.GetTags()
+
+	// Initialize tag input with some sample tags
+	tagInput := taginput.New(tags, themeManager, false)
+
 	return Model{
 		title:           title,
 		isFavoriteInput: isFavoriteInput,
 		isWorkLogInput:  isWorkLogInput,
+		tagInput:        tagInput,
 		themeManager:    themeManager,
 		client:          client,
 	}
@@ -53,12 +64,18 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
+	var cmd tea.Cmd
+
+	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "tab":
 			if m.title.Focused() {
 				m.title.Blur()
+				m.tagInput.Focus()
+			} else if m.tagInput.Focused() {
+				m.tagInput.Blur()
 				m.isFavoriteInput.Focus()
 			} else if m.isFavoriteInput.Focused {
 				m.isFavoriteInput.Blur()
@@ -72,12 +89,15 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			if m.title.Focused() {
 				m.title.Blur()
 				m.isWorkLogInput.Focus()
+			} else if m.tagInput.Focused() {
+				m.tagInput.Blur()
+				m.title.Focus()
 			} else if m.isWorkLogInput.Focused {
 				m.isWorkLogInput.Blur()
 				m.isFavoriteInput.Focus()
 			} else if m.isFavoriteInput.Focused {
 				m.isFavoriteInput.Blur()
-				m.title.Focus()
+				m.tagInput.Focus()
 			}
 			return m, nil
 
@@ -92,12 +112,17 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 				m.isWorkLogInput, _ = m.isWorkLogInput.Update(msg)
 				return m, cmd
 			}
+			if m.tagInput.Focused() {
+				m.tagInput, cmd = m.tagInput.Update(msg)
+				return m, cmd
+			}
 			if m.title.Focused() {
 				// TODO: input validation - need a title
 				note := api.Note{
 					Title:      m.title.Value(),
 					IsFavorite: m.isFavoriteInput.IsChecked(),
 					IsWorkLog:  m.isWorkLogInput.IsChecked(),
+					Tags:       m.tagInput.GetTags(),
 				}
 				// TODO: Handle potential Error returned
 				m.client.CreateNote(note.ToCreateRequest())
@@ -109,9 +134,13 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		m.height = msg.Height
 	}
 
-	var cmd tea.Cmd
+	m.tagInput, cmd = m.tagInput.Update(msg)
+	cmds = append(cmds, cmd)
+
 	m.title, cmd = m.title.Update(msg)
-	return m, cmd
+	cmds = append(cmds, cmd)
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m Model) View() string {
@@ -134,7 +163,11 @@ func (m Model) View() string {
 				lipgloss.Left,
 				title,
 				"",
+				styles.Input.Render("Title:"),
 				m.title.View(),
+				"",
+				m.tagInput.View(),
+				"",
 				lipgloss.JoinHorizontal(
 					lipgloss.Left,
 					m.isFavoriteInput.View(),

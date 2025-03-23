@@ -3,7 +3,7 @@
  * - [x] Favorite
  * - [x] Worklog
  * - [ ] Lags on the return to Notes View
- * - [ ] Tags
+ * - [x] Tags
  * - [ ] Workspace/folder (coming soon)
  */
 package manage
@@ -12,6 +12,7 @@ import (
 	"merlion/internal/api"
 	"merlion/internal/styles"
 	"merlion/internal/styles/components"
+	taginput "merlion/internal/styles/components/tagInput"
 	"merlion/internal/ui/navigation"
 
 	"github.com/charmbracelet/bubbles/spinner"
@@ -32,6 +33,7 @@ type Model struct {
 	title           textinput.Model
 	isFavoriteInput components.RadioInput
 	isWorkLogInput  components.RadioInput
+	tagInput        taginput.Model
 }
 
 func NewModel(
@@ -40,12 +42,17 @@ func NewModel(
 ) navigation.View {
 	title := textinput.New()
 	title.Placeholder = "Note title"
-	title.Prompt = "Title: "
 	title.Focus()
 	title.CharLimit = 156
 	title.Width = 40
 	isFavoriteInput := components.NewRadioInput("Favorite", themeManager)
 	isWorkLogInput := components.NewRadioInput("Work Log", themeManager)
+
+	// Find all tags
+	tags := client.GetTags()
+
+	// Initialize tag input with some sample tags
+	tagInput := taginput.New(tags, themeManager, false)
 
 	sp := spinner.New()
 	sp.Spinner = spinner.MiniDot
@@ -56,6 +63,7 @@ func NewModel(
 		title:           title,
 		isFavoriteInput: isFavoriteInput,
 		isWorkLogInput:  isWorkLogInput,
+		tagInput:        tagInput,
 		client:          client,
 		note:            nil,
 		themeManager:    themeManager,
@@ -86,6 +94,9 @@ func fetchNote(client *api.Client, noteId string) tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
+	var cmd tea.Cmd
+	var cmds []tea.Cmd
+
 	switch msg := msg.(type) {
 
 	case spinner.TickMsg:
@@ -107,6 +118,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		m.isFavoriteInput.SetChecked(msg.Note.IsFavorite)
 		m.isWorkLogInput.SetChecked(msg.Note.IsWorkLog)
 		m.title.SetValue(msg.Note.Title)
+		m.tagInput.SetCurrentTags(m.note.Tags)
 		cmd := m.title.Focus()
 		return m, cmd
 
@@ -115,6 +127,9 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		case "tab":
 			if m.title.Focused() {
 				m.title.Blur()
+				m.tagInput.Focus()
+			} else if m.tagInput.Focused() {
+				m.tagInput.Blur()
 				m.isFavoriteInput.Focus()
 			} else if m.isFavoriteInput.Focused {
 				m.isFavoriteInput.Blur()
@@ -128,6 +143,9 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		case "shift+tab":
 			if m.title.Focused() {
 				m.title.Blur()
+				m.tagInput.Focus()
+			} else if m.tagInput.Focused() {
+				m.tagInput.Blur()
 				m.isWorkLogInput.Focus()
 			} else if m.isWorkLogInput.Focused {
 				m.isWorkLogInput.Blur()
@@ -152,11 +170,16 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 				m.isWorkLogInput, _ = m.isWorkLogInput.Update(msg)
 				return m, cmd
 			}
+			if m.tagInput.Focused() {
+				m.tagInput, cmd = m.tagInput.Update(msg)
+				return m, cmd
+			}
 			if m.title.Focused() {
-				// TODO: input validation - need a title
+				// Save all changes
 				m.note.Title = m.title.Value()
 				m.note.IsFavorite = m.isFavoriteInput.IsChecked()
 				m.note.IsWorkLog = m.isWorkLogInput.IsChecked()
+				m.note.Tags = m.tagInput.GetTags()
 				// TODO: Handle potential Error returned + loading state
 				m.client.UpdateNote(m.note.NoteID, m.note.ToCreateRequest())
 				return m, navigation.SwitchUICmd(navigation.NoteUI)
@@ -169,9 +192,13 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		m.height = msg.Height
 	}
 
-	var cmd tea.Cmd
+	m.tagInput, cmd = m.tagInput.Update(msg)
+	cmds = append(cmds, cmd)
+
 	m.title, cmd = m.title.Update(msg)
-	return m, cmd
+	cmds = append(cmds, cmd)
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m Model) View() string {
@@ -214,7 +241,11 @@ func (m Model) View() string {
 				lipgloss.Left,
 				title,
 				"",
+				styles.Input.Render("Title:"),
 				m.title.View(),
+				"",
+				m.tagInput.View(),
+				"",
 				lipgloss.JoinHorizontal(
 					lipgloss.Left,
 					m.isFavoriteInput.View(),

@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/cookiejar"
+	"strings"
 	"time"
 
 	"merlion/internal/auth"
@@ -117,6 +118,24 @@ func (c *Client) ListNotes() ([]Note, error) {
 	}
 
 	return notes, nil
+}
+
+func (c *Client) GetTags() []string {
+	notes, err := c.ListNotes()
+	tagMap := make(map[string]bool)
+	if err == nil {
+		for _, note := range notes {
+			for _, tag := range note.Tags {
+				// If not in map, add it
+				tagMap[strings.ToLower(tag)] = true
+			}
+		}
+	}
+	tags := make([]string, 0, len(tagMap))
+	for tag := range tagMap {
+		tags = append(tags, tag)
+	}
+	return tags
 }
 
 func (c *Client) GetNote(noteID string) (*Note, error) {
