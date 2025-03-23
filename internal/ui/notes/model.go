@@ -184,6 +184,34 @@ func createNoteItems(notes []api.Note, filter TabKind) []list.Item {
 	return items
 }
 
+func createTagGroups(notes []api.Note) []grouplist.Group {
+	groups := make(map[string][]list.Item)
+
+	for _, note := range notes {
+		for _, tag := range note.Tags {
+			newItem := item{note: note}
+
+			if items, exists := groups[tag]; exists {
+				// This is the key fix: assign back to groups[tag]
+				groups[tag] = append(items, newItem)
+			} else {
+				// Initialize with the new item directly
+				groups[tag] = []list.Item{newItem}
+			}
+		}
+	}
+
+	result := make([]grouplist.Group, 0, len(groups))
+	for name, items := range groups {
+		result = append(result, grouplist.Group{
+			Name:  name,
+			Items: items,
+		})
+	}
+
+	return result
+}
+
 func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 	var (
 		cmd  tea.Cmd
@@ -205,17 +233,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		items := createNoteItems(msg.Notes, currTab)
 		m.noteList.SetItems(items)
 
-		groups := []grouplist.Group{}
-		favGroup := grouplist.Group{
-			Name:  "fav",
-			Items: createNoteItems(msg.Notes, Favorites),
-		}
-		groups = append(groups, favGroup)
-		workGroup := grouplist.Group{
-			Name:  "work",
-			Items: createNoteItems(msg.Notes, WorkLogs),
-		}
-		groups = append(groups, workGroup)
+		groups := createTagGroups(msg.Notes)
 		m.tagsList.SetGroups(groups)
 
 		m.loading = false
