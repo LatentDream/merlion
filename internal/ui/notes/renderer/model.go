@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"merlion/internal/api"
 	"merlion/internal/styles"
+	"merlion/internal/utils"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/spinner"
@@ -167,13 +168,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	return m, cmd
 }
 
-func upperFirst(str string) string {
-	if len(str) == 0 {
-		return ""
-	}
-	return strings.ToUpper(str[0:1]) + str[1:]
-}
-
 func (m Model) View() string {
 	styles := m.themeManager.Styles()
 
@@ -197,7 +191,7 @@ func (m Model) View() string {
 		if len(m.Note.Tags) > 0 {
 			tags += " | Tags:"
 			for _, tag := range m.Note.Tags {
-				tags += " " + upperFirst(tag)
+				tags += " " + utils.UpperFirst(tag)
 			}
 		}
 		worklog := ""

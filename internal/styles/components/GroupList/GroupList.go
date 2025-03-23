@@ -5,6 +5,7 @@ import (
 	"merlion/internal/controls"
 	"merlion/internal/styles"
 	"merlion/internal/styles/components/delegate"
+	"merlion/internal/utils"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
@@ -116,11 +117,11 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.PageDown):
 			// Calculate available height for items
-			headerHeight := 0
+			headerHeight := 8
 			for i := 0; i <= m.selectedGroup; i++ {
 				headerHeight++ // Group header
 				if m.opennedGroup != nil && *m.opennedGroup == i {
-					headerHeight += 3 // Notes header + border + spacing
+					headerHeight += 3
 				}
 			}
 			availableHeight := m.height - headerHeight
@@ -149,32 +150,32 @@ func (m *Model) ensureItemVisible() {
 	}
 
 	// Calculate available height for items
-	headerHeight := 0
+	headerHeight := 8
 	for i := 0; i <= m.selectedGroup; i++ {
 		headerHeight++ // Group header
 		if m.opennedGroup != nil && *m.opennedGroup == i {
 			headerHeight += 3 // Notes header + border + spacing
 		}
 	}
-	availableHeight := m.height - headerHeight
+	availableHeight := m.height - headerHeight - 1 // Reserve 1 line for paginator
 	itemsPerPage := availableHeight / (m.delegate.Height() + m.delegate.Spacing())
-	
+
 	// Update paginator total pages
 	if m.opennedGroup != nil {
 		totalItems := len(m.Groups[*m.opennedGroup].Items)
 		m.paginator.SetTotalPages((totalItems + itemsPerPage - 1) / itemsPerPage)
 	}
-	
+
 	// Calculate the position of the selected item relative to the current page
 	relativePos := *m.selectedItem - (m.page * itemsPerPage)
-	
+
 	// If the item is below the visible area
 	if relativePos >= itemsPerPage {
 		m.page = *m.selectedItem / itemsPerPage
 		m.paginator.Page = m.page
 		m.scrollOffset = 0
 	}
-	
+
 	// If the item is above the visible area
 	if relativePos < 0 {
 		m.page = *m.selectedItem / itemsPerPage
@@ -197,14 +198,7 @@ func (m Model) populatedView() string {
 		return styles.Muted.Render("No items.")
 	}
 
-	// Calculate available height for items
-	// Account for:
-	// - Group headers (1 line each)
-	// - Notes header (2 lines)
-	// - Borders (2 lines)
-	// - Spacing between groups (1 line)
-	// - Paginator (1 line)
-	headerHeight := 0
+	headerHeight := 8
 	for i := 0; i <= m.selectedGroup; i++ {
 		headerHeight++ // Group header
 		if m.opennedGroup != nil && *m.opennedGroup == i {
@@ -255,43 +249,46 @@ func (t Model) View() string {
 
 	theme := t.themeManager.Current()
 	styles := t.themeManager.Styles()
-	indent := strings.Repeat(" ", int(theme.ListIndent))
+	indent := strings.Repeat(" ", 2)
 
-	// Header
-	s.WriteString(lipgloss.NewStyle().Foreground(theme.BorderColor).Render(strings.Repeat("─", t.width)) + "\n")
+	s.WriteString("\n")
+	desc := fmt.Sprintf("   %d items", len(t.Groups))
+	s.WriteString(styles.Muted.Render(desc) + "\n")
+	s.WriteString("\n")
 
 	// List all tags
-	for i, tag := range t.Groups {
-		noteCount := len(tag.Items)
+	for i, group := range t.Groups {
+		noteCount := len(group.Items)
 
 		// indication on open/closed state
 		prefix := indent
-		if i == t.selectedGroup {
+		if i == t.selectedGroup && t.selectedItem == nil {
 			// When selected, reduce the indent by 2 to compensate for the border
 			prefix = prefix[2:]
 		}
-		if t.opennedGroup != nil && *t.opennedGroup == i {
-			prefix = prefix[:len(prefix)-1] + "▼ "
-		} else {
-			prefix = prefix[:len(prefix)-1] + "▶ "
-		}
 
 		// Create title and description
-		title := prefix + tag.Name
+		title := prefix + utils.UpperFirst(group.Name)
+
 		desc := fmt.Sprintf("%d items", noteCount)
+		if t.opennedGroup != nil && *t.opennedGroup == i {
+			desc = "▼ " + desc
+		} else {
+			desc = "▶ " + desc
+		}
 
 		// Style based on selection state
-		if i == t.selectedGroup {
+		if i == t.selectedGroup && t.selectedItem == nil {
 			titleStyle := lipgloss.NewStyle().
 				Border(lipgloss.NormalBorder(), false, false, false, true).
 				BorderForeground(theme.Primary).
 				Padding(0, 0, 0, 1)
 			descStyle := titleStyle.Foreground(theme.Secondary)
 			s.WriteString(titleStyle.Render(title) + "\n")
-			s.WriteString(descStyle.Render(indent[2:] + desc) + "\n")
+			s.WriteString(descStyle.Render(indent[2:]+desc) + "\n")
 		} else {
 			s.WriteString(styles.Text.Render(title) + "\n")
-			s.WriteString(styles.Muted.Render(indent + desc) + "\n")
+			s.WriteString(styles.Muted.Render(indent+desc) + "\n")
 		}
 
 		// If this tag is open, list its notes
@@ -304,7 +301,7 @@ func (t Model) View() string {
 			noteIndent := indent + "  "
 
 			// List notes for this tag
-			if len(tag.Items) == 0 {
+			if len(group.Items) == 0 {
 				s.WriteString(noteIndent + lipgloss.NewStyle().Foreground(theme.MutedColor).Render("No notes for this tag") + "\n")
 			} else {
 				s.WriteString(t.populatedView())
@@ -313,8 +310,9 @@ func (t Model) View() string {
 			// Add bottom separator after items
 			s.WriteString(lipgloss.NewStyle().Foreground(theme.BorderColor).Render(strings.Repeat("─", t.width)) + "\n")
 		}
+
+		s.WriteString("\n")
 	}
 
 	return s.String()
 }
-
