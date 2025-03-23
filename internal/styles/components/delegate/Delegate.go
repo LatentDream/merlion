@@ -78,7 +78,6 @@ func (d StyledDelegate) RenderGroupItems(w io.Writer, m InputModel, index int, i
 		isSelected = true
 	}
 
-
 	if isSelected {
 		title = s.SelectedTitle.Render(title)
 		desc = s.SelectedDesc.Render(desc)

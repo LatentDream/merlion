@@ -193,6 +193,12 @@ func createTagGroups(notes []api.Note) []grouplist.Group {
 
 			if items, exists := groups[tag]; exists {
 				// This is the key fix: assign back to groups[tag]
+				items = append(items, newItem)
+				items = append(items, newItem)
+				items = append(items, newItem)
+				items = append(items, newItem)
+				items = append(items, newItem)
+				items = append(items, newItem)
 				groups[tag] = append(items, newItem)
 			} else {
 				// Initialize with the new item directly
