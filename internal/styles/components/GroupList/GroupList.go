@@ -294,7 +294,7 @@ func (t Model) View() string {
 		// If this tag is open, list its notes
 		if t.opennedGroup != nil && *t.opennedGroup == i {
 			// Add separator for open tag
-			s.WriteString(lipgloss.NewStyle().Foreground(theme.BorderColor).Render(strings.Repeat("─", t.width)) + "\n")
+			s.WriteString(lipgloss.NewStyle().Foreground(theme.BorderColor).Render(strings.Repeat("─", t.width - 1)) + "\n")
 			s.WriteString("\n")
 
 			// Sub-header for notes
@@ -308,11 +308,16 @@ func (t Model) View() string {
 			}
 			s.WriteString("\n")
 			// Add bottom separator after items
-			s.WriteString(lipgloss.NewStyle().Foreground(theme.BorderColor).Render(strings.Repeat("─", t.width)) + "\n")
+			s.WriteString(lipgloss.NewStyle().Foreground(theme.BorderColor).Render(strings.Repeat("─", t.width - 1)) + "\n")
 		}
 
 		s.WriteString("\n")
 	}
 
-	return s.String()
+	output := s.String()
+	for strings.Count(output, "\n") < t.height - 1 {
+		output += "\n"
+	}
+
+	return output
 }
