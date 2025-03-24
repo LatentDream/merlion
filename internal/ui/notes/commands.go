@@ -16,7 +16,16 @@ type editorFinishedMsg struct {
 	err error
 }
 
-func (m *Model) openEditor(content string) tea.Cmd {
+func (m *Model) openEditor() tea.Cmd {
+	note := m.getCurrentNote(true)
+	if note == nil {
+		log.Fatalf("Trying to edit a nil note")
+	}
+	if note.Content == nil {
+		log.Fatalf("Trying to open a note with content == nil")
+	}
+	log.Info("Editing:", note.NoteID)
+
 	// Create a temporary file for editing
 	tmpfile, err := os.CreateTemp("", "note-*.md")
 	if err != nil {
@@ -25,8 +34,7 @@ func (m *Model) openEditor(content string) tea.Cmd {
 		}
 	}
 
-	// Write content to temp file
-	if _, err := tmpfile.WriteString(content); err != nil {
+	if _, err := tmpfile.WriteString(*note.Content); err != nil {
 		os.Remove(tmpfile.Name())
 		return func() tea.Msg {
 			return editorFinishedMsg{fmt.Errorf("could not write to temp file: %w", err)}
@@ -57,23 +65,28 @@ func (m *Model) openEditor(content string) tea.Cmd {
 		}
 
 		// Update note content through your API
-		if i := m.noteList.SelectedItem(); i != nil {
-			note := i.(item).note
-			content := string(newContent)
-			note.Content = &content
-			// Update the item in the model's list
-			currentIndex := m.noteList.Index()
-			items := m.noteList.Items()
-			items[currentIndex] = item{note: note}
-			m.noteList.SetItems(items)
+		content := string(newContent)
+		note.Content = &content
 
-			// Update the note to backend
-			req := note.ToCreateRequest()
-			_, err := m.client.UpdateNote(note.NoteID, req)
-			if err != nil {
-				log.Errorf("Not able to save the note %s", note.NoteID)
-				return editorFinishedMsg{fmt.Errorf("failed to save the edited content: %w\nRecovery file location: %s", err, tmpfile.Name())}
+		// Update the main note list
+		updated := false
+		for _, groundTruthNote := range m.allNotes {
+			if groundTruthNote.NoteID == note.NoteID {
+				*groundTruthNote.Content = content
+				updated = true
+				break
 			}
+		}
+		if !updated {
+			log.Fatalf("Master list didn't get updated after Editor Finish")
+		}
+
+		// Update the note to backend
+		req := note.ToCreateRequest()
+		_, err = m.client.UpdateNote(note.NoteID, req)
+		if err != nil {
+			log.Errorf("Not able to save the note %s", note.NoteID)
+			return editorFinishedMsg{fmt.Errorf("failed to save the edited content: %w\nRecovery file location: %s", err, tmpfile.Name())}
 		}
 
 		// Only remove the file on successful completion

@@ -75,6 +75,9 @@ func (m Model) CurrentItemIdx() *int {
 }
 
 func (m Model) SelectedItem() list.Item {
+	if len(m.Groups) <= m.selectedGroup {
+		return nil
+	}
 	if m.selectedItem != nil {
 		return m.Groups[m.selectedGroup].Items[*m.selectedItem]
 	}

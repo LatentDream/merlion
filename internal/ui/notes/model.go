@@ -3,13 +3,14 @@ package Notes
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"merlion/internal/api"
 	"merlion/internal/controls"
 	"merlion/internal/styles"
+	styledDelegate "merlion/internal/styles/components/delegate"
 	grouplist "merlion/internal/styles/components/groupList"
 	tabs "merlion/internal/styles/components/tabs"
-	styledDelegate "merlion/internal/styles/components/delegate"
 	"merlion/internal/ui/create"
 	"merlion/internal/ui/navigation"
 	"merlion/internal/ui/notes/renderer"
@@ -184,11 +185,50 @@ func createNoteItems(notes []api.Note, filter TabKind) []list.Item {
 	return items
 }
 
+func (m *Model) refreshNotesView() {
+	currTab := m.fileterTabs.CurrentTab()
+	items := createNoteItems(m.allNotes, currTab)
+	m.noteList.SetItems(items)
+	groups := createTagGroups(m.allNotes)
+	m.tagsList.SetGroups(groups)
+}
+
+func (m Model) getCurrentNote(considerRenderer bool) *api.Note {
+	var currentNote *api.Note
+	if m.focusedPane == markdown && considerRenderer {
+		if m.noteRenderer.Note != nil {
+			log.Debug("Selected Rendered note")
+			currentNote = m.noteRenderer.Note
+		}
+	} else {
+		if m.fileterTabs.CurrentTab() == Tags {
+			selectedItem := m.tagsList.SelectedItem()
+			if selectedItem != nil {
+				if noteItem, ok := selectedItem.(item); ok {
+					note := noteItem.note
+					log.Debug("Selected tag note")
+					currentNote = &note
+				}
+			}
+		} else {
+			if selectedItem := m.noteList.SelectedItem(); selectedItem != nil {
+				if noteItem, ok := selectedItem.(item); ok {
+					note := noteItem.note
+					log.Debug("Selected list note")
+					currentNote = &note
+				}
+			}
+		}
+	}
+	return currentNote
+}
+
 func createTagGroups(notes []api.Note) []grouplist.Group {
 	groups := make(map[string][]list.Item)
 
 	for _, note := range notes {
 		for _, tag := range note.Tags {
+			tag = strings.ToLower(tag)
 			newItem := item{note: note}
 
 			if items, exists := groups[tag]; exists {
@@ -227,12 +267,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			return m, nil
 		}
 		m.allNotes = msg.Notes
-		currTab := m.fileterTabs.CurrentTab()
-		items := createNoteItems(msg.Notes, currTab)
-		m.noteList.SetItems(items)
-
-		groups := createTagGroups(msg.Notes)
-		m.tagsList.SetGroups(groups)
+		m.refreshNotesView()
 
 		m.loading = false
 		return m, nil
@@ -248,24 +283,10 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		}
 
 		// Refresh the viewport content after successful edit
-		if i := m.noteList.SelectedItem(); i != nil {
-			// NOTE: Content should be edited on the master list only
-			// -> and refresh the list after
-			note := i.(item).note
-			m.noteRenderer.SetNote(&note)
+		m.refreshNotesView()
+		if note := m.getCurrentNote(true); note != nil {
+			m.noteRenderer.SetNote(note)
 			m.noteRenderer.Render()
-			updated := false
-			for i, n := range m.allNotes {
-				if n.NoteID == note.NoteID {
-					n.Content = note.Content
-					m.allNotes[i] = n
-					updated = true
-					break
-				}
-			}
-			if !updated {
-				log.Fatalf("Master list didn't get updated after Editor Finish")
-			}
 		}
 		return m, nil
 
@@ -340,16 +361,14 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.NextTab):
 			if m.focusedPane == noteList {
-				activeTabName := m.fileterTabs.NextTab()
-				items := createNoteItems(m.allNotes, activeTabName)
-				m.noteList.SetItems(items)
+				m.fileterTabs.NextTab()
+				m.refreshNotesView()
 			}
 
 		case key.Matches(msg, m.keys.PrevTab):
 			if m.focusedPane == noteList {
-				activeTabName := m.fileterTabs.PrevTab()
-				items := createNoteItems(m.allNotes, activeTabName)
-				m.noteList.SetItems(items)
+				m.fileterTabs.PrevTab()
+				m.refreshNotesView()
 			}
 
 		case key.Matches(msg, m.keys.ToggleInfo):
@@ -374,17 +393,8 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			return m, cmd
 
 		case key.Matches(msg, m.keys.Delete):
-			var noteToDelete api.Note
-			if m.focusedPane == noteList {
-				if i := m.noteList.SelectedItem(); i != nil {
-					noteToDelete = i.(item).note
-				}
-			} else {
-				if m.noteRenderer.Note != nil {
-					noteToDelete = *m.noteRenderer.Note
-				}
-			}
-			if noteToDelete.NoteID != "" {
+			noteToDelete := m.getCurrentNote(true)
+			if noteToDelete != nil && noteToDelete.NoteID != "" {
 				cmd = navigation.AskConfirmationCmd(
 					"Are you sure you want to delete this note ?",
 					noteToDelete.Title,
@@ -401,46 +411,36 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			m.focusedPane = noteList
 
 		case key.Matches(msg, m.keys.Edit):
-			if i := m.noteList.SelectedItem(); i != nil {
-				note := i.(item).note
-				if note.Content != nil {
-					return m, m.openEditor(*note.Content)
+			noteToEdit := m.getCurrentNote(true)
+			if noteToEdit != nil {
+				if noteToEdit.Content != nil {
+					return m, m.openEditor()
+				} else {
+					// We don't have the content locally.. fetch
+					m.loading = true
+					return m, fetchNoteContent(m.client, noteToEdit.NoteID)
 				}
 			}
 
 		case key.Matches(msg, m.keys.Manage):
-			if i := m.noteList.SelectedItem(); i != nil {
-				note := i.(item).note
+			noteToManage := m.getCurrentNote(true)
+			if noteToManage != nil {
 				m.loading = true
-				return m, navigation.OpenManageViewCmd(note.NoteID)
+				return m, navigation.OpenManageViewCmd(noteToManage.NoteID)
 			}
 
 		case key.Matches(msg, m.keys.Select):
 			if m.focusedPane == noteList {
-				if m.fileterTabs.CurrentTab() == Tags {
-					if i := m.tagsList.SelectedItem(); i != nil {
-						note := i.(item).note
-						if note.Content == nil {
-							// We don't have the content locally.. fetch
-							m.loading = true
-							return m, fetchNoteContent(m.client, note.NoteID)
-						}
-						m.noteRenderer.SetNote(&note)
-						m.noteRenderer.Render()
-						m.focusedPane = markdown
+				note := m.getCurrentNote(false)
+				if note != nil {
+					if note.Content == nil {
+						// We don't have the content locally.. fetch
+						m.loading = true
+						return m, fetchNoteContent(m.client, note.NoteID)
 					}
-				} else {
-					if i := m.noteList.SelectedItem(); i != nil {
-						note := i.(item).note
-						if note.Content == nil {
-							// We don't have the content locally.. fetch
-							m.loading = true
-							return m, fetchNoteContent(m.client, note.NoteID)
-						}
-						m.noteRenderer.SetNote(&note)
-						m.noteRenderer.Render()
-						m.focusedPane = markdown
-					}
+					m.noteRenderer.SetNote(note)
+					m.noteRenderer.Render()
+					m.focusedPane = markdown
 				}
 			}
 
@@ -462,19 +462,19 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		}
 
 	case noteContentMsg:
-		if i := m.noteList.SelectedItem(); i != nil {
-			note := i.(item).note
+		note := m.getCurrentNote(false)
+		if note != nil {
 			if note.NoteID != msg.NoteId {
 				log.Fatalf("Receive a Content of a un-selected note")
 			}
 			content := msg.Content
 			note.Content = &content
-			m.noteRenderer.SetNote(&note)
+			m.noteRenderer.SetNote(note)
 
 			// Update the item in the model's list
 			currentIndex := m.noteList.Index()
 			items := m.noteList.Items()
-			items[currentIndex] = item{note: note}
+			items[currentIndex] = item{note: *note}
 			m.noteList.SetItems(items)
 			// NOTE: Content should be edited on the master list only
 			// -> and refresh the list after
