@@ -1,7 +1,7 @@
 package dialog
 
 import (
-	"merlion/internal/api"
+	"merlion/internal/store"
 	"merlion/internal/styles"
 	"merlion/internal/ui/navigation"
 
@@ -18,20 +18,20 @@ type Model struct {
 	themeManager *styles.ThemeManager
 	width        int
 	height       int
-	client       *api.Client
+	storeManager *store.Manager
 	confirm      bool
 	returnUI     navigation.CurrentUI
 }
 
-func (m Model) SetClient(client *api.Client) tea.Cmd {
-	m.client = client
+func (m Model) SetClient(sotreManager *store.Manager) tea.Cmd {
+	m.storeManager = sotreManager
 	return nil
 }
 
-func NewModel(client *api.Client, themeManager *styles.ThemeManager) navigation.View {
+func NewModel(sotreManager *store.Manager, themeManager *styles.ThemeManager) navigation.View {
 	return Model{
 		themeManager: themeManager,
-		client:       client,
+		storeManager: sotreManager,
 		confirm:      false,
 	}
 }

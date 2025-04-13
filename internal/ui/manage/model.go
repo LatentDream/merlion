@@ -1,16 +1,8 @@
-/* We want to be able to edit:
- * - [x] Title
- * - [x] Favorite
- * - [x] Worklog
- * - [ ] Lags on the return to Notes View
- * - [x] Tags
- * - [ ] Workspace/folder (coming soon)
- */
 package manage
 
 import (
-	"merlion/internal/api"
 	"merlion/internal/model"
+	"merlion/internal/store"
 	"merlion/internal/styles"
 	"merlion/internal/styles/components"
 	taginput "merlion/internal/styles/components/tagInput"
@@ -28,7 +20,7 @@ type Model struct {
 	height          int
 	note            *model.Note
 	themeManager    *styles.ThemeManager
-	client          *api.Client
+	storeManager    *store.Manager
 	spinner         spinner.Model
 	isLoading       bool
 	title           textinput.Model
@@ -38,7 +30,7 @@ type Model struct {
 }
 
 func NewModel(
-	client *api.Client,
+	storeManager *store.Manager,
 	themeManager *styles.ThemeManager,
 ) navigation.View {
 	title := textinput.New()
@@ -50,7 +42,7 @@ func NewModel(
 	isWorkLogInput := components.NewRadioInput("Work Log", themeManager)
 
 	// Find all tags
-	tags := client.GetTags()
+	tags := storeManager.GetTags()
 
 	// Initialize tag input with some sample tags
 	tagInput := taginput.New(tags, themeManager, false)
@@ -65,7 +57,7 @@ func NewModel(
 		isFavoriteInput: isFavoriteInput,
 		isWorkLogInput:  isWorkLogInput,
 		tagInput:        tagInput,
-		client:          client,
+		storeManager:    storeManager,
 		note:            nil,
 		themeManager:    themeManager,
 		spinner:         sp,
@@ -82,11 +74,11 @@ type fetchNoteResultMsg struct {
 	Error  *error
 }
 
-func fetchNote(client *api.Client, noteId string) tea.Cmd {
+func fetchNote(storeManager *store.Manager, noteId string) tea.Cmd {
 	// Needed as we want the content to be fetch, so we don't delete it by error
 	// TODO: should handle the content.isNone nil in the backend
 	return func() tea.Msg {
-		res, err := client.GetNote(noteId)
+		res, err := storeManager.GetNote(noteId)
 		if err != nil {
 			return fetchNoteResultMsg{NoteId: noteId, Error: &err}
 		}
@@ -107,7 +99,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 	case navigation.OpenManageMsg:
 		m.isLoading = true
-		cmd := fetchNote(m.client, msg.NoteId)
+		cmd := fetchNote(m.storeManager, msg.NoteId)
 		return m, tea.Batch(spinner.Tick, cmd)
 
 	case fetchNoteResultMsg:
@@ -182,7 +174,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 				m.note.IsWorkLog = m.isWorkLogInput.IsChecked()
 				m.note.Tags = m.tagInput.GetTags()
 				// TODO: Handle potential Error returned + loading state
-				m.client.UpdateNote(m.note.NoteID, m.note.ToCreateRequest())
+				m.storeManager.UpdateNote(m.note.NoteID, m.note.ToCreateRequest())
 				return m, navigation.SwitchUICmd(navigation.NoteUI)
 			}
 
@@ -258,7 +250,7 @@ func (m Model) View() string {
 	)
 }
 
-func (m Model) SetClient(client *api.Client) tea.Cmd {
-	m.client = client
+func (m Model) SetClient(manager *store.Manager) tea.Cmd {
+	m.storeManager = manager
 	return nil
 }

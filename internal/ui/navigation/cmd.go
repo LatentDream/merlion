@@ -2,6 +2,7 @@ package navigation
 
 import (
 	"merlion/internal/api"
+	"merlion/internal/store"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -47,7 +48,7 @@ type View interface {
 	Init() tea.Cmd
 	Update(tea.Msg) (View, tea.Cmd)
 	View() string
-	SetClient(*api.Client) tea.Cmd
+	SetClient(*store.Manager) tea.Cmd
 }
 
 // Global CMD to switch View

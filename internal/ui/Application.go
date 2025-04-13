@@ -3,6 +3,7 @@ package ui
 import (
 	"merlion/internal/api"
 	"merlion/internal/auth"
+	"merlion/internal/store"
 	"merlion/internal/styles"
 	"merlion/internal/ui/create"
 	"merlion/internal/ui/dialog"
@@ -31,13 +32,15 @@ func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.
 		client, _ = api.NewClient(creds)
 	}
 
+	manager := store.NewManager(client)
+
 	// Create views
 	views := make(map[navigation.CurrentUI]navigation.View)
-	views[navigation.CreateUI] = create.NewModel(client, themeManager)
+	views[navigation.CreateUI] = create.NewModel(manager, themeManager)
 	views[navigation.LoginUI] = login.NewModel(credentialsManager, themeManager)
-	views[navigation.NoteUI] = NotesUI.NewModel(client, themeManager)
-	views[navigation.DialogUI] = dialog.NewModel(client, themeManager)
-	views[navigation.ManageUI] = manage.NewModel(client, themeManager)
+	views[navigation.NoteUI] = NotesUI.NewModel(manager, themeManager)
+	views[navigation.DialogUI] = dialog.NewModel(manager, themeManager)
+	views[navigation.ManageUI] = manage.NewModel(manager, themeManager)
 
 	return Model{
 		state:  initialUI,
@@ -60,7 +63,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.client = msg.Client
 		var cmds []tea.Cmd
 		for _, view := range m.views {
-			if cmd := view.SetClient(msg.Client); cmd != nil {
+			client := msg.Client
+			storeManager := store.NewManager(client)
+			if cmd := view.SetClient(storeManager); cmd != nil {
 				cmds = append(cmds, cmd)
 			}
 		}

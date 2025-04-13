@@ -1,8 +1,8 @@
 package create
 
 import (
-	"merlion/internal/api"
 	"merlion/internal/model"
+	"merlion/internal/store"
 	"merlion/internal/styles"
 	"merlion/internal/styles/components"
 	taginput "merlion/internal/styles/components/tagInput"
@@ -21,16 +21,16 @@ type Model struct {
 	isFavoriteInput components.RadioInput
 	isWorkLogInput  components.RadioInput
 	themeManager    *styles.ThemeManager
-	client          *api.Client
+	storeManager    *store.Manager
 }
 
-func (m Model) SetClient(client *api.Client) tea.Cmd {
-	m.client = client
+func (m Model) SetClient(storeManager *store.Manager) tea.Cmd {
+	m.storeManager = storeManager
 	return nil
 }
 
 func NewModel(
-	client *api.Client,
+	storeManager *store.Manager,
 	themeManager *styles.ThemeManager,
 ) navigation.View {
 	title := textinput.New()
@@ -42,7 +42,7 @@ func NewModel(
 	isWorkLogInput := components.NewRadioInput("Work Log", themeManager)
 
 	// Find all tags
-	tags := client.GetTags()
+	tags := storeManager.GetTags()
 
 	// Initialize tag input with some sample tags
 	tagInput := taginput.New(tags, themeManager, false)
@@ -53,7 +53,7 @@ func NewModel(
 		isWorkLogInput:  isWorkLogInput,
 		tagInput:        tagInput,
 		themeManager:    themeManager,
-		client:          client,
+		storeManager:    storeManager,
 	}
 }
 
@@ -126,7 +126,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 					Tags:       m.tagInput.GetTags(),
 				}
 				// TODO: Handle potential Error returned
-				m.client.CreateNote(note.ToCreateRequest())
+				m.storeManager.CreateNote(note.ToCreateRequest())
 				return m, navigation.SwitchUICmd(navigation.NoteUI)
 			}
 		}

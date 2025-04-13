@@ -6,6 +6,7 @@ import (
 
 	"merlion/internal/api"
 	"merlion/internal/auth"
+	"merlion/internal/store"
 	"merlion/internal/styles"
 	"merlion/internal/ui/navigation"
 
@@ -60,7 +61,7 @@ func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.
 	}
 }
 
-func (m Model) SetClient(client *api.Client) tea.Cmd {
+func (m Model) SetClient(storeManager *store.Manager) tea.Cmd {
 	return nil
 }
 

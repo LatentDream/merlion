@@ -2,8 +2,8 @@ package Notes
 
 import (
 	"fmt"
-	"merlion/internal/api"
 	"merlion/internal/model"
+	"merlion/internal/store"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -84,7 +84,7 @@ func (m *Model) openEditor() tea.Cmd {
 
 		// Update the note to backend
 		req := note.ToCreateRequest()
-		_, err = m.client.UpdateNote(note.NoteID, req)
+		_, err = m.storeManager.UpdateNote(note.NoteID, req)
 		if err != nil {
 			log.Errorf("Not able to save the note %s", note.NoteID)
 			return editorFinishedMsg{fmt.Errorf("failed to save the edited content: %w\nRecovery file location: %s", err, tmpfile.Name())}
@@ -106,9 +106,9 @@ type noteContentMsg struct {
 }
 type errMsg struct{ err error }
 
-func fetchNoteContent(client *api.Client, noteId string) tea.Cmd {
+func fetchNoteContent(storeManager *store.Manager, noteId string) tea.Cmd {
 	return func() tea.Msg {
-		res, err := client.GetNote(noteId)
+		res, err := storeManager.GetNote(noteId)
 		if err != nil {
 			return errMsg{err}
 		}
@@ -125,10 +125,10 @@ type notesLoadedMsg = NotesLoadedMsg
 
 func (m Model) loadNotes() tea.Cmd {
 	return func() tea.Msg {
-		if m.client == nil {
+		if m.storeManager == nil {
 			log.Fatalf("In CMD - Trying to load notes without any client")
 		}
-		notes, err := m.client.ListNotes()
+		notes, err := m.storeManager.ListNotes()
 		return notesLoadedMsg{Notes: notes, Err: err}
 	}
 }

@@ -5,9 +5,9 @@ import (
 	"sort"
 	"strings"
 
-	"merlion/internal/api"
 	"merlion/internal/controls"
 	"merlion/internal/model"
+	"merlion/internal/store"
 	"merlion/internal/styles"
 	styledDelegate "merlion/internal/styles/components/delegate"
 	grouplist "merlion/internal/styles/components/groupList"
@@ -92,14 +92,14 @@ type Model struct {
 	listDelegate    *styledDelegate.StyledDelegate
 	styles          *styles.Styles
 	themeManager    *styles.ThemeManager
-	client          *api.Client
+	storeManager    *store.Manager
 	createModel     create.Model
 	viewType        ViewType
 	compactViewOnly bool
 	tagsList        grouplist.Model
 }
 
-func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
+func NewModel(storeManager *store.Manager, themeManager *styles.ThemeManager) Model {
 	s := themeManager.Styles()
 
 	// Initialize spinner with themed color
@@ -137,7 +137,7 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 		listDelegate:    delegate,
 		styles:          s,
 		themeManager:    themeManager,
-		client:          client,
+		storeManager:    storeManager,
 		viewType:        large,
 		compactViewOnly: themeManager.Config.CompactViewOnly,
 		tagsList:        gl,
@@ -145,7 +145,7 @@ func NewModel(client *api.Client, themeManager *styles.ThemeManager) Model {
 }
 
 func (m Model) Init() tea.Cmd {
-	if m.client != nil {
+	if m.storeManager != nil {
 		return tea.Batch(
 			m.spinner.Tick,
 			m.loadNotes(),
@@ -154,8 +154,8 @@ func (m Model) Init() tea.Cmd {
 	return m.spinner.Tick
 }
 
-func (m Model) SetClient(client *api.Client) tea.Cmd {
-	m.client = client
+func (m Model) SetClient(storeManager *store.Manager) tea.Cmd {
+	m.storeManager = storeManager
 	return m.loadNotes()
 }
 
@@ -401,7 +401,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 					noteToDelete.Title,
 					navigation.DangerLvl,
 					func() {
-						m.client.DeleteNote(noteToDelete.NoteID)
+						m.storeManager.DeleteNote(noteToDelete.NoteID)
 					},
 					navigation.NoteUI,
 				)
@@ -419,7 +419,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 				} else {
 					// We don't have the content locally.. fetch
 					m.loading = true
-					return m, fetchNoteContent(m.client, noteToEdit.NoteID)
+					return m, fetchNoteContent(m.storeManager, noteToEdit.NoteID)
 				}
 			}
 
@@ -437,7 +437,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 					if note.Content == nil {
 						// We don't have the content locally.. fetch
 						m.loading = true
-						return m, fetchNoteContent(m.client, note.NoteID)
+						return m, fetchNoteContent(m.storeManager, note.NoteID)
 					}
 					m.noteRenderer.SetNote(note)
 					m.noteRenderer.Render()
