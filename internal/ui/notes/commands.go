@@ -3,6 +3,7 @@ package Notes
 import (
 	"fmt"
 	"merlion/internal/api"
+	"merlion/internal/model"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -116,7 +117,7 @@ func fetchNoteContent(client *api.Client, noteId string) tea.Cmd {
 }
 
 type NotesLoadedMsg struct {
-	Notes []api.Note
+	Notes []model.Note
 	Err   error
 }
 

@@ -2,7 +2,7 @@ package renderer
 
 import (
 	"fmt"
-	"merlion/internal/api"
+	"merlion/internal/model"
 	"merlion/internal/styles"
 	"merlion/internal/utils"
 	"strings"
@@ -26,7 +26,7 @@ const (
 // All operations on a note need to be handle
 // by the caller
 type Model struct {
-	Note         *api.Note
+	Note         *model.Note
 	width        int
 	height       int
 	viewport     viewport.Model
@@ -37,7 +37,7 @@ type Model struct {
 	spinner      spinner.Model
 }
 
-func New( themeManager *styles.ThemeManager) Model {
+func New(themeManager *styles.ThemeManager) Model {
 
 	// Initialize glamour for markdown rendering
 	renderer, err := glamour.NewTermRenderer(
@@ -91,7 +91,7 @@ func (m *Model) ToggleHidePosition() {
 	}
 }
 
-func (m *Model) SetNote(note *api.Note) {
+func (m *Model) SetNote(note *model.Note) {
 	m.Note = note
 }
 

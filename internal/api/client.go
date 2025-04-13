@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"merlion/internal/auth"
+	"merlion/internal/model"
 
 	"github.com/charmbracelet/log"
 )
@@ -105,14 +106,14 @@ func (c *Client) doRequest(method, path string, body interface{}) ([]byte, error
 }
 
 // Note operations
-func (c *Client) ListNotes() ([]Note, error) {
+func (c *Client) ListNotes() ([]model.Note, error) {
 	log.Debugf("Listing Notes")
 	respBody, err := c.doRequest(http.MethodGet, "notes", nil)
 	if err != nil {
 		return nil, err
 	}
 
-	var notes []Note
+	var notes []model.Note
 	if err := json.Unmarshal(respBody, &notes); err != nil {
 		return nil, fmt.Errorf("unmarshaling response: %w", err)
 	}
@@ -138,14 +139,14 @@ func (c *Client) GetTags() []string {
 	return tags
 }
 
-func (c *Client) GetNote(noteID string) (*Note, error) {
+func (c *Client) GetNote(noteID string) (*model.Note, error) {
 	log.Debugf("Get Note %s", noteID)
 	respBody, err := c.doRequest(http.MethodGet, fmt.Sprintf("notes/%s", noteID), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	var note Note
+	var note model.Note
 	if err := json.Unmarshal(respBody, &note); err != nil {
 		return nil, fmt.Errorf("unmarshaling response: %w", err)
 	}
@@ -159,14 +160,14 @@ func (c *Client) GetNote(noteID string) (*Note, error) {
 	return &note, nil
 }
 
-func (c *Client) CreateNote(req CreateNoteRequest) (*Note, error) {
+func (c *Client) CreateNote(req model.CreateNoteRequest) (*model.Note, error) {
 	log.Debugf("Creating Note")
 	respBody, err := c.doRequest(http.MethodPost, "notes", req)
 	if err != nil {
 		return nil, err
 	}
 
-	var note Note
+	var note model.Note
 	if err := json.Unmarshal(respBody, &note); err != nil {
 		return nil, fmt.Errorf("unmarshaling response: %w", err)
 	}
@@ -174,14 +175,14 @@ func (c *Client) CreateNote(req CreateNoteRequest) (*Note, error) {
 	return &note, nil
 }
 
-func (c *Client) UpdateNote(noteID string, req CreateNoteRequest) (*Note, error) {
+func (c *Client) UpdateNote(noteID string, req model.CreateNoteRequest) (*model.Note, error) {
 	log.Debugf("Updating Note %s", noteID)
 	respBody, err := c.doRequest(http.MethodPut, fmt.Sprintf("notes/%s", noteID), req)
 	if err != nil {
 		return nil, err
 	}
 
-	var note Note
+	var note model.Note
 	if err := json.Unmarshal(respBody, &note); err != nil {
 		return nil, fmt.Errorf("unmarshaling response: %w", err)
 	}

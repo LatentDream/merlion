@@ -7,6 +7,7 @@ import (
 
 	"merlion/internal/api"
 	"merlion/internal/controls"
+	"merlion/internal/model"
 	"merlion/internal/styles"
 	styledDelegate "merlion/internal/styles/components/delegate"
 	grouplist "merlion/internal/styles/components/groupList"
@@ -41,7 +42,7 @@ const ViewRatio = 4
 const LargeScreenBreakpoint = 140
 
 type item struct {
-	note api.Note
+	note model.Note
 }
 
 type ViewState string
@@ -78,7 +79,7 @@ func (t TabKind) String() string {
 
 type Model struct {
 	noteList        list.Model
-	allNotes        []api.Note
+	allNotes        []model.Note
 	fileterTabs     tabs.Tabs[TabKind]
 	noteRenderer    renderer.Model
 	spinner         spinner.Model
@@ -158,8 +159,8 @@ func (m Model) SetClient(client *api.Client) tea.Cmd {
 	return m.loadNotes()
 }
 
-func createNoteItems(notes []api.Note, filter TabKind) []list.Item {
-	filteredNotes := make([]api.Note, 0)
+func createNoteItems(notes []model.Note, filter TabKind) []list.Item {
+	filteredNotes := make([]model.Note, 0)
 	if filter == Favorites {
 		for _, note := range notes {
 			if note.IsFavorite {
@@ -193,8 +194,8 @@ func (m *Model) refreshNotesView() {
 	m.tagsList.SetGroups(groups)
 }
 
-func (m Model) getCurrentNote(considerRenderer bool) *api.Note {
-	var currentNote *api.Note
+func (m Model) getCurrentNote(considerRenderer bool) *model.Note {
+	var currentNote *model.Note
 	if m.focusedPane == markdown && considerRenderer {
 		if m.noteRenderer.Note != nil {
 			log.Debug("Selected Rendered note")
@@ -223,7 +224,7 @@ func (m Model) getCurrentNote(considerRenderer bool) *api.Note {
 	return currentNote
 }
 
-func createTagGroups(notes []api.Note) []grouplist.Group {
+func createTagGroups(notes []model.Note) []grouplist.Group {
 	groups := make(map[string][]list.Item)
 
 	for _, note := range notes {

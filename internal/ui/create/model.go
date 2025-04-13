@@ -2,6 +2,7 @@ package create
 
 import (
 	"merlion/internal/api"
+	"merlion/internal/model"
 	"merlion/internal/styles"
 	"merlion/internal/styles/components"
 	taginput "merlion/internal/styles/components/tagInput"
@@ -118,7 +119,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			}
 			if m.title.Focused() {
 				// TODO: input validation - need a title
-				note := api.Note{
+				note := model.Note{
 					Title:      m.title.Value(),
 					IsFavorite: m.isFavoriteInput.IsChecked(),
 					IsWorkLog:  m.isWorkLogInput.IsChecked(),

@@ -10,6 +10,7 @@ package manage
 
 import (
 	"merlion/internal/api"
+	"merlion/internal/model"
 	"merlion/internal/styles"
 	"merlion/internal/styles/components"
 	taginput "merlion/internal/styles/components/tagInput"
@@ -25,7 +26,7 @@ import (
 type Model struct {
 	width           int
 	height          int
-	note            *api.Note
+	note            *model.Note
 	themeManager    *styles.ThemeManager
 	client          *api.Client
 	spinner         spinner.Model
@@ -77,7 +78,7 @@ func (m Model) Init() tea.Cmd {
 
 type fetchNoteResultMsg struct {
 	NoteId string
-	Note   *api.Note
+	Note   *model.Note
 	Error  *error
 }
 
