@@ -5,7 +5,7 @@ import (
 )
 
 // Encapsulation to introduce on device local store
-type Store interface {
+type store interface {
 	Name() string
 	ListNotes() ([]model.Note, error)
 	UpdateNote(string, model.CreateNoteRequest) (*model.Note, error)

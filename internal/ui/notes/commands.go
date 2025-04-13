@@ -108,7 +108,7 @@ type errMsg struct{ err error }
 
 func fetchNoteContent(storeManager *store.Manager, noteId string) tea.Cmd {
 	return func() tea.Msg {
-		res, err := storeManager.GetNote(noteId)
+		res, err := storeManager.GetFullNote(noteId)
 		if err != nil {
 			return errMsg{err}
 		}
@@ -128,7 +128,8 @@ func (m Model) loadNotes() tea.Cmd {
 		if m.storeManager == nil {
 			log.Fatalf("In CMD - Trying to load notes without any client")
 		}
-		notes, err := m.storeManager.ListNotes()
+		notes, err := m.storeManager.ListNoteMetadata()
+		// TODO: nothing should be return, & note kept in the storeManager
 		return notesLoadedMsg{Notes: notes, Err: err}
 	}
 }

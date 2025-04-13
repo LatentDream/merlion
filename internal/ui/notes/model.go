@@ -12,7 +12,6 @@ import (
 	styledDelegate "merlion/internal/styles/components/delegate"
 	grouplist "merlion/internal/styles/components/groupList"
 	tabs "merlion/internal/styles/components/tabs"
-	"merlion/internal/ui/create"
 	"merlion/internal/ui/navigation"
 	"merlion/internal/ui/notes/renderer"
 
@@ -79,7 +78,7 @@ func (t TabKind) String() string {
 
 type Model struct {
 	noteList        list.Model
-	allNotes        []model.Note
+	allNotes        []model.Note  // TODO: Move this to the store
 	fileterTabs     tabs.Tabs[TabKind]
 	noteRenderer    renderer.Model
 	spinner         spinner.Model
@@ -93,7 +92,6 @@ type Model struct {
 	styles          *styles.Styles
 	themeManager    *styles.ThemeManager
 	storeManager    *store.Manager
-	createModel     create.Model
 	viewType        ViewType
 	compactViewOnly bool
 	tagsList        grouplist.Model
@@ -264,6 +262,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		cmds = append(cmds, spinnerCmd)
 
 	case notesLoadedMsg:
+		// TODO: nothing should be return, only refreshView should be done here 
 		if msg.Err != nil {
 			return m, nil
 		}
@@ -469,7 +468,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 				log.Fatalf("Receive a Content of a un-selected note")
 			}
 			content := msg.Content
-			note.Content = &content
+			note.Content = &content  // TODO: Move this to the store
 			m.noteRenderer.SetNote(note)
 
 			// Update the item in the model's list
@@ -477,6 +476,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			items := m.noteList.Items()
 			items[currentIndex] = item{note: *note}
 			m.noteList.SetItems(items)
+			// TODO: Move this to the store
 			// NOTE: Content should be edited on the master list only
 			// -> and refresh the list after
 			updated := false

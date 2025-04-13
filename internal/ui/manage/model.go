@@ -78,7 +78,7 @@ func fetchNote(storeManager *store.Manager, noteId string) tea.Cmd {
 	// Needed as we want the content to be fetch, so we don't delete it by error
 	// TODO: should handle the content.isNone nil in the backend
 	return func() tea.Msg {
-		res, err := storeManager.GetNote(noteId)
+		res, err := storeManager.GetFullNote(noteId)
 		if err != nil {
 			return fetchNoteResultMsg{NoteId: noteId, Error: &err}
 		}

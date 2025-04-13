@@ -2,11 +2,13 @@
  * - [x] New store package to encapsulate the Cloud behind an interface (will allow local storage)
  * - [ ] The backend should be able to receive nil ptr to the content & not delete the related content
  *       > remove the needs for internal/ui/manage/model.go:FetchNote
- * - [ ] Models shouldn't keep their own version of []model.Note, but should refer to the store
+ * - [ ] The Note Metadata & the Content should be split
+ *       > GetContent(noteId) (*string, *FetchCmd) <- Return on or the other ?
  */
 package store
 
 import (
+	"log"
 	"merlion/internal/model"
 )
 
@@ -17,32 +19,35 @@ import (
 type Manager struct {
 	activeStore store
 	name        string
-	inited      bool
 	// notes contains a cached list of notes, but their content field may be nil
 	// Use GetNote() to retrieve the complete note with content
 	notes []model.Note
 }
 
 // NewManager creates a new manager with the given store implementation
-// and initializes the notes metadata list (without full content).
+// and initializes the notes list.
 func NewManager(store store) *Manager {
+	notes, err := store.ListNotes()
+	if err != nil {
+		log.Fatalf("Not able to list notes at the moment")
+	}
 	return &Manager{
 		activeStore: store,
 		name:        store.Name(),
-		inited:      false,
+		notes:       notes,
 	}
 }
 
-// GetFullNote retrieves a specific note by ID with its complete content.
+// GetNote retrieves a specific note by ID.
 // This method guarantees that the returned note will have its content field populated.
-func (m *Manager) GetFullNote(noteID string) (*model.Note, error) {
+func (m *Manager) GetNote(noteID string) (*model.Note, error) {
 	return m.activeStore.GetNote(noteID)
 }
 
-// ListNoteMetadata returns all notes from the store, but with potentially empty content fields.
+// ListNotes returns all notes from the store.
 // Note: Returned notes may not have their content field populated.
-// To access a note's full content, use GetFullNote() with the note's ID.
-func (m *Manager) ListNoteMetadata() ([]model.Note, error) {
+// To access a note's content, use GetNote() with the note's ID.
+func (m *Manager) ListNotes() ([]model.Note, error) {
 	return m.activeStore.ListNotes()
 }
 
