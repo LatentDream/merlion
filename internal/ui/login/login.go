@@ -127,7 +127,8 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 				if err != nil {
 					log.Fatalf("Not able to save credentials %v", err)
 				}
-				return m, navigation.LoginCmd(client)
+				storeManager := store.NewManager(client)
+				return m, navigation.LoginCmd(storeManager)
 			}
 			// Move to password field when pressing enter in email field
 			if m.emailInput.Focused() {

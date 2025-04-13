@@ -16,9 +16,9 @@ import (
 )
 
 type Model struct {
-	state  navigation.CurrentUI
-	views  map[navigation.CurrentUI]navigation.View
-	client *api.Client
+	state navigation.CurrentUI
+	views map[navigation.CurrentUI]navigation.View
+	store *store.Manager
 }
 
 func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.ThemeManager) (Model, error) {
@@ -43,9 +43,9 @@ func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.
 	views[navigation.ManageUI] = manage.NewModel(manager, themeManager)
 
 	return Model{
-		state:  initialUI,
-		views:  views,
-		client: client,
+		state: initialUI,
+		views: views,
+		store: manager,
 	}, nil
 }
 
@@ -60,11 +60,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.views[m.state].Init()
 
 	case navigation.LoginMsg:
-		m.client = msg.Client
+		m.store = msg.Manager
 		var cmds []tea.Cmd
 		for _, view := range m.views {
-			client := msg.Client
-			storeManager := store.NewManager(client)
+			storeManager := msg.Manager
 			if cmd := view.SetClient(storeManager); cmd != nil {
 				cmds = append(cmds, cmd)
 			}

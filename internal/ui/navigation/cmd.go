@@ -1,7 +1,6 @@
 package navigation
 
 import (
-	"merlion/internal/api"
 	"merlion/internal/store"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -29,7 +28,7 @@ type SwitchUIMsg struct {
 }
 
 type LoginMsg struct {
-	Client *api.Client
+	Manager *store.Manager
 }
 
 type OpenDialogMsg struct {
@@ -59,9 +58,9 @@ func SwitchUICmd(newState CurrentUI) tea.Cmd {
 	}
 }
 
-func LoginCmd(client *api.Client) tea.Cmd {
+func LoginCmd(storeManager *store.Manager) tea.Cmd {
 	return func() tea.Msg {
-		return LoginMsg{Client: client}
+		return LoginMsg{Manager: storeManager}
 	}
 }
 
