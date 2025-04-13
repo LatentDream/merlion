@@ -7,6 +7,7 @@ import (
 
 type Manager struct {
 	activeStore Store
+	name        string
 	notes       []model.Note
 }
 
@@ -17,6 +18,7 @@ func NewManager(store Store) *Manager {
 	}
 	return &Manager{
 		activeStore: store,
+		name:        store.Name(),
 		notes:       notes,
 	}
 }

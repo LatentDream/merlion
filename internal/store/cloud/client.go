@@ -41,6 +41,10 @@ func NewClient(credentials *Credentials) (*Client, error) {
 	}, nil
 }
 
+func (c *Client) Name() string {
+	return "Cloud"
+}
+
 func (c *Client) setAuthHeaders(req *http.Request) {
 	// Try Bearer token first
 	if c.token != "" {
