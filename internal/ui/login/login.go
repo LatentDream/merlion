@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"merlion/internal/api"
-	"merlion/internal/auth"
 	"merlion/internal/store"
+	"merlion/internal/store/cloud"
 	"merlion/internal/styles"
 	"merlion/internal/ui/navigation"
 
@@ -20,16 +19,16 @@ type Model struct {
 	emailInput         textinput.Model
 	passwordInput      textinput.Model
 	err                error
-	credentials        *auth.Credentials
+	credentials        *cloud.Credentials
 	width              int
 	height             int
 	validating         bool
-	credentialsManager *auth.CredentialsManager
+	credentialsManager *cloud.CredentialsManager
 	styles             *styles.Styles
 	themeManager       *styles.ThemeManager
 }
 
-func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.ThemeManager) navigation.View {
+func NewModel(credentialsManager *cloud.CredentialsManager, themeManager *styles.ThemeManager) navigation.View {
 	appStyles := themeManager.Styles()
 
 	emailInput := textinput.New()
@@ -105,12 +104,12 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			if m.passwordInput.Focused() {
 				// Validate credentials
 				m.validating = true
-				creds := auth.Credentials{
+				creds := cloud.Credentials{
 					Email:    strings.TrimSpace(m.emailInput.Value()),
 					Password: m.passwordInput.Value(),
 				}
 
-				client, err := api.NewClient(nil)
+				client, err := cloud.NewClient(nil)
 				if err != nil {
 					m.err = fmt.Errorf("could not initialize client: %w", err)
 					m.validating = false

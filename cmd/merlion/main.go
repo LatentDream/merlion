@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"merlion/internal/auth"
+	"merlion/internal/store/cloud"
 	"merlion/internal/styles"
 	"merlion/internal/ui"
 	"merlion/internal/utils"
@@ -39,7 +39,7 @@ func main() {
 	}
 
 	// Initialize credentials manager
-	credMgr, err := auth.NewCredentialsManager()
+	credMgr, err := cloud.NewCredentialsManager()
 	if err != nil {
 		_ = closer()
 		log.Fatalf("Failed to initialize credentials manager: %v", err)

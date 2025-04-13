@@ -1,5 +1,4 @@
-// internal/auth/credentials.go
-package auth
+package cloud
 
 import (
 	"crypto/aes"

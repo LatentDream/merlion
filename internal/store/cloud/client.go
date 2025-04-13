@@ -1,5 +1,4 @@
-// internal/api/client.go
-package api
+package cloud
 
 import (
 	"bytes"
@@ -12,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"merlion/internal/auth"
 	"merlion/internal/model"
 
 	"github.com/charmbracelet/log"
@@ -24,12 +22,12 @@ const (
 
 type Client struct {
 	httpClient  *http.Client
-	credentials *auth.Credentials
+	credentials *Credentials
 	token       string         // For Bearer auth
 	cookies     []*http.Cookie // For Cookie auth
 }
 
-func NewClient(credentials *auth.Credentials) (*Client, error) {
+func NewClient(credentials *Credentials) (*Client, error) {
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		return nil, fmt.Errorf("creating cookie jar: %w", err)
@@ -212,7 +210,7 @@ func (c *Client) Login() error {
 	return err
 }
 
-func (c *Client) ValidateCredentials(creds auth.Credentials) error {
+func (c *Client) ValidateCredentials(creds Credentials) error {
 	// Try to login with the credentials
 	_, err := c.doRequest(http.MethodPost, "users/login", map[string]string{
 		"email":    creds.Email,

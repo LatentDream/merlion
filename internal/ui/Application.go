@@ -1,9 +1,8 @@
 package ui
 
 import (
-	"merlion/internal/api"
-	"merlion/internal/auth"
 	"merlion/internal/store"
+	"merlion/internal/store/cloud"
 	"merlion/internal/styles"
 	"merlion/internal/ui/create"
 	"merlion/internal/ui/dialog"
@@ -21,15 +20,15 @@ type Model struct {
 	store *store.Manager
 }
 
-func NewModel(credentialsManager *auth.CredentialsManager, themeManager *styles.ThemeManager) (Model, error) {
+func NewModel(credentialsManager *cloud.CredentialsManager, themeManager *styles.ThemeManager) (Model, error) {
 	initialUI := navigation.LoginUI
-	var client *api.Client = nil
+	var client *cloud.Client = nil
 
 	// Check credentials
 	creds, _ := credentialsManager.LoadCredentials()
 	if creds != nil {
 		initialUI = navigation.NoteUI
-		client, _ = api.NewClient(creds)
+		client, _ = cloud.NewClient(creds)
 	}
 
 	manager := store.NewManager(client)
