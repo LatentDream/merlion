@@ -41,11 +41,8 @@ func NewModel(
 	isFavoriteInput := components.NewRadioInput("Favorite", themeManager)
 	isWorkLogInput := components.NewRadioInput("Work Log", themeManager)
 
-	// Find all tags
-	tags := storeManager.GetTags()
-
 	// Initialize tag input with some sample tags
-	tagInput := taginput.New(tags, themeManager, false)
+	tagInput := taginput.New([]string{}, themeManager, false)
 
 	return Model{
 		title:           title,
@@ -57,10 +54,20 @@ func NewModel(
 	}
 }
 
+type fetchedTagsMsg []string
+
+func fetchTagsCmd(m *Model) tea.Cmd {
+	return func() tea.Msg {
+		tags := m.storeManager.GetTags()
+		return fetchedTagsMsg(tags)
+	}
+}
+
 func (m Model) Init() tea.Cmd {
 	return tea.Batch(
 		textinput.Blink,
 		tea.WindowSize(),
+		fetchTagsCmd(&m),
 	)
 }
 
@@ -69,6 +76,9 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 	var cmds []tea.Cmd
 	switch msg := msg.(type) {
+	case fetchedTagsMsg:
+		m.tagInput.SetAvailableTags([]string(msg))
+		return m, nil
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "tab":

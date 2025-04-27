@@ -36,8 +36,14 @@ func New(tags []string, tm *styles.ThemeManager, focused bool) Model {
 	}
 }
 
+// Prefill the input with some tags
 func (m *Model) SetCurrentTags(tags []string) {
 	m.currentTags = tags
+}
+
+// Update the available tags proposition list
+func (m *Model) SetAvailableTags(tags []string) {
+	m.existingTags = tags
 }
 
 // Focus focuses the tag input

@@ -41,11 +41,8 @@ func NewModel(
 	isFavoriteInput := components.NewRadioInput("Favorite", themeManager)
 	isWorkLogInput := components.NewRadioInput("Work Log", themeManager)
 
-	// Find all tags
-	tags := storeManager.GetTags()
-
 	// Initialize tag input with some sample tags
-	tagInput := taginput.New(tags, themeManager, false)
+	tagInput := taginput.New([]string{}, themeManager, false)
 
 	sp := spinner.New()
 	sp.Spinner = spinner.MiniDot
@@ -100,6 +97,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 	case navigation.OpenManageMsg:
 		m.isLoading = true
 		cmd := fetchNote(m.storeManager, msg.NoteId)
+		m.tagInput.SetAvailableTags(m.storeManager.GetTags())
 		return m, tea.Batch(spinner.Tick, cmd)
 
 	case fetchNoteResultMsg:

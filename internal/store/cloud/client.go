@@ -8,7 +8,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/cookiejar"
-	"strings"
 	"time"
 
 	"merlion/internal/model"
@@ -109,36 +108,35 @@ func (c *Client) doRequest(method, path string, body interface{}) ([]byte, error
 
 // Note operations
 func (c *Client) ListNotes() ([]model.Note, error) {
-	log.Debugf("Listing Notes")
+	// Start timing the request
+	startTime := time.Now()
+	log.Debugf("ListNotes: Starting request")
+
+	// Make the HTTP request
 	respBody, err := c.doRequest(http.MethodGet, "notes", nil)
 	if err != nil {
+		log.Debugf("ListNotes: Failed after %v: %v", time.Since(startTime), err)
 		return nil, err
 	}
 
+	// Record time after network request
+	networkTime := time.Since(startTime)
+	log.Debugf("ListNotes: Network request completed in %v, response size: %d bytes",
+		networkTime, len(respBody))
+
+	// Unmarshal the response
 	var notes []model.Note
 	if err := json.Unmarshal(respBody, &notes); err != nil {
+		log.Debugf("ListNotes: Unmarshaling failed after %v: %v", time.Since(startTime), err)
 		return nil, fmt.Errorf("unmarshaling response: %w", err)
 	}
 
-	return notes, nil
-}
+	// Record total time and log summary info
+	totalTime := time.Since(startTime)
+	log.Debugf("ListNotes: Completed successfully in %v, retrieved %d notes",
+		totalTime, len(notes))
 
-func (c *Client) GetTags() []string {
-	notes, err := c.ListNotes()
-	tagMap := make(map[string]bool)
-	if err == nil {
-		for _, note := range notes {
-			for _, tag := range note.Tags {
-				// If not in map, add it
-				tagMap[strings.ToLower(tag)] = true
-			}
-		}
-	}
-	tags := make([]string, 0, len(tagMap))
-	for tag := range tagMap {
-		tags = append(tags, tag)
-	}
-	return tags
+	return notes, nil
 }
 
 func (c *Client) GetNote(noteID string) (*model.Note, error) {

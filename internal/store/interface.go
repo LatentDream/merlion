@@ -9,7 +9,6 @@ type store interface {
 	Name() string
 	ListNotes() ([]model.Note, error)
 	UpdateNote(string, model.CreateNoteRequest) (*model.Note, error)
-	GetTags() []string
 	GetNote(noteID string) (*model.Note, error)
 	CreateNote(req model.CreateNoteRequest) (*model.Note, error)
 	DeleteNote(noteID string) error

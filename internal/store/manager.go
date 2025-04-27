@@ -8,6 +8,7 @@ package store
 
 import (
 	"merlion/internal/model"
+	"strings"
 )
 
 // Manager handles note operations through an underlying store implementation.
@@ -43,7 +44,12 @@ func (m *Manager) GetFullNote(noteID string) (*model.Note, error) {
 // Note: Returned notes may not have their content field populated.
 // To access a note's full content, use GetFullNote() with the note's ID.
 func (m *Manager) ListNoteMetadata() ([]model.Note, error) {
-	return m.activeStore.ListNotes()
+	notes, err := m.activeStore.ListNotes()
+	if err != nil {
+		return notes, err
+	}
+	m.notes = notes
+	return notes, nil
 }
 
 // UpdateNote modifies an existing note with the provided changes.
@@ -51,9 +57,20 @@ func (m *Manager) UpdateNote(noteId string, changes model.CreateNoteRequest) (*m
 	return m.activeStore.UpdateNote(noteId, changes)
 }
 
-// GetTags returns all available tags from the store.
+// GetTags returns all available tags from the cached notes.
 func (m *Manager) GetTags() []string {
-	return m.activeStore.GetTags()
+	tagMap := make(map[string]bool)
+	for _, note := range m.notes {
+		for _, tag := range note.Tags {
+			// If not in map, add it
+			tagMap[strings.ToLower(tag)] = true
+		}
+	}
+	tags := make([]string, 0, len(tagMap))
+	for tag := range tagMap {
+		tags = append(tags, tag)
+	}
+	return tags
 }
 
 // CreateNote creates a new note with the provided request data.
