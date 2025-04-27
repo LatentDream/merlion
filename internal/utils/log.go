@@ -7,6 +7,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	gap "github.com/muesli/go-app-paths"
+	"github.com/muesli/termenv"
 )
 
 func getLogFilePath() (string, error) {
@@ -19,6 +20,7 @@ func getLogFilePath() (string, error) {
 
 func SetupLog() (func() error, error) {
 	log.SetOutput(io.Discard)
+
 	// Log to file, if set
 	logFile, err := getLogFilePath()
 	if err != nil {
@@ -28,12 +30,17 @@ func SetupLog() (func() error, error) {
 		// log disabled
 		return func() error { return nil }, nil
 	}
+
 	f, err := os.OpenFile(logFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644)
 	if err != nil {
 		// log disabled
 		return func() error { return nil }, nil
 	}
 	log.SetOutput(f)
+
+	log.SetReportCaller(true)
+	log.SetColorProfile(termenv.TrueColor)
+
 	setLogLevel()
 	return f.Close, nil
 }

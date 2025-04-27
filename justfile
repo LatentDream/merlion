@@ -12,7 +12,7 @@ build:
 
 # Run binary
 run:
-    LOG_LEVEL=DEBUG ./merlion
+    LOG_LEVEL=DEBUG APP_ENV=dev ./merlion
 
 # Remove the Exectutable
 clean:
