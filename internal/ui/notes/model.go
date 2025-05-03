@@ -274,8 +274,6 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			m.noteRenderer.SetErrorMessage(fmt.Sprintf("Error editing note: %v", msg.err))
 			return m, nil
 		}
-
-		// Refresh the viewport content after successful edit
 		m.refreshNotesView()
 		if note := m.getCurrentNote(true); note != nil {
 			m.noteRenderer.SetNote(note)

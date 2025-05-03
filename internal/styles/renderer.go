@@ -1,6 +1,6 @@
 package styles
 
-import "github.com/charmbracelet/glamour/ansi"
+import "github.com/latentdream/merlion/glamour/ansi"
 
 func stringPtr(s string) *string {
 	return &s

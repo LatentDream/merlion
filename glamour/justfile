@@ -1,0 +1,10 @@
+default:
+    just --list
+
+# Build binary
+build:
+    go build
+
+clean:
+    rm -f ./build
+
