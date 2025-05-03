@@ -65,24 +65,6 @@ func (m Model) Init() tea.Cmd {
 	return tea.WindowSize()
 }
 
-type fetchNoteResultMsg struct {
-	NoteId string
-	Note   *model.Note
-	Error  *error
-}
-
-func fetchNote(storeManager *store.Manager, noteId string) tea.Cmd {
-	// Needed as we want the content to be fetch, so we don't delete it by error
-	// TODO: should handle the content.isNone nil in the backend
-	return func() tea.Msg {
-		res, err := storeManager.GetFullNote(noteId)
-		if err != nil {
-			return fetchNoteResultMsg{NoteId: noteId, Error: &err}
-		}
-		return fetchNoteResultMsg{NoteId: res.NoteID, Note: res}
-	}
-}
-
 func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
@@ -95,23 +77,17 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		return m, spinnerCmd
 
 	case navigation.OpenManageMsg:
-		m.isLoading = true
-		cmd := fetchNote(m.storeManager, msg.NoteId)
+		note, err := m.storeManager.SearchById(msg.NoteId)
+		if err != nil {
+			log.Fatalf("Opened a Manage view on a note which doesn't exist")
+		}
+		m.note = note
+		m.isFavoriteInput.SetChecked(note.IsFavorite)
+		m.isWorkLogInput.SetChecked(note.IsWorkLog)
+		m.title.SetValue(note.Title)
+		m.tagInput.SetCurrentTags(note.Tags)
 		m.tagInput.SetAvailableTags(m.storeManager.GetTags())
 		return m, tea.Batch(spinner.Tick, cmd)
-
-	case fetchNoteResultMsg:
-		m.isLoading = false
-		if msg.Error != nil {
-			log.Fatalf("Not able to fetch note: %v", &msg.Error)
-		}
-		m.note = msg.Note
-		m.isFavoriteInput.SetChecked(msg.Note.IsFavorite)
-		m.isWorkLogInput.SetChecked(msg.Note.IsWorkLog)
-		m.title.SetValue(msg.Note.Title)
-		m.tagInput.SetCurrentTags(m.note.Tags)
-		cmd := m.title.Focus()
-		return m, cmd
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -171,8 +147,10 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 				m.note.IsFavorite = m.isFavoriteInput.IsChecked()
 				m.note.IsWorkLog = m.isWorkLogInput.IsChecked()
 				m.note.Tags = m.tagInput.GetTags()
-				// TODO: Handle potential Error returned + loading state
-				m.storeManager.UpdateNote(m.note.NoteID, m.note.ToCreateRequest())
+				_, err := m.storeManager.UpdateNote(m.note.NoteID, m.note.ToCreateRequest())
+				if err != nil {
+					log.Error("Failed to update note", "error", err)
+				}
 				return m, navigation.SwitchUICmd(navigation.NoteUI)
 			}
 
