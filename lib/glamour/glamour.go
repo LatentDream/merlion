@@ -19,8 +19,8 @@ import (
 	"github.com/yuin/goldmark/util"
 	"golang.org/x/term"
 
-	"github.com/latentdream/merlion/glamour/ansi"
-	"github.com/latentdream/merlion/glamour/styles"
+	"github.com/latentdream/merlion/lib/glamour/ansi"
+	"github.com/latentdream/merlion/lib/glamour/styles"
 )
 
 const (

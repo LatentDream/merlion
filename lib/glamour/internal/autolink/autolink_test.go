@@ -3,7 +3,7 @@ package autolink_test
 import (
 	"testing"
 
-	"github.com/latentdream/merlion/glamour/internal/autolink"
+	"github.com/latentdream/merlion/lib/glamour/internal/autolink"
 )
 
 func TestDetect(t *testing.T) {

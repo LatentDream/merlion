@@ -4,7 +4,7 @@ package styles
 //go:generate go run ../internal/generate-style-json
 
 import (
-	"github.com/latentdream/merlion/glamour/ansi"
+	"github.com/latentdream/merlion/lib/glamour/ansi"
 )
 
 const (

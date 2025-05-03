@@ -7,7 +7,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/latentdream/merlion/glamour/internal/autolink"
+	"github.com/latentdream/merlion/lib/glamour/internal/autolink"
 	east "github.com/yuin/goldmark-emoji/ast"
 	"github.com/yuin/goldmark/ast"
 	astext "github.com/yuin/goldmark/extension/ast"

@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/latentdream/merlion/glamour/ansi"
-	styles "github.com/latentdream/merlion/glamour/styles"
+	"github.com/latentdream/merlion/lib/glamour/ansi"
+	styles "github.com/latentdream/merlion/lib/glamour/styles"
 )
 
 func writeStyleJSON(filename string, styleConfig *ansi.StyleConfig) error {

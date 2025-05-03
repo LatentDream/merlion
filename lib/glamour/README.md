@@ -10,7 +10,7 @@ This fork includes custom modifications needed for this project:
 ## Usage
 
 ```go
-import "github.com/latentdream/merlion/glamour"
+import "github.com/latentdream/merlion/lib/glamour"
 ```
 
 ## License

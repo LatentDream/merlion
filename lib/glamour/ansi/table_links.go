@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/latentdream/merlion/glamour/internal/autolink"
+	"github.com/latentdream/merlion/lib/glamour/internal/autolink"
 	xansi "github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/exp/slice"
 	"github.com/yuin/goldmark/ast"

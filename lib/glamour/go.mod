@@ -1,4 +1,4 @@
-module github.com/latentdream/merlion/glamour
+module github.com/latentdream/merlion/lib/glamour
 
 go 1.23.0
 

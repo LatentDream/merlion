@@ -10,7 +10,7 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/latentdream/merlion/glamour"
+	"github.com/latentdream/merlion/lib/glamour"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 )

@@ -9,12 +9,12 @@ require (
 	github.com/charmbracelet/log v0.4.0
 	github.com/charmbracelet/x/ansi v0.8.0
 	github.com/charmbracelet/x/editor v0.1.0
-	github.com/latentdream/merlion/glamour v0.10.0
+	github.com/latentdream/merlion/lib/glamour v0.10.0
 	github.com/muesli/go-app-paths v0.2.2
 	github.com/muesli/termenv v0.16.0
 )
 
-replace github.com/latentdream/merlion/glamour => ./glamour
+replace github.com/latentdream/merlion/lib/glamour => ./lib/glamour
 
 require (
 	github.com/alecthomas/chroma/v2 v2.14.0 // indirect
