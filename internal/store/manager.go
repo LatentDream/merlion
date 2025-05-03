@@ -7,9 +7,15 @@
 package store
 
 import (
+	"errors"
+	"log"
 	"merlion/internal/model"
+	"merlion/internal/utils"
 	"strings"
 )
+
+// ErrNoteNotFound is returned when a note with the given ID is not found
+var ErrNoteNotFound = errors.New("note not found")
 
 // Manager handles note operations through an underlying store implementation.
 // Note: When using ListNoteMetadata() or accessing Manager.notes directly, note content
@@ -19,9 +25,9 @@ type Manager struct {
 	activeStore store
 	name        string
 	inited      bool
-	// notes contains a cached list of notes, but their content field may be nil
+	// Notes contains a cached list of Notes, but their content field may be nil
 	// Use GetNote() to retrieve the complete note with content
-	notes []model.Note
+	Notes []model.Note
 }
 
 // NewManager creates a new manager with the given store implementation
@@ -36,8 +42,24 @@ func NewManager(store store) *Manager {
 
 // GetFullNote retrieves a specific note by ID with its complete content.
 // This method guarantees that the returned note will have its content field populated.
-func (m *Manager) GetFullNote(noteID string) (*model.Note, error) {
-	return m.activeStore.GetNote(noteID)
+func (m *Manager) GetFullNote(noteId string) (*model.Note, error) {
+	note, err := m.activeStore.GetNote(noteId)
+	if err != nil {
+		return nil, err
+	}
+
+	found := false
+	for i, cachedNote := range m.Notes {
+		if cachedNote.NoteID == noteId {
+			m.Notes[i] = *note
+			found = true
+			break
+		}
+	}
+	if !found {
+		log.Fatalf("User was able to get an undefined note - Should not happen")
+	}
+	return note, nil
 }
 
 // ListNoteMetadata returns all notes from the store, but with potentially empty content fields.
@@ -48,19 +70,23 @@ func (m *Manager) ListNoteMetadata() ([]model.Note, error) {
 	if err != nil {
 		return notes, err
 	}
-	m.notes = notes
+	m.Notes = notes
 	return notes, nil
 }
 
-// UpdateNote modifies an existing note with the provided changes.
-func (m *Manager) UpdateNote(noteId string, changes model.CreateNoteRequest) (*model.Note, error) {
-	return m.activeStore.UpdateNote(noteId, changes)
+func (m *Manager) SearchById(noteId string) (*model.Note, error) {
+	for _, note := range m.Notes {
+		if note.NoteID == noteId {
+			return &note, nil
+		}
+	}
+	return nil, ErrNoteNotFound
 }
 
 // GetTags returns all available tags from the cached notes.
 func (m *Manager) GetTags() []string {
 	tagMap := make(map[string]bool)
-	for _, note := range m.notes {
+	for _, note := range m.Notes {
 		for _, tag := range note.Tags {
 			// If not in map, add it
 			tagMap[strings.ToLower(tag)] = true
@@ -75,10 +101,51 @@ func (m *Manager) GetTags() []string {
 
 // CreateNote creates a new note with the provided request data.
 func (m *Manager) CreateNote(req model.CreateNoteRequest) (*model.Note, error) {
-	return m.activeStore.CreateNote(req)
+	note, err := m.activeStore.CreateNote(req)
+	if err != nil {
+		return nil, err
+	}
+	m.Notes = append(m.Notes, *note)
+	return note, nil
+}
+
+// UpdateNote modifies an existing note with the provided changes and updates the metadata cache.
+func (m *Manager) UpdateNote(noteId string, changes model.CreateNoteRequest) (*model.Note, error) {
+	note, err := m.activeStore.UpdateNote(noteId, changes)
+	if err != nil {
+		return nil, err
+	}
+
+	found := false
+	for i, cachedNote := range m.Notes {
+		if cachedNote.NoteID == noteId {
+			m.Notes[i] = *note
+			found = true
+			break
+		}
+	}
+	if !found {
+		log.Fatalf("User was able to update an undefined note - Should not happen")
+	}
+	return note, nil
 }
 
 // DeleteNote removes a note by its ID.
-func (m *Manager) DeleteNote(noteID string) error {
-	return m.activeStore.DeleteNote(noteID)
+func (m *Manager) DeleteNote(noteId string) error {
+	err := m.activeStore.DeleteNote(noteId)
+	if err != nil {
+		return err
+	}
+	idx := -1
+	for i, cachedNote := range m.Notes {
+		if cachedNote.NoteID == noteId {
+			idx = i
+			break
+		}
+	}
+	if idx == -1 {
+		log.Fatalf("Deleted a note which wasn't cached locally - Should not happen")
+	}
+	utils.Remove(m.Notes, idx)
+	return nil
 }
