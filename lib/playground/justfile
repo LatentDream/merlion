@@ -1,0 +1,19 @@
+default:
+    just dev
+
+# Build and execute
+dev:
+    just build
+    just run
+
+# Build binary
+build:
+    go build -o playground ./main.go
+
+# Run binary
+run:
+    ./playground
+
+# Remove the Exectutable
+clean:
+    rm -f ./playground
