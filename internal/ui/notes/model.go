@@ -78,7 +78,6 @@ func (t TabKind) String() string {
 
 type Model struct {
 	noteList        list.Model
-	allNotes        []model.Note  // TODO: Move this to the store
 	fileterTabs     tabs.Tabs[TabKind]
 	noteRenderer    renderer.Model
 	spinner         spinner.Model
@@ -186,9 +185,9 @@ func createNoteItems(notes []model.Note, filter TabKind) []list.Item {
 
 func (m *Model) refreshNotesView() {
 	currTab := m.fileterTabs.CurrentTab()
-	items := createNoteItems(m.allNotes, currTab)
+	items := createNoteItems(m.storeManager.Notes, currTab)
 	m.noteList.SetItems(items)
-	groups := createTagGroups(m.allNotes)
+	groups := createTagGroups(m.storeManager.Notes)
 	m.tagsList.SetGroups(groups)
 }
 
@@ -262,13 +261,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		cmds = append(cmds, spinnerCmd)
 
 	case notesLoadedMsg:
-		// TODO: nothing should be return, only refreshView should be done here 
-		if msg.Err != nil {
-			return m, nil
-		}
-		m.allNotes = msg.Notes
 		m.refreshNotesView()
-
 		m.loading = false
 		return m, nil
 
@@ -462,35 +455,23 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		}
 
 	case noteContentMsg:
-		note := m.getCurrentNote(false)
-		if note != nil {
-			if note.NoteID != msg.NoteId {
+		currentNote := m.getCurrentNote(false)
+		updatedNote := msg.UpdatedNote
+		if currentNote != nil {
+			if currentNote.NoteID != updatedNote.NoteID {
 				log.Fatalf("Receive a Content of a un-selected note")
 			}
-			content := msg.Content
-			note.Content = &content  // TODO: Move this to the store
-			m.noteRenderer.SetNote(note)
 
-			// Update the item in the model's list
+			// Swap the item in the presentation list for the one with the content
+			log.Debug("Swaping view note for updated note")
 			currentIndex := m.noteList.Index()
 			items := m.noteList.Items()
-			items[currentIndex] = item{note: *note}
+			items[currentIndex] = item{note: *updatedNote}
 			m.noteList.SetItems(items)
-			// TODO: Move this to the store
-			// NOTE: Content should be edited on the master list only
-			// -> and refresh the list after
-			updated := false
-			for i, n := range m.allNotes {
-				if n.NoteID == note.NoteID {
-					n.Content = &content
-					m.allNotes[i] = n
-					updated = true
-					break
-				}
-			}
-			if !updated {
-				log.Fatalf("Master list didn't get updated after downloading content")
-			}
+
+			// Display the content in the renderer
+			log.Debug("Rendering updated note")
+			m.noteRenderer.SetNote(updatedNote)
 			m.focusedPane = markdown
 			m.noteRenderer.Render()
 		}

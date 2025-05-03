@@ -71,7 +71,7 @@ func (m *Model) openEditor() tea.Cmd {
 
 		// Update the main note list
 		updated := false
-		for _, groundTruthNote := range m.allNotes {
+		for _, groundTruthNote := range m.storeManager.Notes {
 			if groundTruthNote.NoteID == note.NoteID {
 				*groundTruthNote.Content = content
 				updated = true
@@ -101,18 +101,17 @@ func (m *Model) openEditor() tea.Cmd {
 // Fetch Notes ---
 
 type noteContentMsg struct {
-	NoteId  string
-	Content string
+	UpdatedNote *model.Note
 }
 type errMsg struct{ err error }
 
 func fetchNoteContent(storeManager *store.Manager, noteId string) tea.Cmd {
 	return func() tea.Msg {
-		res, err := storeManager.GetFullNote(noteId)
+		updatedNote, err := storeManager.GetFullNote(noteId)
 		if err != nil {
 			return errMsg{err}
 		}
-		return noteContentMsg{NoteId: res.NoteID, Content: *res.Content}
+		return noteContentMsg{UpdatedNote: updatedNote}
 	}
 }
 
