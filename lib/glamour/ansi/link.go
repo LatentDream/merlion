@@ -64,7 +64,7 @@ func (e *LinkElement) renderHrefPart(w io.Writer, ctx RenderContext) error {
 	u, err := url.Parse(e.URL)
 	if err == nil && "#"+u.Fragment != e.URL { // if the URL only consists of an anchor, ignore it
 		el := &BaseElement{
-			Token:  resolveRelativeURL(e.BaseURL, e.URL),
+			Token:  "↗", // resolveRelativeURL(e.BaseURL, e.URL),
 			Prefix: prefix,
 			Style:  ctx.options.Styles.Link,
 		}
