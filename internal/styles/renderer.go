@@ -107,6 +107,15 @@ func (tm *ThemeManager) GetRendererStyle() ansi.StyleConfig {
 			Color: stringPtr(string(tm.Theme.Secondary)),
 			Bold:  boolPtr(true),
 		},
+		WikiLink: ansi.StylePrimitive{
+			Color:     stringPtr(string(tm.Theme.Secondary)),
+			Underline: boolPtr(true),
+		},
+		WikiLinkHighlighted: ansi.StylePrimitive{
+			Blink:     boolPtr(true),
+			Color:     stringPtr(string(tm.Theme.Secondary)),
+			Underline: boolPtr(true),
+		},
 		Image: ansi.StylePrimitive{
 			Color:     stringPtr(string(tm.Theme.Tertiary)),
 			Underline: boolPtr(true),

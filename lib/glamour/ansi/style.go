@@ -122,6 +122,9 @@ type StyleConfig struct {
 	Link     StylePrimitive `json:"link,omitempty"`
 	LinkText StylePrimitive `json:"link_text,omitempty"`
 
+	WikiLink            StylePrimitive `json:"wikilink,omitempty"`
+	WikiLinkHighlighted StylePrimitive `json:"wikilink_highlighted,omitempty"`
+
 	Image     StylePrimitive `json:"image,omitempty"`
 	ImageText StylePrimitive `json:"image_text,omitempty"`
 

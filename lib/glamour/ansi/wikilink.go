@@ -2,12 +2,12 @@ package ansi
 
 import (
 	"io"
-	"strings"
 )
 
 // A WikiLinkElement is used to render hyperlinks.
 type WikiLinkElement struct {
-	Token string
+	Token      string
+	isSelected bool
 }
 
 // Render renders a WikiLinkElement.
@@ -19,14 +19,15 @@ func (e *WikiLinkElement) Render(w io.Writer, ctx RenderContext) error {
 }
 
 func (e *WikiLinkElement) renderTextPart(w io.Writer, ctx RenderContext) error {
-	style := ctx.options.Styles.ImageText
-	style.Format = strings.TrimSuffix(style.Format, " →")
-
+	style := ctx.options.Styles.WikiLink
+	if e.isSelected {
+		style = ctx.options.Styles.WikiLinkHighlighted
+	}
 	if len(e.Token) > 0 {
 		el := &BaseElement{
-			Token:  e.Token,
+			Token: e.Token,
 			// Suffix: " →",
-			Style:  ctx.options.Styles.Link,
+			Style: style,
 		}
 		err := el.Render(w, ctx)
 		if err != nil {
