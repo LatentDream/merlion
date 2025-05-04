@@ -10,9 +10,9 @@ import (
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/latentdream/merlion/lib/glamour"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
+	"github.com/latentdream/merlion/lib/glamour"
 )
 
 type Postion int
@@ -125,6 +125,7 @@ func (m *Model) Render() {
 		m.viewport.SetContent(content)
 		return
 	}
+
 	rendered, err := m.renderer.Render(*m.Note.Content)
 	if err != nil {
 		m.SetErrorMessage(fmt.Sprintf("Error rendering markdown: %v", err))
@@ -165,6 +166,24 @@ func (m Model) Init() tea.Cmd {
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.viewport, cmd = m.viewport.Update(msg)
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "tab":
+			nextIdx := m.renderer.GetIdxToShowAsSelected() + 1
+			m.renderer.SetIdxToShowAsSelected(nextIdx)
+			m.Render()
+		case "shift+tab":
+			nextIdx := m.renderer.GetIdxToShowAsSelected()
+			if nextIdx > 0 {
+				nextIdx--
+			}
+			m.renderer.SetIdxToShowAsSelected(nextIdx)
+			m.Render()
+		}
+	}
+
 	return m, cmd
 }
 
