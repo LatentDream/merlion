@@ -89,3 +89,17 @@ print(s)
 
 Enjoy your Markdown journey!
 
+## Tag
+
+@someone
+
+text text text @latentdream
+
+## WikiLink
+
+[[link]]
+
+text text text [[Title of another note]] text text text 
+
+text text text
+
