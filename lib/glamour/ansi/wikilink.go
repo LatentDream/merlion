@@ -6,22 +6,31 @@ import (
 
 // A WikiLinkElement is used to render hyperlinks.
 type WikiLinkElement struct {
-	Token      string
-	isSelected bool
+	Token string
+}
+
+// Context to use in the rendering process to display the selected element
+type SelectorContext struct {
+	ElemIdxToDisplay int
+	nbElemSeen       int
 }
 
 // Render renders a WikiLinkElement.
 func (e *WikiLinkElement) Render(w io.Writer, ctx RenderContext) error {
-	if err := e.renderTextPart(w, ctx); err != nil {
+	isSelected := ctx.Selector.nbElemSeen == ctx.Selector.ElemIdxToDisplay
+	ctx.Selector.nbElemSeen++
+	if err := e.renderWikiLink(w, ctx, isSelected); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (e *WikiLinkElement) renderTextPart(w io.Writer, ctx RenderContext) error {
-	style := ctx.options.Styles.WikiLink
-	if e.isSelected {
+func (e *WikiLinkElement) renderWikiLink(w io.Writer, ctx RenderContext, isSelected bool) error {
+	var style StylePrimitive
+	if isSelected {
 		style = ctx.options.Styles.WikiLinkHighlighted
+	} else {
+		style = ctx.options.Styles.WikiLink
 	}
 	if len(e.Token) > 0 {
 		el := &BaseElement{

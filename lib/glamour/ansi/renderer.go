@@ -29,13 +29,13 @@ type Options struct {
 
 // ANSIRenderer renders markdown content as ANSI escaped sequences.
 type ANSIRenderer struct { //nolint: revive
-	context RenderContext
+	Context RenderContext
 }
 
 // NewRenderer returns a new ANSIRenderer with style and options set.
 func NewRenderer(options Options) *ANSIRenderer {
 	return &ANSIRenderer{
-		context: NewRenderContext(options),
+		Context: NewRenderContext(options),
 	}
 }
 
@@ -96,7 +96,7 @@ func (r *ANSIRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 
 func (r *ANSIRenderer) renderNode(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	writeTo := io.Writer(w)
-	bs := r.context.blockStack
+	bs := r.Context.blockStack
 
 	// children get rendered by their parent
 	if isChild(node) {
@@ -112,7 +112,7 @@ func (r *ANSIRenderer) renderNode(w util.BufWriter, source []byte, node ast.Node
 
 		_, _ = io.WriteString(writeTo, e.Entering)
 		if e.Renderer != nil {
-			err := e.Renderer.Render(writeTo, r.context)
+			err := e.Renderer.Render(writeTo, r.Context)
 			if err != nil {
 				return ast.WalkStop, fmt.Errorf("glamour: error rendering: %w", err)
 			}
@@ -130,7 +130,7 @@ func (r *ANSIRenderer) renderNode(w util.BufWriter, source []byte, node ast.Node
 		}
 
 		if e.Finisher != nil {
-			err := e.Finisher.Finish(writeTo, r.context)
+			err := e.Finisher.Finish(writeTo, r.Context)
 			if err != nil {
 				return ast.WalkStop, fmt.Errorf("glamour: error finishing render: %w", err)
 			}

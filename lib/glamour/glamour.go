@@ -35,10 +35,12 @@ type TermRendererOption func(*TermRenderer) error
 // TermRenderer can be used to render markdown content, posing a depth of
 // customization and styles to fit your needs.
 type TermRenderer struct {
-	md          goldmark.Markdown
-	ansiOptions ansi.Options
-	buf         bytes.Buffer
-	renderBuf   bytes.Buffer
+	md              goldmark.Markdown
+	ansiOptions     ansi.Options
+	rendererContext *ansi.RenderContext
+	buf             bytes.Buffer
+	renderBuf       bytes.Buffer
+	elementSelected int
 }
 
 // Render initializes a new TermRenderer and renders a markdown with a specific
@@ -91,6 +93,7 @@ func NewTermRenderer(options ...TermRendererOption) (*TermRenderer, error) {
 		}
 	}
 	ar := ansi.NewRenderer(tr.ansiOptions)
+	tr.rendererContext = &ar.Context
 	tr.md.SetRenderer(
 		renderer.NewRenderer(
 			renderer.WithNodeRenderers(
@@ -285,7 +288,8 @@ func (tr *TermRenderer) Close() error {
 
 // Render returns the markdown rendered into a string.
 func (tr *TermRenderer) Render(in string) (string, error) {
-	b, err := tr.RenderBytes([]byte(in))
+	tr.rendererContext.Reset()
+		b, err := tr.RenderBytes([]byte(in))
 	return string(b), err
 }
 
@@ -294,6 +298,14 @@ func (tr *TermRenderer) RenderBytes(in []byte) ([]byte, error) {
 	var buf bytes.Buffer
 	err := tr.md.Convert(in, &buf)
 	return buf.Bytes(), err
+}
+
+func (tr *TermRenderer) GetIdxToShowAsSelected() int {
+	return tr.rendererContext.Selector.ElemIdxToDisplay
+}
+
+func (tr *TermRenderer) SetIdxToShowAsSelected(idx int) {
+	tr.rendererContext.Selector.ElemIdxToDisplay = idx
 }
 
 func getEnvironmentStyle() string {

@@ -40,7 +40,7 @@ type Element struct {
 
 // NewElement returns the appropriate render Element for a given node.
 func (tr *ANSIRenderer) NewElement(node ast.Node, source []byte) Element {
-	ctx := tr.context
+	ctx := tr.Context
 
 	switch node.Kind() {
 	// Document

@@ -14,6 +14,8 @@ type RenderContext struct {
 	blockStack *BlockStack
 	table      *TableElement
 
+	Selector *SelectorContext
+
 	stripper *bluemonday.Policy
 }
 
@@ -23,6 +25,7 @@ func NewRenderContext(options Options) RenderContext {
 		options:    options,
 		blockStack: &BlockStack{},
 		table:      &TableElement{},
+		Selector:   &SelectorContext{ElemIdxToDisplay: -1},
 		stripper:   bluemonday.StrictPolicy(),
 	}
 }
@@ -35,4 +38,9 @@ func (ctx RenderContext) SanitizeHTML(s string, trimSpaces bool) string {
 	}
 
 	return html.UnescapeString(s)
+}
+
+// Reset the context state - should be use before a render
+func (ctx *RenderContext) Reset() {
+	ctx.Selector.nbElemSeen = 0
 }
