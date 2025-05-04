@@ -7,6 +7,7 @@ import (
 	"io"
 	"strings"
 
+	ext "github.com/latentdream/merlion/lib/glamour/extension"
 	"github.com/latentdream/merlion/lib/glamour/internal/autolink"
 	east "github.com/yuin/goldmark-emoji/ast"
 	"github.com/yuin/goldmark/ast"
@@ -468,6 +469,14 @@ func (tr *ANSIRenderer) NewElement(node ast.Node, source []byte) Element {
 		return Element{
 			Renderer: &BaseElement{
 				Token: string(n.Value.Unicode),
+			},
+		}
+
+	case ext.KindWikiLink:
+		n := node.(*ext.WikiLink)
+		return Element{
+			Renderer: &WikiLinkElement{
+				Token: string(n.Title),
 			},
 		}
 

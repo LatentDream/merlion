@@ -20,6 +20,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/latentdream/merlion/lib/glamour/ansi"
+	ext "github.com/latentdream/merlion/lib/glamour/extension"
 	"github.com/latentdream/merlion/lib/glamour/styles"
 )
 
@@ -73,6 +74,7 @@ func NewTermRenderer(options ...TermRendererOption) (*TermRenderer, error) {
 			goldmark.WithExtensions(
 				extension.GFM,
 				extension.DefinitionList,
+				&ext.ExtendedParser{},
 			),
 			goldmark.WithParserOptions(
 				parser.WithAutoHeadingID(),

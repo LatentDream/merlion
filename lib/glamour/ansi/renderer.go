@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 
+	ext "github.com/latentdream/merlion/lib/glamour/extension"
 	"github.com/muesli/termenv"
 	east "github.com/yuin/goldmark-emoji/ast"
 	"github.com/yuin/goldmark/ast"
@@ -88,6 +89,9 @@ func (r *ANSIRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 
 	// emoji
 	reg.Register(east.KindEmoji, r.renderNode)
+
+	// wikilink
+	reg.Register(ext.KindWikiLink, r.renderNode)
 }
 
 func (r *ANSIRenderer) renderNode(w util.BufWriter, source []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
