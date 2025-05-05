@@ -20,7 +20,8 @@ clean:
 
 # Display the live logs
 log:
-    tail -f ~/.cache/merlion/merlion.log
+    tail -f $(go run os_check.go)
+
 
 export:
     just build
