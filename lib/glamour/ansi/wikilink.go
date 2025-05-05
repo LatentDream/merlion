@@ -9,16 +9,9 @@ type WikiLinkElement struct {
 	Token string
 }
 
-// Context to use in the rendering process to display the selected element
-type SelectorContext struct {
-	ElemIdxToDisplay int
-	nbElemSeen       int
-}
-
 // Render renders a WikiLinkElement.
 func (e *WikiLinkElement) Render(w io.Writer, ctx RenderContext) error {
-	isSelected := ctx.Selector.nbElemSeen == ctx.Selector.ElemIdxToDisplay
-	ctx.Selector.nbElemSeen++
+	isSelected := ctx.Selector.isSelected(&Selector{Title: e.Token})
 	if err := e.renderWikiLink(w, ctx, isSelected); err != nil {
 		return err
 	}
@@ -35,7 +28,6 @@ func (e *WikiLinkElement) renderWikiLink(w io.Writer, ctx RenderContext, isSelec
 	if len(e.Token) > 0 {
 		el := &BaseElement{
 			Token: e.Token,
-			// Suffix: " →",
 			Style: style,
 		}
 		err := el.Render(w, ctx)

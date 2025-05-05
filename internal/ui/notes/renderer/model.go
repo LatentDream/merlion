@@ -181,6 +181,13 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			}
 			m.renderer.SetIdxToShowAsSelected(nextIdx)
 			m.Render()
+		case "enter":
+			selector := m.renderer.GetSelectorInfo()
+			if selector == nil {
+				log.Debug("selector is nil")
+				break
+			}
+			log.Debug("User requested", "link", selector.Link, "title", selector.Title)
 		}
 	}
 

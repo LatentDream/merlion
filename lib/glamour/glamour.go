@@ -289,7 +289,7 @@ func (tr *TermRenderer) Close() error {
 // Render returns the markdown rendered into a string.
 func (tr *TermRenderer) Render(in string) (string, error) {
 	tr.rendererContext.Reset()
-		b, err := tr.RenderBytes([]byte(in))
+	b, err := tr.RenderBytes([]byte(in))
 	return string(b), err
 }
 
@@ -301,11 +301,15 @@ func (tr *TermRenderer) RenderBytes(in []byte) ([]byte, error) {
 }
 
 func (tr *TermRenderer) GetIdxToShowAsSelected() int {
-	return tr.rendererContext.Selector.ElemIdxToDisplay
+	return tr.rendererContext.Selector.GetElementSelectedIdx()
 }
 
 func (tr *TermRenderer) SetIdxToShowAsSelected(idx int) {
-	tr.rendererContext.Selector.ElemIdxToDisplay = idx
+	tr.rendererContext.Selector.SetElementSelectedIdx(idx)
+}
+
+func (tr *TermRenderer) GetSelectorInfo() *ansi.Selector {
+	return tr.rendererContext.Selector.GetSelector()
 }
 
 func getEnvironmentStyle() string {

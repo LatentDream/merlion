@@ -25,7 +25,7 @@ func NewRenderContext(options Options) RenderContext {
 		options:    options,
 		blockStack: &BlockStack{},
 		table:      &TableElement{},
-		Selector:   &SelectorContext{ElemIdxToDisplay: -1},
+		Selector:   &SelectorContext{idxToShowAsDisplay: -1},
 		stripper:   bluemonday.StrictPolicy(),
 	}
 }
@@ -42,5 +42,5 @@ func (ctx RenderContext) SanitizeHTML(s string, trimSpaces bool) string {
 
 // Reset the context state - should be use before a render
 func (ctx *RenderContext) Reset() {
-	ctx.Selector.nbElemSeen = 0
+	ctx.Selector.resetASTWalkState()
 }
