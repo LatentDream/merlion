@@ -74,16 +74,16 @@ func (m *Manager) ListNoteMetadata() ([]model.Note, error) {
 	return notes, nil
 }
 
-func (m *Manager) SearchById(noteId string) (*model.Note, error) {
+func (m *Manager) SearchById(noteId string) *model.Note {
 	for _, note := range m.Notes {
 		if note.NoteID == noteId {
-			return &note, nil
+			return &note
 		}
 	}
-	return nil, ErrNoteNotFound
+	return nil
 }
 
-func (m *Manager) SearchByTitle(title string) (*model.Note, error) {
+func (m *Manager) SearchByTitle(title string) *model.Note {
 	standardize := func(s string) string {
 		return strings.TrimSpace(strings.ToLower(s))
 	}
@@ -91,10 +91,10 @@ func (m *Manager) SearchByTitle(title string) (*model.Note, error) {
 	for _, note := range m.Notes {
 		currTitle := standardize(note.Title)
 		if currTitle == searchTitle {
-			return &note, nil
+			return &note
 		}
 	}
-	return nil, ErrNoteNotFound
+	return nil
 
 }
 

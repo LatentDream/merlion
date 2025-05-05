@@ -312,6 +312,10 @@ func (tr *TermRenderer) GetSelectorInfo() *ansi.Selector {
 	return tr.rendererContext.Selector.GetSelector()
 }
 
+func (tr *TermRenderer) ClearSelector() {
+	tr.rendererContext.Selector.ResetState()
+}
+
 func getEnvironmentStyle() string {
 	glamourStyle := os.Getenv("GLAMOUR_STYLE")
 	if len(glamourStyle) == 0 {

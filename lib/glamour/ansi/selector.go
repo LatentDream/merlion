@@ -12,6 +12,12 @@ type SelectorContext struct {
 	currentSelector    *Selector
 }
 
+func (ctx *SelectorContext) ResetState() {
+	ctx.currentSelector = nil
+	ctx.nbElemSeen = 0
+	ctx.idxToShowAsDisplay = -1
+}
+
 func (ctx *SelectorContext) resetASTWalkState() {
 	nbSeen := ctx.nbElemSeen
 	ctx.currentSelector = nil

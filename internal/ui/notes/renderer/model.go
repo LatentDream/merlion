@@ -95,6 +95,7 @@ func (m *Model) ToggleHidePosition() {
 }
 
 func (m *Model) SetNote(note *model.Note) {
+	m.renderer.ClearSelector()
 	m.Note = note
 }
 
@@ -194,6 +195,11 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			// - Or create if doesn't exist
 			// - Or open URL if link
 			log.Debug("User requested", "link", selector.Link, "title", selector.Title)
+			note := m.storeManager.SearchByTitle(selector.Title)
+			if note != nil {
+				m.SetNote(note)
+				m.Render()
+			}
 
 		}
 	}
