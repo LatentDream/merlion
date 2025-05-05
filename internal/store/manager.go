@@ -83,6 +83,21 @@ func (m *Manager) SearchById(noteId string) (*model.Note, error) {
 	return nil, ErrNoteNotFound
 }
 
+func (m *Manager) SearchByTitle(title string) (*model.Note, error) {
+	standardize := func(s string) string {
+		return strings.TrimSpace(strings.ToLower(s))
+	}
+	searchTitle := standardize(title)
+	for _, note := range m.Notes {
+		currTitle := standardize(note.Title)
+		if currTitle == searchTitle {
+			return &note, nil
+		}
+	}
+	return nil, ErrNoteNotFound
+
+}
+
 // GetTags returns all available tags from the cached notes.
 func (m *Manager) GetTags() []string {
 	tagMap := make(map[string]bool)

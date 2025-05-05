@@ -118,7 +118,7 @@ func NewModel(storeManager *store.Manager, themeManager *styles.ThemeManager) Mo
 	filterTabs := []TabKind{AllNotes, Favorites, WorkLogs, Tags}
 	tabs := tabs.New(filterTabs, themeManager)
 
-	noteRenderer := renderer.New(themeManager)
+	noteRenderer := renderer.New(themeManager, storeManager)
 
 	gl := grouplist.New([]grouplist.Group{}, delegate, themeManager)
 

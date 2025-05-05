@@ -3,6 +3,7 @@ package renderer
 import (
 	"fmt"
 	"merlion/internal/model"
+	"merlion/internal/store"
 	"merlion/internal/styles"
 	"merlion/internal/utils"
 	"strings"
@@ -33,11 +34,12 @@ type Model struct {
 	renderer     *glamour.TermRenderer
 	infoHide     bool
 	infoPos      Postion
+	storeManager *store.Manager
 	themeManager *styles.ThemeManager
 	spinner      spinner.Model
 }
 
-func New(themeManager *styles.ThemeManager) Model {
+func New(themeManager *styles.ThemeManager, storeManager *store.Manager) Model {
 
 	// Initialize glamour for markdown rendering
 	renderer, err := glamour.NewTermRenderer(
@@ -63,6 +65,7 @@ func New(themeManager *styles.ThemeManager) Model {
 
 	return Model{
 		Note:         nil,
+		storeManager:  storeManager,
 		themeManager: themeManager,
 		renderer:     renderer,
 		viewport:     vp,
@@ -187,7 +190,11 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 				log.Debug("selector is nil")
 				break
 			}
+			// Trigger a search + note change
+			// - Or create if doesn't exist
+			// - Or open URL if link
 			log.Debug("User requested", "link", selector.Link, "title", selector.Title)
+
 		}
 	}
 
