@@ -183,7 +183,8 @@ func (m *Model) HandleSelector(selector *ansi.Selector) tea.Cmd {
 			m.Render()
 		} else {
 			// Create if doesn't exist
-			cmd := navigation.SwitchUICmd(navigation.CreateUI)
+			createArgs := []any{selector.Title}
+			cmd := navigation.SwitchUICmd(navigation.CreateUI, createArgs)
 			return cmd
 		}
 	} else {

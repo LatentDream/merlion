@@ -124,7 +124,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			return m, nil
 
 		case "esc", "q":
-			return m, navigation.SwitchUICmd(navigation.NoteUI)
+			return m, navigation.SwitchUICmd(navigation.NoteUI, []any{})
 
 		case "enter":
 			if m.note == nil {
@@ -151,7 +151,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 				if err != nil {
 					log.Error("Failed to update note", "error", err)
 				}
-				return m, navigation.SwitchUICmd(navigation.NoteUI)
+				return m, navigation.SwitchUICmd(navigation.NoteUI, []any{})
 			}
 
 		}

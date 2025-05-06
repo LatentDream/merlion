@@ -63,12 +63,29 @@ func fetchTagsCmd(m *Model) tea.Cmd {
 	}
 }
 
+type prefillMsg struct {
+	Title string
+}
+
+func prefillCmd(title string) tea.Cmd {
+	return func() tea.Msg {
+		return prefillMsg{Title: title}
+	}
+
+}
+
 func (m Model) Init(args ...any) tea.Cmd {
-	return tea.Batch(
+	cmds := []tea.Cmd{
 		textinput.Blink,
 		tea.WindowSize(),
 		fetchTagsCmd(&m),
-	)
+	}
+	if len(args) > 0 {
+		if title, ok := args[0].(string); ok {
+			cmds = append(cmds, prefillCmd(title))
+		}
+	}
+	return tea.Batch(cmds...)
 }
 
 func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
@@ -79,6 +96,8 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 	case fetchedTagsMsg:
 		m.tagInput.SetAvailableTags([]string(msg))
 		return m, nil
+	case prefillMsg:
+		m.title.SetValue(msg.Title)
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "tab":
@@ -113,7 +132,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			return m, nil
 
 		case "esc", "q":
-			return m, navigation.SwitchUICmd(navigation.NoteUI)
+			return m, navigation.SwitchUICmd(navigation.NoteUI, []any{})
 
 		case "enter":
 			if m.isFavoriteInput.Focused || m.isWorkLogInput.Focused {
@@ -137,7 +156,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 				}
 				// TODO: Handle potential Error returned
 				m.storeManager.CreateNote(note.ToCreateRequest())
-				return m, navigation.SwitchUICmd(navigation.NoteUI)
+				return m, navigation.SwitchUICmd(navigation.NoteUI, []any{})
 			}
 		}
 	case tea.WindowSizeMsg:

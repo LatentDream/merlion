@@ -62,16 +62,16 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			m.confirm = !m.confirm
 			return m, nil
 		case "esc", "q":
-			return m, navigation.SwitchUICmd(navigation.NoteUI)
+			return m, navigation.SwitchUICmd(navigation.NoteUI, []any{})
 		case "enter":
 			if m.confirm {
 				if m.callback != nil {
 					m.callback()
-					return m, navigation.SwitchUICmd(m.returnUI)
+					return m, navigation.SwitchUICmd(m.returnUI, []any{})
 				}
 				log.Fatalf("No OnConfirm provided")
 			} else {
-				return m, navigation.SwitchUICmd(m.returnUI)
+				return m, navigation.SwitchUICmd(m.returnUI, []any{})
 			}
 		}
 

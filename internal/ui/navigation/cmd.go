@@ -53,9 +53,9 @@ type View interface {
 
 // Global CMD to switch View
 
-func SwitchUICmd(newState CurrentUI) tea.Cmd {
+func SwitchUICmd(newState CurrentUI, args []any) tea.Cmd {
 	return func() tea.Msg {
-		return SwitchUIMsg{NewState: newState}
+		return SwitchUIMsg{NewState: newState, Args: args}
 	}
 }
 

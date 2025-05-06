@@ -380,7 +380,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 			return m, nil
 
 		case key.Matches(msg, m.keys.Create):
-			cmd = navigation.SwitchUICmd(navigation.CreateUI)
+			cmd = navigation.SwitchUICmd(navigation.CreateUI, []any{})
 			return m, cmd
 
 		case key.Matches(msg, m.keys.Delete):
