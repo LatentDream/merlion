@@ -5,7 +5,9 @@ import (
 	"merlion/internal/model"
 	"merlion/internal/store"
 	"merlion/internal/styles"
+	"merlion/internal/ui/navigation"
 	"merlion/internal/utils"
+	"os/exec"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/spinner"
@@ -14,6 +16,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/latentdream/merlion/lib/glamour"
+	"github.com/latentdream/merlion/lib/glamour/ansi"
 )
 
 type Postion int
@@ -65,7 +68,7 @@ func New(themeManager *styles.ThemeManager, storeManager *store.Manager) Model {
 
 	return Model{
 		Note:         nil,
-		storeManager:  storeManager,
+		storeManager: storeManager,
 		themeManager: themeManager,
 		renderer:     renderer,
 		viewport:     vp,
@@ -167,9 +170,38 @@ func (m Model) Init() tea.Cmd {
 	return nil
 }
 
+func (m *Model) HandleSelector(selector *ansi.Selector) tea.Cmd {
+	if selector == nil {
+		log.Debug("selector is nil")
+		return nil
+	}
+	if selector.Title != "" {
+		log.Debug("Opening: ", "title", selector)
+		note := m.storeManager.SearchByTitle(selector.Title)
+		if note != nil {
+			m.SetNote(note)
+			m.Render()
+		} else {
+			// Create if doesn't exist
+			cmd := navigation.SwitchUICmd(navigation.CreateUI)
+			return cmd
+		}
+	} else {
+		log.Debug("Opening: ", "link", selector)
+		cmd := exec.Command("open", selector.Link)
+		err := cmd.Start()
+		if err != nil {
+			log.Error("Failed to open link", "error", err)
+		}
+	}
+	return nil
+}
+
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+	var cmds []tea.Cmd
 	var cmd tea.Cmd
 	m.viewport, cmd = m.viewport.Update(msg)
+	cmds = append(cmds, cmd)
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
@@ -187,24 +219,14 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			m.Render()
 		case "enter":
 			selector := m.renderer.GetSelectorInfo()
-			if selector == nil {
-				log.Debug("selector is nil")
-				break
+			cmd = m.HandleSelector(selector)
+			if cmd != nil {
+				cmds = append(cmds, cmd)
 			}
-			// Trigger a search + note change
-			// - Or create if doesn't exist
-			// - Or open URL if link
-			log.Debug("User requested", "link", selector.Link, "title", selector.Title)
-			note := m.storeManager.SearchByTitle(selector.Title)
-			if note != nil {
-				m.SetNote(note)
-				m.Render()
-			}
-
 		}
 	}
 
-	return m, cmd
+	return m, tea.Batch(cmds...)
 }
 
 func (m Model) View() string {

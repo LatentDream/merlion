@@ -111,9 +111,9 @@ func (tm *ThemeManager) GetRendererStyle() ansi.StyleConfig {
 			Color:     stringPtr(string(tm.Theme.Secondary)),
 			Underline: boolPtr(true),
 		},
-		WikiLinkHighlighted: ansi.StylePrimitive{
+		Selector: ansi.StylePrimitive{
 			Blink:     boolPtr(true),
-			Color:     stringPtr(string(tm.Theme.Secondary)),
+			Color:     stringPtr(string(tm.Theme.Tertiary)),
 			Underline: boolPtr(true),
 		},
 		Image: ansi.StylePrimitive{

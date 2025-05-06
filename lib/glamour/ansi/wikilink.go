@@ -21,7 +21,7 @@ func (e *WikiLinkElement) Render(w io.Writer, ctx RenderContext) error {
 func (e *WikiLinkElement) renderWikiLink(w io.Writer, ctx RenderContext, isSelected bool) error {
 	var style StylePrimitive
 	if isSelected {
-		style = ctx.options.Styles.WikiLinkHighlighted
+		style = ctx.options.Styles.Selector
 	} else {
 		style = ctx.options.Styles.WikiLink
 	}

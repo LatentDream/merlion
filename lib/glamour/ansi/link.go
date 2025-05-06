@@ -18,13 +18,14 @@ type LinkElement struct {
 
 // Render renders a LinkElement.
 func (e *LinkElement) Render(w io.Writer, ctx RenderContext) error {
+	isSelected := ctx.Selector.isSelected(&Selector{Link: e.URL})
 	if !e.SkipText {
 		if err := e.renderTextPart(w, ctx); err != nil {
 			return err
 		}
 	}
 	if !e.SkipHref {
-		if err := e.renderHrefPart(w, ctx); err != nil {
+		if err := e.renderHrefPart(w, ctx, isSelected); err != nil {
 			return err
 		}
 	}
@@ -55,10 +56,17 @@ func (e *LinkElement) renderTextPart(w io.Writer, ctx RenderContext) error {
 	return nil
 }
 
-func (e *LinkElement) renderHrefPart(w io.Writer, ctx RenderContext) error {
+func (e *LinkElement) renderHrefPart(w io.Writer, ctx RenderContext, isSelected bool) error {
 	prefix := ""
 	if !e.SkipText {
 		prefix = " "
+	}
+
+	var style StylePrimitive
+	if isSelected {
+		style = ctx.options.Styles.Selector
+	} else {
+		style = ctx.options.Styles.Link
 	}
 
 	u, err := url.Parse(e.URL)
@@ -66,7 +74,7 @@ func (e *LinkElement) renderHrefPart(w io.Writer, ctx RenderContext) error {
 		el := &BaseElement{
 			Token:  "↗", // resolveRelativeURL(e.BaseURL, e.URL),
 			Prefix: prefix,
-			Style:  ctx.options.Styles.Link,
+			Style:  style,
 		}
 		if err := el.Render(w, ctx); err != nil {
 			return err
