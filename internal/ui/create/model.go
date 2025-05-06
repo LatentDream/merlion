@@ -63,7 +63,7 @@ func fetchTagsCmd(m *Model) tea.Cmd {
 	}
 }
 
-func (m Model) Init() tea.Cmd {
+func (m Model) Init(args ...any) tea.Cmd {
 	return tea.Batch(
 		textinput.Blink,
 		tea.WindowSize(),

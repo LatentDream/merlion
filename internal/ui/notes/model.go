@@ -141,7 +141,7 @@ func NewModel(storeManager *store.Manager, themeManager *styles.ThemeManager) Mo
 	}
 }
 
-func (m Model) Init() tea.Cmd {
+func (m Model) Init(args ...any) tea.Cmd {
 	if m.storeManager != nil {
 		return tea.Batch(
 			m.spinner.Tick,

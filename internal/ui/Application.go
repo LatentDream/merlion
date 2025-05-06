@@ -56,7 +56,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case navigation.SwitchUIMsg:
 		m.state = msg.NewState
-		return m, m.views[m.state].Init()
+		return m, m.views[m.state].Init(msg.Args...)
 
 	case navigation.LoginMsg:
 		m.store = msg.Manager

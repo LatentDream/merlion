@@ -25,6 +25,7 @@ const (
 
 type SwitchUIMsg struct {
 	NewState CurrentUI
+	Args     []any
 }
 
 type LoginMsg struct {
@@ -44,7 +45,7 @@ type OpenManageMsg struct {
 }
 
 type View interface {
-	Init() tea.Cmd
+	Init(...any) tea.Cmd
 	Update(tea.Msg) (View, tea.Cmd)
 	View() string
 	SetClient(*store.Manager) tea.Cmd

@@ -64,7 +64,7 @@ func (m Model) SetClient(storeManager *store.Manager) tea.Cmd {
 	return nil
 }
 
-func (m Model) Init() tea.Cmd {
+func (m Model) Init(args ...any) tea.Cmd {
 	return textinput.Blink
 }
 

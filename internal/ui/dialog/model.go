@@ -36,7 +36,7 @@ func NewModel(sotreManager *store.Manager, themeManager *styles.ThemeManager) na
 	}
 }
 
-func (m Model) Init() tea.Cmd {
+func (m Model) Init(args ...any) tea.Cmd {
 	return tea.WindowSize()
 }
 
