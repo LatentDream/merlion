@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	version "merlion/cmd/merlion/version"
 	"merlion/internal/store/cloud"
 	"merlion/internal/styles"
 	"merlion/internal/ui"
@@ -10,6 +11,7 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -22,27 +24,35 @@ type Command struct {
 	run         func(args ...string) int
 }
 
-var COMMANDS = []Command{
-	{
-		name:        "help",
-		description: "Show help information",
-		run:         func(args ...string) int { return 0 },
-	},
-	{
-		name:        "version",
-		description: "Show version information",
-		run:         func(args ...string) int { return 0 },
-	},
-	{
-		name:        "logout",
-		description: "Removed the cached credentials",
-		run:         func(args ...string) int { return 0 },
-	},
+var COMMANDS []Command
+
+func HelpCmd(args ...string) int {
+	fmt.Println("Merlion - Help")
+	fmt.Println("\nAvailable commands:")
+	for _, cmd := range COMMANDS {
+		fmt.Printf("  %-10s %s\n", cmd.name, cmd.description)
+	}
+	return 0
 }
 
-func help() int {
-	println("Merlion - Help")
-	return 0
+func init() {
+	COMMANDS = []Command{
+		{
+			name:        "help",
+			description: "Show help information",
+			run:         HelpCmd,
+		},
+		{
+			name:        "version",
+			description: "Show version information",
+			run:         version.VersionCmd,
+		},
+		{
+			name:        "logout",
+			description: "Removed the cached credentials",
+			run:         func(args ...string) int { return 0 },
+		},
+	}
 }
 
 func UI() {
@@ -118,12 +128,12 @@ func main() {
 		command := os.Args[1]
 		args := os.Args[2:]
 		for _, cmd := range COMMANDS {
-			if cmd.name == command {
+			if strings.ToLower(cmd.name) == strings.ToLower(command) {
 				os.Exit(cmd.run(args...))
 			}
 		}
 		fmt.Printf("Unknown command: %s\n", command)
-		help()
+		HelpCmd()
 		os.Exit(1)
 	}
 	UI()

@@ -1,6 +1,11 @@
 default:
     just --list
 
+version := "1.0.0"
+commit := `git rev-parse HEAD`
+build_time := `date '+%Y-%m-%d %H:%M:%S'`
+module_path := `go list -m`
+
 # Build and execute
 dev:
     just build
@@ -8,7 +13,11 @@ dev:
 
 # Build binary
 build:
-    go build -o merlion ./cmd/merlion
+    go build \
+        -ldflags "-X {{module_path}}/cmd/merlion/version.Version=\"{{version}}\" -X {{module_path}}/cmd/merlion/version.Commit=\"{{commit}}\"" \
+        -o merlion \
+        ./cmd/merlion
+
 
 # Run binary
 run:
