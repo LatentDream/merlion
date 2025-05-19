@@ -16,8 +16,13 @@ type Command struct {
 
 var COMMANDS []Command
 
-func HelpCmd(args ...string) int {
+func helpCmd(args ...string) int {
 	fmt.Println("Merlion - Help")
+	fmt.Println("")
+	fmt.Println("TUI Note-taking application")
+	fmt.Println("Run `merlion` without args to start in TUI mode")
+	fmt.Println("For remote storage capability, create an account at:")
+	fmt.Println("    https://merlion.dev/login")
 	fmt.Println("\nAvailable commands:")
 	for _, cmd := range COMMANDS {
 		fmt.Printf("  %-10s %s\n", cmd.name, cmd.description)
@@ -30,18 +35,18 @@ func init() {
 		{
 			name:        "help",
 			description: "Show help information",
-			run:         HelpCmd,
+			run:         helpCmd,
 		},
 		{
 			name:        "version",
 			description: "Show version information",
 			run:         version.VersionCmd,
 		},
-		{
-			name:        "logout",
-			description: "Removed the cached credentials",
-			run:         LogoutCmd,
-		},
+		// {
+		// 	name:        "logout",
+		// 	description: "Removed the cached credentials",
+		// 	run:         logoutCmd,
+		// },
 	}
 }
 
@@ -55,7 +60,7 @@ func main() {
 			}
 		}
 		fmt.Printf("Unknown command: %s\n", command)
-		HelpCmd()
+		helpCmd()
 		os.Exit(1)
 	}
 	startTUI()
