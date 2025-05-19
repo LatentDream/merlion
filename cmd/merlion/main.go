@@ -16,7 +16,36 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-func main() {
+type Command struct {
+	name        string
+	description string
+	run         func(args ...string) int
+}
+
+var COMMANDS = []Command{
+	{
+		name:        "help",
+		description: "Show help information",
+		run:         func(args ...string) int { return 0 },
+	},
+	{
+		name:        "version",
+		description: "Show version information",
+		run:         func(args ...string) int { return 0 },
+	},
+	{
+		name:        "logout",
+		description: "Removed the cached credentials",
+		run:         func(args ...string) int { return 0 },
+	},
+}
+
+func help() int {
+	println("Merlion - Help")
+	return 0
+}
+
+func UI() {
 	startTime := time.Now()
 	closer, err := utils.SetupLog()
 	if err != nil {
@@ -82,4 +111,20 @@ func main() {
 	}
 	_ = closer()
 	log.Debug("Main function completed", "total_time", time.Since(startTime))
+}
+
+func main() {
+	if len(os.Args) > 1 {
+		command := os.Args[1]
+		args := os.Args[2:]
+		for _, cmd := range COMMANDS {
+			if cmd.name == command {
+				os.Exit(cmd.run(args...))
+			}
+		}
+		fmt.Printf("Unknown command: %s\n", command)
+		help()
+		os.Exit(1)
+	}
+	UI()
 }
