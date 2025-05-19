@@ -40,6 +40,10 @@ func (ctx RenderContext) SanitizeHTML(s string, trimSpaces bool) string {
 	return html.UnescapeString(s)
 }
 
+func (ctx *RenderContext) SetWordWrap(wordwrap int) {
+	ctx.options.WordWrap = wordwrap
+}
+
 // Reset the context state - should be use before a render
 func (ctx *RenderContext) Reset() {
 	ctx.Selector.resetASTWalkState()

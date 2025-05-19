@@ -137,7 +137,8 @@ func (tm *ThemeManager) GetRendererStyle() ansi.StyleConfig {
 				StylePrimitive: ansi.StylePrimitive{
 					Color: stringPtr(string(tm.Theme.Foreground)),
 				},
-				Margin: uintPtr(tm.Theme.Margin),
+				Margin:      uintPtr(tm.Theme.Margin),
+				IndentToken: stringPtr("│ "),
 			},
 			Chroma: &ansi.Chroma{
 				Text: ansi.StylePrimitive{

@@ -316,6 +316,11 @@ func (tr *TermRenderer) ClearSelector() {
 	tr.rendererContext.Selector.ResetState()
 }
 
+func (tr *TermRenderer) SetWidth(wordWrap int) {
+	tr.ansiOptions.WordWrap = wordWrap
+	tr.rendererContext.SetWordWrap(wordWrap)
+}
+
 func getEnvironmentStyle() string {
 	glamourStyle := os.Getenv("GLAMOUR_STYLE")
 	if len(glamourStyle) == 0 {

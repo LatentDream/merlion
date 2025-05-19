@@ -47,7 +47,7 @@ func New(themeManager *styles.ThemeManager, storeManager *store.Manager) Model {
 	// Initialize glamour for markdown rendering
 	renderer, err := glamour.NewTermRenderer(
 		glamour.WithStyles(themeManager.GetRendererStyle()),
-		glamour.WithWordWrap(int(themeManager.Theme.WordWrap)),
+		glamour.WithWordWrap(80),
 	)
 	if err != nil {
 		log.Fatalf("failed to initialize markdown renderer: %v", err)
@@ -149,7 +149,7 @@ func (m *Model) RefreshTheme() {
 
 	renderer, err := glamour.NewTermRenderer(
 		glamour.WithStyles(m.themeManager.GetRendererStyle()),
-		glamour.WithWordWrap(int(m.themeManager.Theme.WordWrap)),
+		glamour.WithWordWrap(int(m.width)),
 	)
 	if err != nil {
 		log.Errorf("Error while creating new renderer %v", err)
@@ -164,6 +164,8 @@ func (m *Model) SetSize(width int, height int) {
 	m.viewport.Width = width
 	m.height = height
 	m.viewport.Height = height - map[bool]int{false: 2, true: 0}[m.infoHide]
+	m.renderer.SetWidth(width )
+	m.Render()
 }
 
 func (m Model) Init() tea.Cmd {

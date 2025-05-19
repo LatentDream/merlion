@@ -28,7 +28,6 @@ type Theme struct {
 	// Specific Renderer elements
 	Margin     uint
 	ListIndent uint
-	WordWrap   uint
 }
 
 var (
@@ -50,7 +49,6 @@ var (
 		HelpColor:     lipgloss.Color("#494949"),
 		Margin:         2,
 		ListIndent:     4,
-		WordWrap:       130,
 	}
 
 	// Neo Tokyo theme
@@ -72,6 +70,5 @@ var (
 		HelpColor:     lipgloss.Color("#494949"),
 		Margin:         2,
 		ListIndent:     4,
-		WordWrap:       130,
 	}
 )
