@@ -157,3 +157,15 @@ func (cm *CredentialsManager) LoadCredentials() (*Credentials, error) {
 
 	return &creds, nil
 }
+
+func (cm *CredentialsManager) RemoveCredentials() error {
+	credFile := filepath.Join(cm.configDir, "credentials.json")
+	err := os.Remove(credFile)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return fmt.Errorf("removing credentials file: %w", err)
+	}
+	return nil
+}
