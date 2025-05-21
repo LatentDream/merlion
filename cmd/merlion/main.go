@@ -42,11 +42,11 @@ func init() {
 			description: "Show version information",
 			run:         version.VersionCmd,
 		},
-		// {
-		// 	name:        "logout",
-		// 	description: "Removed the cached credentials",
-		// 	run:         logoutCmd,
-		// },
+		{
+			name:        "logout",
+			description: "Removed the cached credentials",
+			run:         logoutCmd,
+		},
 	}
 }
 

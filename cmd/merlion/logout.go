@@ -1,8 +1,23 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"merlion/internal/store/cloud"
+)
 
 func logoutCmd(args ...string) int {
-	fmt.Println("Unimplemented")
-	return 1
+	credMgr, err := cloud.NewCredentialsManager()
+	if err != nil {
+		fmt.Println("Failed to initialize credentials manager: %v", err)
+		return 1
+	}
+
+	err = credMgr.RemoveCredentials()
+	if err != nil {
+		fmt.Println("ERROR: Failed to remove credentials: ", err)
+		return 1
+	}
+
+	fmt.Println("Credentials has been removed from disk")
+	return 0
 }
