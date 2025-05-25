@@ -116,10 +116,8 @@ func fetchNoteContent(storeManager *store.Manager, noteId string) tea.Cmd {
 }
 
 type NotesLoadedMsg struct {
-	Notes []model.Note
-	Err   error
+	Err error
 }
-
 type notesLoadedMsg = NotesLoadedMsg
 
 func (m Model) loadNotes() tea.Cmd {
@@ -127,8 +125,10 @@ func (m Model) loadNotes() tea.Cmd {
 		if m.storeManager == nil {
 			log.Fatalf("In CMD - Trying to load notes without any client")
 		}
-		notes, err := m.storeManager.ListNoteMetadata()
-		// TODO: nothing should be return, & note kept in the storeManager
-		return notesLoadedMsg{Notes: notes, Err: err}
+		_, err := m.storeManager.ListNoteMetadata()
+		if err != nil {
+			log.Error("Unable to list notes: ", err)
+		}
+		return notesLoadedMsg{Err: err}
 	}
 }

@@ -61,11 +61,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case navigation.LoginMsg:
 		m.store = msg.Manager
 		var cmds []tea.Cmd
-		for _, view := range m.views {
+		for i, view := range m.views {
 			storeManager := msg.Manager
-			if cmd := view.SetClient(storeManager); cmd != nil {
-				cmds = append(cmds, cmd)
-			}
+			updatedView := view.SetClient(storeManager)
+			m.views[i] = updatedView
 		}
 		m.state = navigation.NoteUI
 		cmds = append(cmds, m.views[m.state].Init())

@@ -48,7 +48,7 @@ type View interface {
 	Init(...any) tea.Cmd
 	Update(tea.Msg) (View, tea.Cmd)
 	View() string
-	SetClient(*store.Manager) tea.Cmd
+	SetClient(*store.Manager) View
 }
 
 // Global CMD to switch View

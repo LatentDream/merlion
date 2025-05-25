@@ -60,8 +60,8 @@ func NewModel(credentialsManager *cloud.CredentialsManager, themeManager *styles
 	}
 }
 
-func (m Model) SetClient(storeManager *store.Manager) tea.Cmd {
-	return nil
+func (m Model) SetClient(storeManager *store.Manager) navigation.View {
+	return m
 }
 
 func (m Model) Init(args ...any) tea.Cmd {

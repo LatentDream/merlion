@@ -23,9 +23,9 @@ type Model struct {
 	returnUI     navigation.CurrentUI
 }
 
-func (m Model) SetClient(sotreManager *store.Manager) tea.Cmd {
+func (m Model) SetClient(sotreManager *store.Manager) navigation.View {
 	m.storeManager = sotreManager
-	return nil
+	return m
 }
 
 func NewModel(sotreManager *store.Manager, themeManager *styles.ThemeManager) navigation.View {

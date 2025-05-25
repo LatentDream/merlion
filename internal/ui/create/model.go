@@ -24,9 +24,9 @@ type Model struct {
 	storeManager    *store.Manager
 }
 
-func (m Model) SetClient(storeManager *store.Manager) tea.Cmd {
+func (m Model) SetClient(storeManager *store.Manager) navigation.View {
 	m.storeManager = storeManager
-	return nil
+	return m
 }
 
 func NewModel(

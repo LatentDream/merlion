@@ -151,9 +151,9 @@ func (m Model) Init(args ...any) tea.Cmd {
 	return m.spinner.Tick
 }
 
-func (m Model) SetClient(storeManager *store.Manager) tea.Cmd {
+func (m Model) SetClient(storeManager *store.Manager) navigation.View {
 	m.storeManager = storeManager
-	return m.loadNotes()
+	return m
 }
 
 func createNoteItems(notes []model.Note, filter TabKind) []list.Item {

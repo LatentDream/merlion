@@ -226,7 +226,7 @@ func (m Model) View() string {
 	)
 }
 
-func (m Model) SetClient(manager *store.Manager) tea.Cmd {
+func (m Model) SetClient(manager *store.Manager) navigation.View {
 	m.storeManager = manager
-	return nil
+	return m
 }
