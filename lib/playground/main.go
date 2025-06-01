@@ -38,9 +38,6 @@ func main() {
 	fmt.Println("Current DB version: ", version)
 
 	// List all files in the embedded migrations directory
-	ops := operations.ApplyMigrations()
-	for _, op := range ops {
-		fmt.Println(op.Name())
-	}
+	operations.ApplyMigrations(db)
 }
 
