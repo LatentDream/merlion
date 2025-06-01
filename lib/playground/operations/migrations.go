@@ -20,7 +20,7 @@ const INITIAL_VERSION = 0
 //go:embed migrations/*.sql
 var migrationsContent embed.FS
 
-func TableExist(db *sql.DB, tableName string) (bool, error) {
+func tableExist(db *sql.DB, tableName string) (bool, error) {
 	query := `SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?;`
 
 	var count int
@@ -56,7 +56,7 @@ func createVersionTable(db *sql.DB) (int, error) {
 }
 
 func GetVersion(db *sql.DB) (int, error) {
-	exist, err := TableExist(db, "merlion_version")
+	exist, err := tableExist(db, "merlion_version")
 	if err != nil {
 		return -1, err
 	}
