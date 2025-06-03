@@ -1,12 +1,25 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
-	version "merlion/cmd/merlion/version"
-	_ "net/http/pprof"
 	"os"
+	"path/filepath"
 	"strings"
+
+	"github.com/charmbracelet/log"
+	_ "github.com/mattn/go-sqlite3" // SQLite driver
+	version "merlion/cmd/merlion/version"
+	"merlion/internal/database" // Added
+	"merlion/internal/store"
+	"merlion/internal/store/local"
+	// "merlion/internal/store/local/operations" // Removed if no longer directly used
+	_ "net/http/pprof"
 )
+
+// var db *sql.DB // Removed global db variable
+
+// getDBPath() and initDB() functions are now moved to internal/database/sqlite.go
 
 type Command struct {
 	name        string
@@ -51,6 +64,22 @@ func init() {
 }
 
 func main() {
+	// Call the new InitDB function from the database package
+	db, err := database.InitDB()
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	// Defer close on the db instance returned by InitDB
+	if db != nil { // Should always be non-nil if err is nil, but good practice
+		defer func() {
+			if errClose := db.Close(); errClose != nil {
+				log.Errorf("Failed to close database: %v", errClose)
+			} else {
+				log.Info("Database connection closed.")
+			}
+		}()
+	}
+
 	if len(os.Args) > 1 {
 		command := os.Args[1]
 		args := os.Args[2:]
@@ -63,5 +92,9 @@ func main() {
 		helpCmd()
 		os.Exit(1)
 	}
-	startTUI()
+
+	localStore := local.NewLocalClient(db, "local-sqlite")
+	storeManager := store.NewManager(localStore)
+
+	startTUI(storeManager)
 }

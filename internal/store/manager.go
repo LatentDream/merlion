@@ -33,9 +33,13 @@ type Manager struct {
 // NewManager creates a new manager with the given store implementation
 // and initializes the notes metadata list (without full content).
 func NewManager(store store) *Manager {
+	name := "unknown"
+	if store != nil {
+		name = store.Name()
+	}
 	return &Manager{
 		activeStore: store,
-		name:        store.Name(),
+		name:        name,
 		inited:      false,
 	}
 }

@@ -14,9 +14,10 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
+	"merlion/internal/store"
 )
 
-func startTUI() {
+func startTUI(storeManager *store.Manager) {
 	startTime := time.Now()
 	closer, err := utils.SetupLog()
 	if err != nil {
@@ -61,7 +62,10 @@ func startTUI() {
 	}
 	log.Debug("Credentials manager initialized", "elapsed", time.Since(startTime))
 
-	model, err := ui.NewModel(credMgr, themeManager)
+	// Pass the storeManager to the UI model.
+	// The order of arguments for ui.NewModel will need to be adjusted in its definition.
+	// Current: credMgr, themeManager. New: storeManager, themeManager, credMgr
+	model, err := ui.NewModel(storeManager, themeManager, credMgr)
 	if err != nil {
 		_ = closer()
 		log.Fatalf("Failed to create UI model: %v", err)
