@@ -21,7 +21,7 @@ build:
 
 # Run binary
 run:
-    LOG_LEVEL=DEBUG APP_ENV=dev ./merlion
+    LOG_LEVEL=DEBUG APP_ENV=dev MERLION_DB_PATH=./dev.db ./merlion
 
 # Remove the Exectutable
 clean:

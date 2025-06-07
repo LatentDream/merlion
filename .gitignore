@@ -22,3 +22,6 @@ go.work.sum
 !merlion/
 
 *.log
+
+# Dev database
+dev.db*
