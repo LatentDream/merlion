@@ -72,6 +72,22 @@ func GetVersion(db *sql.DB) (int, error) {
 	return version, nil
 }
 
+func StampVersion(db *sql.DB, version int) error {
+	updateVersionQuery := `UPDATE merlion_version SET version = ? WHERE id = 'version'`
+	result, err := db.Exec(updateVersionQuery, version)
+	if err != nil {
+		return fmt.Errorf("Failed to update version after migration: %w", err)
+	}
+	nbAffected, err := result.RowsAffected()
+	if err != err {
+		return fmt.Errorf("Unexpected error while verifying the nb of db stamp: %w", err)
+	}
+	if nbAffected == 0 {
+		return fmt.Errorf("No row change while stamping DB")
+	}
+	return nil
+}
+
 func getMigrationVersion(migrationFile fs.DirEntry) int {
 	parts := strings.Split(migrationFile.Name(), "__")
 	assert.Eq(len(parts), 2, "File format should be int__description.sql, like: 024__adding_something.sql but found:", migrationFile.Name())
@@ -118,9 +134,9 @@ func ApplyMigrations(db *sql.DB) error {
 
 	currVersion, err := GetVersion(db)
 	if err != nil {
-		fmt.Errorf("FATAL: impossible to get version -", err)
+		return fmt.Errorf("FATAL: impossible to get version - %w", err)
 	}
-	log.Info("DB currently stamp at: #%d\n", currVersion)
+	log.Info(fmt.Sprintf("DB currently stamp at: #%d", currVersion))
 
 	migrationFiles := GetMigrationFiles()
 	nbApply := 0
@@ -136,22 +152,21 @@ func ApplyMigrations(db *sql.DB) error {
 			return fmt.Errorf("failed to read migration file %s: %w", migrationFile.Name(), err)
 		}
 
-		log.Info("Applying migration %s (version %d)\n", migrationFile.Name(), version)
+		log.Info(fmt.Sprintf("Applying migration %s (version %d)", migrationFile.Name(), version))
 
 		_, err = db.Exec(string(data))
 		if err != nil {
 			return fmt.Errorf("Failed to execute migration %s: %w", migrationFile.Name(), err)
 		}
 
-		updateVersionQuery := `UPDATE merlion_version SET version = ? WHERE id = "version"`
-		_, err = db.Exec(updateVersionQuery, version)
+		err = StampVersion(db, version)
 		if err != nil {
-			return fmt.Errorf("Failed to update version after migration %s: %w", migrationFile.Name(), err)
+			return fmt.Errorf("Failed to stamp after migration %s: %w", migrationFile.Name(), err)
 		}
 
 		nbApply += 1
 	}
 
-	log.Info("Applied %d migrations\n", nbApply)
+	log.Info(fmt.Sprintf("Applied %d migrations", nbApply))
 	return nil
 }
