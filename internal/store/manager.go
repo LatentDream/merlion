@@ -22,7 +22,7 @@ var ErrNoteNotFound = errors.New("note not found")
 // may not be populated (content field may be nil). For guaranteed access to note
 // content, use GetFullNote() which will always return the complete note with content.
 type Manager struct {
-	activeStore store
+	activeStore Store
 	name        string
 	inited      bool
 	// Notes contains a cached list of Notes, but their content field may be nil
@@ -32,7 +32,7 @@ type Manager struct {
 
 // NewManager creates a new manager with the given store implementation
 // and initializes the notes metadata list (without full content).
-func NewManager(store store) *Manager {
+func NewManager(store Store) *Manager {
 	return &Manager{
 		activeStore: store,
 		name:        store.Name(),

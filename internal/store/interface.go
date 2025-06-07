@@ -4,8 +4,8 @@ import (
 	"merlion/internal/model"
 )
 
-// Encapsulation to introduce on device local store
-type store interface {
+// Encapsulation to introduce on device local Store
+type Store interface {
 	Name() string
 	ListNotes() ([]model.Note, error)
 	UpdateNote(string, model.CreateNoteRequest) (*model.Note, error)

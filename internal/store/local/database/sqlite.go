@@ -8,7 +8,6 @@ import (
 
 	"github.com/charmbracelet/log"
 	_ "github.com/mattn/go-sqlite3"
-	"merlion/internal/store/local/operations"
 )
 
 const ENV_DB_PATH_OVERWRITTEN = "MERLION_DB_PATH"
