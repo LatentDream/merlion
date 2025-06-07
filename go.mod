@@ -11,6 +11,7 @@ require (
 	github.com/charmbracelet/x/editor v0.1.0
 	github.com/glebarez/go-sqlite v1.22.0
 	github.com/latentdream/merlion/lib/glamour v0.10.0
+	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/muesli/go-app-paths v0.2.2
 	github.com/muesli/termenv v0.16.0
 )
@@ -30,7 +31,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
-	github.com/google/uuid v1.5.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect

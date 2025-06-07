@@ -1,4 +1,4 @@
-package operations
+package database
 
 import (
 	"cmp"
@@ -114,11 +114,11 @@ func GetMigrationFiles() []fs.DirEntry {
 	return entries
 }
 
-func ApplyMigrations(db *sql.DB) {
+func ApplyMigrations(db *sql.DB) error {
 
 	currVersion, err := GetVersion(db)
 	if err != nil {
-		panic(fmt.Sprintln("FATAL: impossible to get version -", err))
+		fmt.Errorf("FATAL: impossible to get version -", err)
 	}
 	log.Info("DB currently stamp at: #%d\n", currVersion)
 
@@ -133,25 +133,25 @@ func ApplyMigrations(db *sql.DB) {
 		filePath := "migrations/" + migrationFile.Name()
 		data, err := migrationsContent.ReadFile(filePath)
 		if err != nil {
-			panic(fmt.Sprintf("failed to read migration file %s: %w", migrationFile.Name(), err))
-		e
+			return fmt.Errorf("failed to read migration file %s: %w", migrationFile.Name(), err)
+		}
 
 		log.Info("Applying migration %s (version %d)\n", migrationFile.Name(), version)
 
 		_, err = db.Exec(string(data))
 		if err != nil {
-			panic(fmt.Sprintf("Failed to execute migration %s: %w", migrationFile.Name(), err))
+			return fmt.Errorf("Failed to execute migration %s: %w", migrationFile.Name(), err)
 		}
 
 		updateVersionQuery := `UPDATE merlion_version SET version = ? WHERE id = "version"`
 		_, err = db.Exec(updateVersionQuery, version)
 		if err != nil {
-			panic(fmt.Sprintf("Failed to update version after migration %s: %w", migrationFile.Name(), err))
+			return fmt.Errorf("Failed to update version after migration %s: %w", migrationFile.Name(), err)
 		}
 
 		nbApply += 1
 	}
 
 	log.Info("Applied %d migrations\n", nbApply)
+	return nil
 }
-
