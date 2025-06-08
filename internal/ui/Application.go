@@ -1,8 +1,12 @@
 package ui
 
 import (
+	"database/sql"
+	"fmt"
 	"merlion/internal/store"
 	"merlion/internal/store/cloud"
+	"merlion/internal/store/local"
+	"merlion/internal/store/local/database"
 	"merlion/internal/styles"
 	"merlion/internal/ui/create"
 	"merlion/internal/ui/dialog"
@@ -20,18 +24,25 @@ type Model struct {
 	store *store.Manager
 }
 
-func NewModel(credentialsManager *cloud.CredentialsManager, themeManager *styles.ThemeManager) (Model, error) {
-	initialUI := navigation.LoginUI
-	var client *cloud.Client = nil
+func NewModel(credentialsManager *cloud.CredentialsManager, localDB *sql.DB, themeManager *styles.ThemeManager) (Model, error) {
+	initialUI := navigation.NoteUI
 
+	db, err := database.InitDB()
+	if err != nil {
+		panic(fmt.Sprintln("Failed to init DB", err))
+	}
+	localClient := local.NewClient(db)
+
+	var cloudClient *cloud.Client = nil
 	// Check credentials
 	creds, _ := credentialsManager.LoadCredentials()
 	if creds != nil {
-		initialUI = navigation.NoteUI
-		client, _ = cloud.NewClient(creds)
+		cloudClient, _ = cloud.NewClient(creds)
+	} else {
+		initialUI = navigation.LoginUI
 	}
 
-	manager := store.NewManager(client)
+	manager := store.NewManager(cloudClient, localClient)
 
 	// Create views
 	views := make(map[navigation.CurrentUI]navigation.View)
@@ -59,11 +70,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.views[m.state].Init(msg.Args...)
 
 	case navigation.LoginMsg:
-		m.store = msg.Manager
+		m.store.UpdateCloudClient(msg.Client)
 		var cmds []tea.Cmd
 		for i, view := range m.views {
-			storeManager := msg.Manager
-			updatedView := view.SetClient(storeManager)
+			cloudClient := msg.Client
+			updatedView := view.SetCloudClient(cloudClient)
 			m.views[i] = updatedView
 		}
 		m.state = navigation.NoteUI

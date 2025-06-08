@@ -2,6 +2,7 @@ package dialog
 
 import (
 	"merlion/internal/store"
+	"merlion/internal/store/cloud"
 	"merlion/internal/styles"
 	"merlion/internal/ui/navigation"
 
@@ -23,8 +24,8 @@ type Model struct {
 	returnUI     navigation.CurrentUI
 }
 
-func (m Model) SetClient(sotreManager *store.Manager) navigation.View {
-	m.storeManager = sotreManager
+func (m Model) SetCloudClient(client *cloud.Client) navigation.View {
+	m.storeManager.UpdateCloudClient(client)
 	return m
 }
 

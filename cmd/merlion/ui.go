@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"merlion/internal/store/cloud"
+	"merlion/internal/store/local/database"
 	"merlion/internal/styles"
 	"merlion/internal/ui"
 	"merlion/internal/utils"
@@ -18,25 +19,28 @@ import (
 
 func startTUI() {
 	startTime := time.Now()
+
+	// Setup Logging
 	closer, err := utils.SetupLog()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+	defer closer()
 	log.Debug("Starting main function", "time", startTime)
 	log.Debug("Log setup complete", "elapsed", time.Since(startTime))
 
+	// Setup profiling in dev env
 	if os.Getenv("APP_ENV") == "dev" {
-		log.Info("Enabling pprof for profiling")
+		log.Warn("Enabling pprof for profiling")
 		go func() {
-			log.Info(http.ListenAndServe("localhost:6060", nil))
+			log.Warn(http.ListenAndServe("localhost:6060", nil))
 		}()
 	}
 
 	// Initialize config directory
 	userConfigDir, err := os.UserConfigDir()
 	if err != nil {
-		_ = closer()
 		log.Fatalf("Failed to get user config directory: %v", err)
 	}
 	configDir := filepath.Join(userConfigDir, "merlion")
@@ -48,7 +52,6 @@ func startTUI() {
 	// Initialize theme manager
 	themeManager, err := styles.NewThemeManager(configDir)
 	if err != nil {
-		_ = closer()
 		log.Fatalf("Failed to initialize theme manager: %v", err)
 	}
 	log.Debug("Theme manager initialized", "elapsed", time.Since(startTime))
@@ -56,14 +59,20 @@ func startTUI() {
 	// Initialize credentials manager
 	credMgr, err := cloud.NewCredentialsManager()
 	if err != nil {
-		_ = closer()
 		log.Fatalf("Failed to initialize credentials manager: %v", err)
 	}
 	log.Debug("Credentials manager initialized", "elapsed", time.Since(startTime))
 
-	model, err := ui.NewModel(credMgr, themeManager)
+	// Initial local DB - I don't like have the DB where, but needed to have the Close
+	// TODO: A ctx where closing funcs can be registered would be great
+	localDB, err := database.InitDB()
 	if err != nil {
-		_ = closer()
+		log.Fatalf("Failed to init DB: %v", err)
+	}
+	defer localDB.Close()
+
+	model, err := ui.NewModel(credMgr, localDB, themeManager)
+	if err != nil {
 		log.Fatalf("Failed to create UI model: %v", err)
 	}
 	log.Debug("UI model created", "elapsed", time.Since(startTime))
@@ -77,9 +86,7 @@ func startTUI() {
 
 	log.Debug("Starting Tea program", "elapsed", time.Since(startTime))
 	if _, err := p.Run(); err != nil {
-		_ = closer()
 		log.Fatalf("Error running program: %v", err)
 	}
-	_ = closer()
 	log.Debug("Main function completed", "total_time", time.Since(startTime))
 }

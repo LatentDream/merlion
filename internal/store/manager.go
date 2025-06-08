@@ -7,24 +7,29 @@
 package store
 
 import (
-	"errors"
+	"fmt"
 	"log"
 	"merlion/internal/model"
+	"merlion/internal/store/cloud"
+	"merlion/internal/store/local"
 	"merlion/internal/utils"
+	"merlion/internal/utils/assert"
 	"strings"
 )
 
-// ErrNoteNotFound is returned when a note with the given ID is not found
-var ErrNoteNotFound = errors.New("note not found")
+const panic__consistency = "Storage was changed, but note wasn't refresh"
 
 // Manager handles note operations through an underlying store implementation.
 // Note: When using ListNoteMetadata() or accessing Manager.notes directly, note content
 // may not be populated (content field may be nil). For guaranteed access to note
 // content, use GetFullNote() which will always return the complete note with content.
 type Manager struct {
-	activeStore Store
-	name        string
-	inited      bool
+	activeStore          Store
+	Name                 string
+	inited               bool
+	internal__cloudStore *cloud.Client
+	internal__localStore *local.Client
+	internal__notesStore string
 	// Notes contains a cached list of Notes, but their content field may be nil
 	// Use GetNote() to retrieve the complete note with content
 	Notes []model.Note
@@ -32,17 +37,57 @@ type Manager struct {
 
 // NewManager creates a new manager with the given store implementation
 // and initializes the notes metadata list (without full content).
-func NewManager(store Store) *Manager {
-	return &Manager{
-		activeStore: store,
-		name:        store.Name(),
-		inited:      false,
+func NewManager(cloudStore *cloud.Client, localStore *local.Client) *Manager {
+	var defaultStore Store
+	defaultStore = localStore
+	if cloudStore != nil {
+		defaultStore = localStore
 	}
+
+	return &Manager{
+		activeStore:          defaultStore,
+		Name:                 defaultStore.Name(),
+		inited:               false,
+		internal__cloudStore: cloudStore,
+		internal__localStore: localStore,
+		internal__notesStore: defaultStore.Name(),
+	}
+}
+
+// UpdateCloudStore will swap the cloud storage for a new store
+// Expect the store to be valid and functionnal, panic otherwise
+func (m *Manager) UpdateCloudClient(client *cloud.Client) {
+	if m.activeStore.Name() == "Cloud" {
+		m.activeStore = client
+		_, err := m.ListNoteMetadata()
+		if err != nil {
+			log.Fatalf("Failed to fetch from new cloud store: %v", err)
+		}
+	}
+	m.internal__cloudStore = client
+}
+
+// NextStore swap the current underlying storage with the next registered one
+// Dev needs to call ListNoteMetadata after calling this, otherwise a panic occur
+func (m *Manager) NextStore() error {
+	if m.Name == "Cloud" {
+		m.activeStore = m.internal__localStore
+	} else {
+		if m.internal__cloudStore == nil {
+			return fmt.Errorf("Cloud store is nil")
+		}
+		m.activeStore = m.internal__cloudStore
+	}
+	m.Name = m.activeStore.Name()
+
+	return nil
 }
 
 // GetFullNote retrieves a specific note by ID with its complete content.
 // This method guarantees that the returned note will have its content field populated.
 func (m *Manager) GetFullNote(noteId string) (*model.Note, error) {
+	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency)
+
 	note, err := m.activeStore.GetNote(noteId)
 	if err != nil {
 		return nil, err
@@ -71,10 +116,13 @@ func (m *Manager) ListNoteMetadata() ([]model.Note, error) {
 		return notes, err
 	}
 	m.Notes = notes
+	m.internal__notesStore = m.activeStore.Name()
 	return notes, nil
 }
 
 func (m *Manager) SearchById(noteId string) *model.Note {
+	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency)
+
 	for _, note := range m.Notes {
 		if note.NoteID == noteId {
 			return &note
@@ -84,6 +132,8 @@ func (m *Manager) SearchById(noteId string) *model.Note {
 }
 
 func (m *Manager) SearchByTitle(title string) *model.Note {
+	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency)
+
 	standardize := func(s string) string {
 		return strings.TrimSpace(strings.ToLower(s))
 	}
@@ -100,6 +150,8 @@ func (m *Manager) SearchByTitle(title string) *model.Note {
 
 // GetTags returns all available tags from the cached notes.
 func (m *Manager) GetTags() []string {
+	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency)
+
 	tagMap := make(map[string]bool)
 	for _, note := range m.Notes {
 		for _, tag := range note.Tags {
@@ -116,6 +168,8 @@ func (m *Manager) GetTags() []string {
 
 // CreateNote creates a new note with the provided request data.
 func (m *Manager) CreateNote(req model.CreateNoteRequest) (*model.Note, error) {
+	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency)
+
 	note, err := m.activeStore.CreateNote(req)
 	if err != nil {
 		return nil, err
@@ -126,6 +180,8 @@ func (m *Manager) CreateNote(req model.CreateNoteRequest) (*model.Note, error) {
 
 // UpdateNote modifies an existing note with the provided changes and updates the metadata cache.
 func (m *Manager) UpdateNote(noteId string, changes model.CreateNoteRequest) (*model.Note, error) {
+	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency)
+
 	note, err := m.activeStore.UpdateNote(noteId, changes)
 	if err != nil {
 		return nil, err
@@ -147,6 +203,8 @@ func (m *Manager) UpdateNote(noteId string, changes model.CreateNoteRequest) (*m
 
 // DeleteNote removes a note by its ID.
 func (m *Manager) DeleteNote(noteId string) error {
+	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency)
+
 	err := m.activeStore.DeleteNote(noteId)
 	if err != nil {
 		return err

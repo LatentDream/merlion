@@ -3,6 +3,7 @@ package create
 import (
 	"merlion/internal/model"
 	"merlion/internal/store"
+	"merlion/internal/store/cloud"
 	"merlion/internal/styles"
 	"merlion/internal/styles/components"
 	taginput "merlion/internal/styles/components/tagInput"
@@ -24,8 +25,8 @@ type Model struct {
 	storeManager    *store.Manager
 }
 
-func (m Model) SetClient(storeManager *store.Manager) navigation.View {
-	m.storeManager = storeManager
+func (m Model) SetCloudClient(client *cloud.Client) navigation.View {
+	m.storeManager.UpdateCloudClient(client)
 	return m
 }
 

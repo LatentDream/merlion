@@ -1,7 +1,7 @@
 package navigation
 
 import (
-	"merlion/internal/store"
+	"merlion/internal/store/cloud"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -29,7 +29,7 @@ type SwitchUIMsg struct {
 }
 
 type LoginMsg struct {
-	Manager *store.Manager
+	Client *cloud.Client
 }
 
 type OpenDialogMsg struct {
@@ -48,7 +48,7 @@ type View interface {
 	Init(...any) tea.Cmd
 	Update(tea.Msg) (View, tea.Cmd)
 	View() string
-	SetClient(*store.Manager) View
+	SetCloudClient(*cloud.Client) View
 }
 
 // Global CMD to switch View
@@ -59,9 +59,9 @@ func SwitchUICmd(newState CurrentUI, args []any) tea.Cmd {
 	}
 }
 
-func LoginCmd(storeManager *store.Manager) tea.Cmd {
+func LoginCmd(client *cloud.Client) tea.Cmd {
 	return func() tea.Msg {
-		return LoginMsg{Manager: storeManager}
+		return LoginMsg{Client: client}
 	}
 }
 

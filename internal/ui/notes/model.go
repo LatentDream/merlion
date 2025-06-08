@@ -8,6 +8,7 @@ import (
 	"merlion/internal/controls"
 	"merlion/internal/model"
 	"merlion/internal/store"
+	"merlion/internal/store/cloud"
 	"merlion/internal/styles"
 	styledDelegate "merlion/internal/styles/components/delegate"
 	grouplist "merlion/internal/styles/components/groupList"
@@ -151,8 +152,8 @@ func (m Model) Init(args ...any) tea.Cmd {
 	return m.spinner.Tick
 }
 
-func (m Model) SetClient(storeManager *store.Manager) navigation.View {
-	m.storeManager = storeManager
+func (m Model) SetCloudClient(client *cloud.Client) navigation.View {
+	m.storeManager.UpdateCloudClient(client)
 	return m
 }
 
@@ -437,6 +438,14 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.ToggleTheme):
 			toggleTheme(&m)
+
+		case key.Matches(msg, m.keys.ToggleStore):
+			m.storeManager.NextStore()
+			m.loading = true
+			loadCmd := m.loadNotes()
+			cmds = append(cmds, loadCmd)
+			m.noteRenderer.SetNote(nil)
+			m.noteRenderer.Render()
 		}
 
 		// Handle navigation based on focused pane

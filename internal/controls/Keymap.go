@@ -25,6 +25,7 @@ type KeyMap struct {
 	ToggleCompactView  key.Binding
 	Create             key.Binding
 	Delete             key.Binding
+	ToggleStore        key.Binding
 }
 
 var Keys = KeyMap{
@@ -107,5 +108,9 @@ var Keys = KeyMap{
 	Create: key.NewBinding(
 		key.WithKeys("c"),
 		key.WithHelp("c", "New"),
+	),
+	ToggleStore: key.NewBinding(
+		key.WithKeys("(", ")"),
+		key.WithHelp(")", "Toggle Store"),
 	),
 }

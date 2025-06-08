@@ -3,6 +3,7 @@ package manage
 import (
 	"merlion/internal/model"
 	"merlion/internal/store"
+	"merlion/internal/store/cloud"
 	"merlion/internal/styles"
 	"merlion/internal/styles/components"
 	taginput "merlion/internal/styles/components/tagInput"
@@ -226,7 +227,7 @@ func (m Model) View() string {
 	)
 }
 
-func (m Model) SetClient(manager *store.Manager) navigation.View {
-	m.storeManager = manager
+func (m Model) SetCloudClient(client *cloud.Client) navigation.View {
+	m.storeManager.UpdateCloudClient(client)
 	return m
 }

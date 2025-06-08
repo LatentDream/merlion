@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"merlion/internal/store"
 	"merlion/internal/store/cloud"
 	"merlion/internal/styles"
 	"merlion/internal/ui/navigation"
@@ -60,7 +59,7 @@ func NewModel(credentialsManager *cloud.CredentialsManager, themeManager *styles
 	}
 }
 
-func (m Model) SetClient(storeManager *store.Manager) navigation.View {
+func (m Model) SetCloudClient(client *cloud.Client) navigation.View {
 	return m
 }
 
@@ -109,14 +108,14 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 					Password: m.passwordInput.Value(),
 				}
 
-				client, err := cloud.NewClient(nil)
+				cloudClient, err := cloud.NewClient(nil)
 				if err != nil {
 					m.err = fmt.Errorf("could not initialize client: %w", err)
 					m.validating = false
 					return m, nil
 				}
 
-				if err := client.ValidateCredentials(creds); err != nil {
+				if err := cloudClient.ValidateCredentials(creds); err != nil {
 					m.err = err
 					m.validating = false
 					return m, nil
@@ -126,8 +125,8 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 				if err != nil {
 					log.Fatalf("Not able to save credentials %v", err)
 				}
-				storeManager := store.NewManager(client)
-				return m, navigation.LoginCmd(storeManager)
+				
+				return m, navigation.LoginCmd(cloudClient)
 			}
 			// Move to password field when pressing enter in email field
 			if m.emailInput.Focused() {
