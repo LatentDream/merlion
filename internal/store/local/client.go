@@ -13,20 +13,22 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+const (
+	Name = "Local"
+)
+
 type Client struct {
-	db   *sql.DB
-	name string
+	db *sql.DB
 }
 
 func NewClient(db *sql.DB) *Client {
 	return &Client{
-		db:   db,
-		name: "Local Storage",
+		db: db,
 	}
 }
 
 func (c *Client) Name() string {
-	return c.name
+	return Name
 }
 
 func (c *Client) ListNotes() ([]model.Note, error) {

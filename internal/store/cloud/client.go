@@ -17,6 +17,7 @@ import (
 
 const (
 	baseURL = "https://api.merlion.dev"
+	Name = "Cloud"
 )
 
 type Client struct {
@@ -41,7 +42,7 @@ func NewClient(credentials *Credentials) (*Client, error) {
 }
 
 func (c *Client) Name() string {
-	return "Cloud"
+	return Name
 }
 
 func (c *Client) setAuthHeaders(req *http.Request) {

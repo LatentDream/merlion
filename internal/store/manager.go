@@ -1,9 +1,3 @@
-/* TODO: Refactoring in progress
- * - [x] New store package to encapsulate the Cloud behind an interface (will allow local storage)
- * - [ ] The backend should be able to receive nil ptr to the content & not delete the related content
- *       > remove the needs for internal/ui/manage/model.go:FetchNote
- * - [ ] Models shouldn't keep their own version of []model.Note, but should refer to the store
- */
 package store
 
 import (
@@ -57,7 +51,7 @@ func NewManager(cloudStore *cloud.Client, localStore *local.Client) *Manager {
 // UpdateCloudStore will swap the cloud storage for a new store
 // Expect the store to be valid and functionnal, panic otherwise
 func (m *Manager) UpdateCloudClient(client *cloud.Client) {
-	if m.activeStore.Name() == "Cloud" {
+	if m.activeStore.Name() == cloud.Name {
 		m.activeStore = client
 		_, err := m.ListNoteMetadata()
 		if err != nil {
@@ -70,7 +64,7 @@ func (m *Manager) UpdateCloudClient(client *cloud.Client) {
 // NextStore swap the current underlying storage with the next registered one
 // Dev needs to call ListNoteMetadata after calling this, otherwise a panic occur
 func (m *Manager) NextStore() error {
-	if m.Name == "Cloud" {
+	if m.Name == cloud.Name {
 		m.activeStore = m.internal__localStore
 	} else {
 		if m.internal__cloudStore == nil {
