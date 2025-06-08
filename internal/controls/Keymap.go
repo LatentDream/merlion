@@ -1,6 +1,8 @@
 package controls
 
 import (
+	"reflect"
+
 	"github.com/charmbracelet/bubbles/key"
 )
 
@@ -113,4 +115,19 @@ var Keys = KeyMap{
 		key.WithKeys("(", ")"),
 		key.WithHelp(")", "Toggle Store"),
 	),
+}
+
+func (k KeyMap) ToSlice() []key.Binding {
+	var bindings []key.Binding
+	v := reflect.ValueOf(k)
+
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		// Check if the field is of type key.Binding
+		if binding, ok := field.Interface().(key.Binding); ok {
+			bindings = append(bindings, binding)
+		}
+	}
+
+	return bindings
 }
