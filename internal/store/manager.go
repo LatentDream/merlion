@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-const panic__consistency = "Storage was changed, but note wasn't refresh"
+const panic__consistency_msg = "Storage was changed, but note wasn't refresh"
 
 // Manager handles note operations through an underlying store implementation.
 // Note: When using ListNoteMetadata() or accessing Manager.notes directly, note content
@@ -80,7 +80,7 @@ func (m *Manager) NextStore() error {
 // GetFullNote retrieves a specific note by ID with its complete content.
 // This method guarantees that the returned note will have its content field populated.
 func (m *Manager) GetFullNote(noteId string) (*model.Note, error) {
-	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency)
+	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency_msg)
 
 	note, err := m.activeStore.GetNote(noteId)
 	if err != nil {
@@ -115,7 +115,7 @@ func (m *Manager) ListNoteMetadata() ([]model.Note, error) {
 }
 
 func (m *Manager) SearchById(noteId string) *model.Note {
-	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency)
+	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency_msg)
 
 	for _, note := range m.Notes {
 		if note.NoteID == noteId {
@@ -126,7 +126,7 @@ func (m *Manager) SearchById(noteId string) *model.Note {
 }
 
 func (m *Manager) SearchByTitle(title string) *model.Note {
-	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency)
+	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency_msg)
 
 	standardize := func(s string) string {
 		return strings.TrimSpace(strings.ToLower(s))
@@ -144,7 +144,7 @@ func (m *Manager) SearchByTitle(title string) *model.Note {
 
 // GetTags returns all available tags from the cached notes.
 func (m *Manager) GetTags() []string {
-	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency)
+	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency_msg)
 
 	tagMap := make(map[string]bool)
 	for _, note := range m.Notes {
@@ -162,7 +162,7 @@ func (m *Manager) GetTags() []string {
 
 // CreateNote creates a new note with the provided request data.
 func (m *Manager) CreateNote(req model.CreateNoteRequest) (*model.Note, error) {
-	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency)
+	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency_msg)
 
 	note, err := m.activeStore.CreateNote(req)
 	if err != nil {
@@ -174,7 +174,7 @@ func (m *Manager) CreateNote(req model.CreateNoteRequest) (*model.Note, error) {
 
 // UpdateNote modifies an existing note with the provided changes and updates the metadata cache.
 func (m *Manager) UpdateNote(noteId string, changes model.CreateNoteRequest) (*model.Note, error) {
-	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency)
+	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency_msg)
 
 	note, err := m.activeStore.UpdateNote(noteId, changes)
 	if err != nil {
@@ -197,7 +197,7 @@ func (m *Manager) UpdateNote(noteId string, changes model.CreateNoteRequest) (*m
 
 // DeleteNote removes a note by its ID.
 func (m *Manager) DeleteNote(noteId string) error {
-	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency)
+	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency_msg)
 
 	err := m.activeStore.DeleteNote(noteId)
 	if err != nil {
