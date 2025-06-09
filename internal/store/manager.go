@@ -35,7 +35,7 @@ func NewManager(cloudStore *cloud.Client, localStore *local.Client) *Manager {
 	var defaultStore Store
 	defaultStore = localStore
 	if cloudStore != nil {
-		defaultStore = localStore
+		defaultStore = cloudStore
 	}
 
 	return &Manager{
