@@ -27,6 +27,8 @@ func helpCmd(args ...string) int {
 	for _, cmd := range COMMANDS {
 		fmt.Printf("  %-10s %s\n", cmd.name, cmd.description)
 	}
+	fmt.Println("\nAvailable flags for TUI:")
+	fmt.Println("  --compact      Start in compact mode")
 	return 0
 }
 
@@ -50,18 +52,45 @@ func init() {
 	}
 }
 
+// parseArgs separates flags from commands and returns both
+func parseArgs(args []string) (flags []string, commands []string) {
+	for _, arg := range args {
+		if strings.HasPrefix(arg, "--") {
+			flags = append(flags, arg)
+		} else {
+			commands = append(commands, arg)
+		}
+	}
+	return flags, commands
+}
+
 func main() {
-	if len(os.Args) > 1 {
-		command := os.Args[1]
-		args := os.Args[2:]
+	flags, commands := parseArgs(os.Args[1:])
+
+	// Handle --help flag
+	for _, flag := range flags {
+		if flag == "--help" {
+			helpCmd()
+			os.Exit(0)
+		}
+	}
+
+	// Handle commands
+	if len(commands) > 0 {
+		command := commands[0]
+		args := commands[1:]
+
 		for _, cmd := range COMMANDS {
 			if strings.ToLower(cmd.name) == strings.ToLower(command) {
 				os.Exit(cmd.run(args...))
 			}
 		}
+
 		fmt.Printf("Unknown command: %s\n", command)
 		helpCmd()
 		os.Exit(1)
 	}
-	startTUI()
+
+	// Default: start TUI
+	startTUI(flags...)
 }
