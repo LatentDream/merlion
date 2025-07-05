@@ -78,23 +78,23 @@ func (t TabKind) String() string {
 }
 
 type Model struct {
-	noteList        list.Model
-	fileterTabs     tabs.Tabs[TabKind]
-	noteRenderer    renderer.Model
-	spinner         spinner.Model
-	keys            controls.KeyMap
-	focusedPane     focusedPanel
-	width           int
-	height          int
-	ready           bool
-	loading         bool
-	listDelegate    *styledDelegate.StyledDelegate
-	styles          *styles.Styles
-	themeManager    *styles.ThemeManager
-	storeManager    *store.Manager
-	viewType        ViewType
-	compactViewOnly bool
-	tagsList        grouplist.Model
+	noteList     list.Model
+	fileterTabs  tabs.Tabs[TabKind]
+	noteRenderer renderer.Model
+	spinner      spinner.Model
+	keys         controls.KeyMap
+	focusedPane  focusedPanel
+	width        int
+	height       int
+	ready        bool
+	loading      bool
+	listDelegate *styledDelegate.StyledDelegate
+	styles       *styles.Styles
+	themeManager *styles.ThemeManager
+	storeManager *store.Manager
+	viewType     ViewType
+	compactView  bool
+	tagsList     grouplist.Model
 }
 
 func NewModel(storeManager *store.Manager, themeManager *styles.ThemeManager) Model {
@@ -125,20 +125,20 @@ func NewModel(storeManager *store.Manager, themeManager *styles.ThemeManager) Mo
 
 	// Initialize help viewport with themed styles
 	return Model{
-		noteList:        l,
-		fileterTabs:     tabs,
-		noteRenderer:    noteRenderer,
-		spinner:         sp,
-		keys:            controls.Keys,
-		focusedPane:     noteList,
-		loading:         true,
-		listDelegate:    delegate,
-		styles:          s,
-		themeManager:    themeManager,
-		storeManager:    storeManager,
-		viewType:        large,
-		compactViewOnly: themeManager.Config.CompactViewOnly,
-		tagsList:        gl,
+		noteList:     l,
+		fileterTabs:  tabs,
+		noteRenderer: noteRenderer,
+		spinner:      sp,
+		keys:         controls.Keys,
+		focusedPane:  noteList,
+		loading:      true,
+		listDelegate: delegate,
+		styles:       s,
+		themeManager: themeManager,
+		storeManager: storeManager,
+		viewType:     large,
+		compactView:  themeManager.Config.CompactView,
+		tagsList:     gl,
 	}
 }
 
@@ -289,7 +289,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		m.width = msg.Width - 4
 		m.height = msg.Height - 2
 
-		if msg.Width >= LargeScreenBreakpoint && !m.compactViewOnly {
+		if msg.Width >= LargeScreenBreakpoint && !m.compactView {
 			m.viewType = large
 
 			// Account for padding and borders in the style
@@ -500,8 +500,8 @@ func (i item) Description() string {
 func (i item) FilterValue() string { return i.note.Title }
 
 func (m *Model) ToggleFullscreen() {
-	newConf := !m.compactViewOnly
-	m.compactViewOnly = newConf
+	newConf := !m.compactView
+	m.compactView = newConf
 	m.themeManager.SetCompactViewOnly(newConf)
 }
 

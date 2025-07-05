@@ -11,6 +11,7 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"path/filepath"
+	"slices"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -52,7 +53,11 @@ func startTUI(flags ...string) {
 	log.Debug("Config directory initialized", "elapsed", time.Since(startTime))
 
 	// Initialize theme manager
-	themeManager, err := styles.NewThemeManager(configDir)
+	options := []styles.ManagerOption{}
+	if slices.Contains(flags, "--compact") {
+		options = append(options, styles.WithCompactViewStart(true))
+	}
+	themeManager, err := styles.NewThemeManager(configDir, options...)
 	if err != nil {
 		log.Fatalf("Failed to initialize theme manager: %v", err)
 	}

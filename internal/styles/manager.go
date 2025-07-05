@@ -10,27 +10,54 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-type Config struct {
-	Theme           string `json:"theme"`
-	InfoHidden      bool   `json:"infoHidden"`
-	InfoBottom      bool   `json:"infoBottom"`
-	CompactViewOnly bool   `json:"compactViewOnly"`
+// managerOption: holds the options for the ThemeManager
+type managerOption struct {
+	saveOnChange bool
+	// Add other global styling option here
+}
+type ManagerOption func(*managerOption, *UserConfig)
+
+// WithSaveOnChange: Allows to remove the auto onsave when changing the config element
+func WithSaveOnChange(saveOnChange bool) ManagerOption {
+	return func(tc *managerOption, uc *UserConfig) {
+		tc.saveOnChange = saveOnChange
+	}
+}
+
+// WithCompactViewStart: if the user only has access to the compact view
+func WithCompactViewStart(isStartingInCompactView bool) ManagerOption {
+	return func(tc *managerOption, uc *UserConfig) {
+		if isStartingInCompactView {
+			uc.CompactView = true
+		}
+	}
+}
+
+type UserConfig struct {
+	Theme       string `json:"theme"`
+	InfoHidden  bool   `json:"infoHidden"`
+	InfoBottom  bool   `json:"infoBottom"`
+	CompactView bool   `json:"compactViewOnly"`
 }
 
 type ThemeManager struct {
-	configDir string
-	Theme     Theme
-	Config    Config
+	Theme         Theme
+	Config        UserConfig
+	configDir     string
+	managerOption managerOption
 }
 
-func NewThemeManager(configDir string) (*ThemeManager, error) {
+func NewThemeManager(configDir string, options ...ManagerOption) (*ThemeManager, error) {
 	tm := &ThemeManager{
 		configDir: configDir,
-		Config: Config{
-			Theme:           "neotokyo",
-			InfoHidden:      false,
-			InfoBottom:      true,
-			CompactViewOnly: false,
+		Config: UserConfig{
+			Theme:       "neotokyo",
+			InfoHidden:  false,
+			InfoBottom:  true,
+			CompactView: false,
+		},
+		managerOption: managerOption{
+			saveOnChange: true,
 		},
 		Theme: NeoTokyo,
 	}
@@ -43,6 +70,11 @@ func NewThemeManager(configDir string) (*ThemeManager, error) {
 		}
 	}
 
+	// Apply all options
+	for _, option := range options {
+		option(&tm.managerOption, &tm.Config)
+	}
+
 	return tm, nil
 }
 
@@ -53,7 +85,7 @@ func (tm *ThemeManager) loadConfig() error {
 		return err
 	}
 
-	var config Config
+	var config UserConfig
 	if err := json.Unmarshal(data, &config); err != nil {
 		return fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -74,6 +106,11 @@ func (tm *ThemeManager) loadConfig() error {
 }
 
 func (tm *ThemeManager) SaveConfig() error {
+	if !tm.managerOption.saveOnChange {
+		log.Info("Config not saved because saveOnChange is false")
+		return nil
+	}
+
 	data, err := json.Marshal(tm.Config)
 	if err != nil {
 		return fmt.Errorf("marshaling config: %w", err)
@@ -133,7 +170,7 @@ func (tm *ThemeManager) SetInfoBottom(hide bool) error {
 }
 
 func (tm *ThemeManager) SetCompactViewOnly(compact bool) error {
-	tm.Config.CompactViewOnly = compact
+	tm.Config.CompactView = compact
 	return tm.SaveConfig()
 }
 
