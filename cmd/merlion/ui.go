@@ -19,8 +19,6 @@ import (
 )
 
 func startTUI(flags ...string) {
-	log.Info("Starting TUI with flags: %v\n", flags)
-
 	startTime := time.Now()
 
 	// Setup Logging
