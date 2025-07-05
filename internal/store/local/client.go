@@ -37,6 +37,7 @@ func (c *Client) ListNotes() ([]model.Note, error) {
 			   is_work_log, created_at, updated_at
 		FROM notes
 		WHERE is_trash = false
+		ORDER BY updated_at DESC
 	`)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query notes: %w", err)
