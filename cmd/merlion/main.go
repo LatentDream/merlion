@@ -29,6 +29,7 @@ func helpCmd(args ...string) int {
 	}
 	fmt.Println("\nAvailable flags for TUI:")
 	fmt.Println("  --compact      Start in compact mode")
+	fmt.Println("  --noSave       Disable autosave of config")
 	return 0
 }
 
@@ -66,14 +67,6 @@ func parseArgs(args []string) (flags []string, commands []string) {
 
 func main() {
 	flags, commands := parseArgs(os.Args[1:])
-
-	// Handle --help flag
-	for _, flag := range flags {
-		if flag == "--help" {
-			helpCmd()
-			os.Exit(0)
-		}
-	}
 
 	// Handle commands
 	if len(commands) > 0 {

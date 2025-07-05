@@ -57,6 +57,9 @@ func startTUI(flags ...string) {
 	if slices.Contains(flags, "--compact") {
 		options = append(options, styles.WithCompactViewStart(true))
 	}
+	if slices.Contains(flags, "--noSave") {
+		options = append(options, styles.WithSaveOnChange(false))
+	}
 	themeManager, err := styles.NewThemeManager(configDir, options...)
 	if err != nil {
 		log.Fatalf("Failed to initialize theme manager: %v", err)
