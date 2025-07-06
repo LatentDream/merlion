@@ -1,10 +1,12 @@
 package context
 
-import "merlion/internal/styles"
+import (
+	"merlion/internal/styles"
+)
 
 type Context struct {
-	ThemeManager *styles.ThemeManager
-	UserConfig   *styles.UserConfig
+	ThemeManager   *styles.ThemeManager
+	DefaultToCloud bool
 }
 
 type ContextOption func(*Context)
@@ -20,7 +22,7 @@ func WithSaveOnChange(saveOnChange bool) ContextOption {
 func WithCompactViewStart(isStartingInCompactView bool) ContextOption {
 	return func(c *Context) {
 		if isStartingInCompactView {
-			c.UserConfig.CompactView = true
+			c.ThemeManager.Config.CompactView = true
 		}
 	}
 }
@@ -29,7 +31,7 @@ func WithCompactViewStart(isStartingInCompactView bool) ContextOption {
 func WithLocalFirst(isLocalFirst bool) ContextOption {
 	return func(c *Context) {
 		if isLocalFirst {
-			c.UserConfig.LocalFirst = true
+			c.DefaultToCloud = isLocalFirst
 		}
 	}
 }
@@ -41,7 +43,8 @@ func NewContext(configDir string, options ...ContextOption) (*Context, error) {
 	}
 
 	context := &Context{
-		ThemeManager: tm,
+		ThemeManager:   tm,
+		DefaultToCloud: tm.Config.DefaultToCloud,
 	}
 
 	// Apply all options

@@ -42,7 +42,7 @@ func NewModel(credentialsManager *cloud.CredentialsManager, localDB *sql.DB, ctx
 		initialUI = navigation.LoginUI
 	}
 
-	manager := store.NewManager(cloudClient, localClient)
+	manager := store.NewManager(cloudClient, localClient, ctx.DefaultToCloud)
 
 	// Create views
 	views := make(map[navigation.CurrentUI]navigation.View)

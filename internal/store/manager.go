@@ -31,10 +31,10 @@ type Manager struct {
 
 // NewManager creates a new manager with the given store implementation
 // and initializes the notes metadata list (without full content).
-func NewManager(cloudStore *cloud.Client, localStore *local.Client) *Manager {
+func NewManager(cloudStore *cloud.Client, localStore *local.Client, defaultToCloud bool) *Manager {
 	var defaultStore Store
 	defaultStore = localStore
-	if cloudStore != nil {
+	if cloudStore != nil && defaultToCloud {
 		defaultStore = cloudStore
 	}
 

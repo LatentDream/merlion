@@ -11,11 +11,11 @@ import (
 )
 
 type UserConfig struct {
-	Theme       string `json:"theme"`
-	InfoHidden  bool   `json:"infoHidden"`
-	InfoBottom  bool   `json:"infoBottom"`
-	CompactView bool   `json:"compactViewOnly"`
-	LocalFirst  bool   `json:"localFirst"`
+	Theme          string `json:"theme"`
+	InfoHidden     bool   `json:"infoHidden"`
+	InfoBottom     bool   `json:"infoBottom"`
+	CompactView    bool   `json:"compactViewOnly"`
+	DefaultToCloud bool   `json:"localFirst"`
 }
 
 type ThemeManager struct {
