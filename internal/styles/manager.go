@@ -14,8 +14,8 @@ type UserConfig struct {
 	Theme          string `json:"theme"`
 	InfoHidden     bool   `json:"infoHidden"`
 	InfoBottom     bool   `json:"infoBottom"`
-	CompactView    bool   `json:"compactViewOnly"`
-	DefaultToCloud bool   `json:"localFirst"`
+	CompactView    bool   `json:"compactView"`
+	DefaultToCloud bool   `json:"defaultToCloud"`
 }
 
 type ThemeManager struct {
