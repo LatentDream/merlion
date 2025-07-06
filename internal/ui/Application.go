@@ -3,11 +3,11 @@ package ui
 import (
 	"database/sql"
 	"fmt"
+	"merlion/internal/context"
 	"merlion/internal/store"
 	"merlion/internal/store/cloud"
 	"merlion/internal/store/local"
 	"merlion/internal/store/local/database"
-	"merlion/internal/styles"
 	"merlion/internal/ui/create"
 	"merlion/internal/ui/dialog"
 	"merlion/internal/ui/login"
@@ -24,7 +24,7 @@ type Model struct {
 	store *store.Manager
 }
 
-func NewModel(credentialsManager *cloud.CredentialsManager, localDB *sql.DB, themeManager *styles.ThemeManager) (Model, error) {
+func NewModel(credentialsManager *cloud.CredentialsManager, localDB *sql.DB, ctx *context.Context) (Model, error) {
 	initialUI := navigation.NoteUI
 
 	db, err := database.InitDB()
@@ -46,11 +46,11 @@ func NewModel(credentialsManager *cloud.CredentialsManager, localDB *sql.DB, the
 
 	// Create views
 	views := make(map[navigation.CurrentUI]navigation.View)
-	views[navigation.CreateUI] = create.NewModel(manager, themeManager)
-	views[navigation.LoginUI] = login.NewModel(credentialsManager, themeManager)
-	views[navigation.NoteUI] = NotesUI.NewModel(manager, themeManager)
-	views[navigation.DialogUI] = dialog.NewModel(manager, themeManager)
-	views[navigation.ManageUI] = manage.NewModel(manager, themeManager)
+	views[navigation.CreateUI] = create.NewModel(manager, ctx.ThemeManager)
+	views[navigation.LoginUI] = login.NewModel(credentialsManager, ctx.ThemeManager)
+	views[navigation.NoteUI] = NotesUI.NewModel(manager, ctx.ThemeManager)
+	views[navigation.DialogUI] = dialog.NewModel(manager, ctx.ThemeManager)
+	views[navigation.ManageUI] = manage.NewModel(manager, ctx.ThemeManager)
 
 	return Model{
 		state: initialUI,

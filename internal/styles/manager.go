@@ -10,44 +10,22 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-// managerOption: holds the options for the ThemeManager
-type managerOption struct {
-	saveOnChange bool
-	// Add other global styling option here
-}
-type ManagerOption func(*managerOption, *UserConfig)
-
-// WithSaveOnChange: Allows to remove the auto onsave when changing the config element
-func WithSaveOnChange(saveOnChange bool) ManagerOption {
-	return func(tc *managerOption, uc *UserConfig) {
-		tc.saveOnChange = saveOnChange
-	}
-}
-
-// WithCompactViewStart: if the user only has access to the compact view
-func WithCompactViewStart(isStartingInCompactView bool) ManagerOption {
-	return func(tc *managerOption, uc *UserConfig) {
-		if isStartingInCompactView {
-			uc.CompactView = true
-		}
-	}
-}
-
 type UserConfig struct {
 	Theme       string `json:"theme"`
 	InfoHidden  bool   `json:"infoHidden"`
 	InfoBottom  bool   `json:"infoBottom"`
 	CompactView bool   `json:"compactViewOnly"`
+	LocalFirst  bool   `json:"localFirst"`
 }
 
 type ThemeManager struct {
-	Theme         Theme
-	Config        UserConfig
-	configDir     string
-	managerOption managerOption
+	Theme        Theme
+	Config       UserConfig
+	configDir    string
+	saveOnChange bool
 }
 
-func NewThemeManager(configDir string, options ...ManagerOption) (*ThemeManager, error) {
+func NewThemeManager(configDir string) (*ThemeManager, error) {
 	tm := &ThemeManager{
 		configDir: configDir,
 		Config: UserConfig{
@@ -55,9 +33,6 @@ func NewThemeManager(configDir string, options ...ManagerOption) (*ThemeManager,
 			InfoHidden:  false,
 			InfoBottom:  true,
 			CompactView: false,
-		},
-		managerOption: managerOption{
-			saveOnChange: true,
 		},
 		Theme: NeoTokyo,
 	}
@@ -68,11 +43,6 @@ func NewThemeManager(configDir string, options ...ManagerOption) (*ThemeManager,
 		if err := tm.SaveConfig(); err != nil {
 			return nil, fmt.Errorf("saving default config: %w", err)
 		}
-	}
-
-	// Apply all options
-	for _, option := range options {
-		option(&tm.managerOption, &tm.Config)
 	}
 
 	return tm, nil
@@ -105,8 +75,13 @@ func (tm *ThemeManager) loadConfig() error {
 	return nil
 }
 
+// SetSaveOnChange: Allows to remove the auto onsave when changing the config element
+func (tm *ThemeManager) SetSaveOnChange(saveOnChange bool) {
+	tm.saveOnChange = saveOnChange
+}
+
 func (tm *ThemeManager) SaveConfig() error {
-	if !tm.managerOption.saveOnChange {
+	if !tm.saveOnChange {
 		log.Info("Config not saved because saveOnChange is false")
 		return nil
 	}

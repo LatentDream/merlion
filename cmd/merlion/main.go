@@ -29,7 +29,8 @@ func helpCmd(args ...string) int {
 	}
 	fmt.Println("\nAvailable flags for TUI:")
 	fmt.Println("  --compact      Start in compact mode")
-	fmt.Println("  --noSave       Disable autosave of config")
+	fmt.Println("  --no-save       Disable autosave of config")
+	fmt.Println("  --local        Show local notes first instead of remote")
 	return 0
 }
 
@@ -67,6 +68,13 @@ func parseArgs(args []string) (flags []string, commands []string) {
 
 func main() {
 	flags, commands := parseArgs(os.Args[1:])
+
+	// Handle --help flag
+	for _, flag := range flags {
+		if flag == "--help" {
+			commands = append(commands, "help")
+		}
+	}
 
 	// Handle commands
 	if len(commands) > 0 {

@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"merlion/internal/context"
 	"merlion/internal/store/cloud"
 	"merlion/internal/store/local/database"
-	"merlion/internal/styles"
 	"merlion/internal/ui"
 	"merlion/internal/utils"
 	"net/http"
@@ -51,14 +51,17 @@ func startTUI(flags ...string) {
 	log.Debug("Config directory initialized", "elapsed", time.Since(startTime))
 
 	// Initialize theme manager
-	options := []styles.ManagerOption{}
+	options := []context.ContextOption{}
 	if slices.Contains(flags, "--compact") {
-		options = append(options, styles.WithCompactViewStart(true))
+		options = append(options, context.WithCompactViewStart(true))
 	}
-	if slices.Contains(flags, "--noSave") {
-		options = append(options, styles.WithSaveOnChange(false))
+	if slices.Contains(flags, "--no-save") {
+		options = append(options, context.WithSaveOnChange(false))
 	}
-	themeManager, err := styles.NewThemeManager(configDir, options...)
+	if slices.Contains(flags, "--local") {
+		options = append(options, context.WithLocalFirst(true))
+	}
+	ctx, err := context.NewContext(configDir, options...)
 	if err != nil {
 		log.Fatalf("Failed to initialize theme manager: %v", err)
 	}
@@ -79,7 +82,7 @@ func startTUI(flags ...string) {
 	}
 	defer localDB.Close()
 
-	model, err := ui.NewModel(credMgr, localDB, themeManager)
+	model, err := ui.NewModel(credMgr, localDB, ctx)
 	if err != nil {
 		log.Fatalf("Failed to create UI model: %v", err)
 	}
