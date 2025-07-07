@@ -31,7 +31,7 @@ func WithCompactViewStart(isStartingInCompactView bool) ContextOption {
 func WithLocalFirst(isLocalFirst bool) ContextOption {
 	return func(c *Context) {
 		if isLocalFirst {
-			c.DefaultToCloud = isLocalFirst
+			c.DefaultToCloud = !isLocalFirst
 		}
 	}
 }
