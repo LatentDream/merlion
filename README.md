@@ -1,51 +1,86 @@
-# 🌊 Merlion
-
-**What is it?**
-> Notion - For the terminal
-
-**Current Progress?**
-> MVP - I can use it everyday comfortably, but it's short in features
-
-**Why?**
-> Why not?
-> - I wanted to check out Go
-> - I'm using it every day, no more `.md` everywhere
-> - And work across multiple computers (**Primary motivation**)
-
-**Want to try it?**
-> It's free, *for now at least*
-> 1. Create an account [Merlion.dev](https://merlion.dev)
-> 2. Build the project `go build -o merlion ./cmd/merlion`
-> 3. Run the project `./merlion`
-
-**What does it look like?**
-> You'll have to try it to see it
-> - It has Gruvbox & NeoTokyo Theme if that can convince you
-> - `ctrl+t` to switch between them :)
-> - I'll attach some pictures to the readme soon enough
-
-**Where's the backend code?**
-> Private at the moment
+<h1 align="center">🌊 Merlion</h1>
+<p align="center">
+  Obsidian-inspired terminal note-taking app<br>
+  <a href="https://merlion.dev">merlion.dev</a>
+</p>
 
 ---
 
-## Tmux-i-fy it
-I usually run the app with `<tmux-leader>m` which simply open a window with Merlion & kill the window on exit
+## What is it?
 
-**To do so:**
-1. Create a simple script 
-    ```sh
-    #!/bin/bash
-    # Execute (Should be in your path)
-    merlion
-    # After exits, kill the window
-    tmux send-keys "exit" C-m
-    ```
+Merlion is a terminal-first, Markdown-based note-taking application, inspired by Obsidian but built from the ground up for command-line workflows.
 
-2. Bind it in your tmux config
-    ```conf
-    bind-key m new-window -n "Merlion" -c "#{pane_current_path}" "~/.config/scripts/tmux-merlion.sh"
-    bind-key C-m new-window -n "Merlion" -c "#{pane_current_path}" "~/.config/scripts/tmux-merlion.sh"
-    ```
+---
+
+## Current Status
+
+Merlion is a work in progress, but already usable for daily note-taking.
+
+It was born out of a personal need to:
+
+- Avoid scattered `.md` files
+- Work seamlessly across multiple machines
+- Explore Go in a real-world project
+
+---
+
+## Sync and Accounts
+
+Merlion works fully offline by default.
+
+To sync notes across devices, Merlion uses a cloud backend.  
+An account is required to enable sync — [merlion.dev](https://merlion.dev)
+
+---
+
+## Getting Started
+
+1. Clone the repository  
+2. Build the project:
+
+```sh
+just build
+# Or:
+go build -o merlion ./cmd/merlion
 
 
+Run it:
+```sh
+./merlion
+```
+
+#### Features
+- Keyboard (only) navigation
+- Local-first note storage
+- Optional cloud storage to sync notes across devices
+- Built-in themes: Gruvbox and NeoTokyo
+  - **Feel free to submit a PR to add more themes**.
+  - Toggle themes with ctrl+t
+
+
+#### Screenshots
+<p align="center"> <img src="./screenshots/Screenshot_1.png" width="45%"> <img src="./screenshots/Screenshot_2.png" width="45%"> <img src="./screenshots/Screenshot_3.png" width="45%"> </p> 
+
+#### Tmux Integration
+
+Add the following to your .tmux.conf to launch Merlion in a popup window:
+
+```.tmux.conf
+bind C-m display-popup \
+  -d "#{pane_current_path}" \
+  -w 90% \
+  -h 90% \
+  -E "merlion --compact"
+```
+Then launch it with `<tmux-leader> + m`.
+
+#### Cloud Code
+
+The cloud backend is currently private.
+Roadmap
+
+#### Planned features:
+- [ ] Full-text search
+- [ ] End-to-end encrypted
+- [ ] Sync your local notes to the cloud
+- [ ] Lightweight web UI (read-only)
