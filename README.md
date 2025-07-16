@@ -8,28 +8,27 @@
 
 ## What is it?
 
-Merlion is a terminal-first, Markdown-based note-taking application, inspired by Obsidian but built from the ground up for command-line workflows.
+Merlion is a TUI, Markdown-based note-taking application, inspired by Obsidian but built for command-line workflows.
 
 ---
 
-## Current Status
+## Know more
 
-Merlion is a work in progress, but already usable for daily note-taking.
+Always a WIP, but already usable and stable for daily note-taking.
 
-It was born out of a personal need to:
-
-- Avoid scattered `.md` files
-- Work seamlessly across multiple machines
-- Explore Go in a real-world project
-
+**Why did I create that ?**
+> Why not?
+> - I wanted to check out Go
+> - I'm using it every day, no more `.md` everywhere
+> - And work across multiple computers (**Primary motivation**)
 ---
 
 ## Sync and Accounts
 
-Merlion works fully offline by default.
-
-To sync notes across devices, Merlion uses a cloud backend.  
-An account is required to enable sync — [merlion.dev](https://merlion.dev)
+Merlion works fully offline by default, no account needed, all files are on your computer in a SqliteDB.
+- To have online note to sharing note across computer, you can create an account at [Merlion.dev](https://merlion.dev)
+    - You note will then be local, or online, switch between the two workplace with `(` or `)`
+    - Sync capability between online & offline note will soon be added
 
 ---
 
@@ -53,10 +52,13 @@ Run it:
 - Keyboard (only) navigation
 - Local-first note storage
 - Optional cloud storage to sync notes across devices
+  - Lightweight web UI
 - Built-in themes: Gruvbox and NeoTokyo
   - **Feel free to submit a PR to add more themes**.
   - Toggle themes with ctrl+t
-
+- Naviguate between note base on note title
+- Markdown support
+- Use your `$EDITOR` as note editor, perfect for vim/nvim user
 
 #### Screenshots
 <p align="center"> <img src="./screenshots/Screenshot_1.png" width="45%"> <img src="./screenshots/Screenshot_2.png" width="45%"> <img src="./screenshots/Screenshot_3.png" width="45%"> </p> 
@@ -81,6 +83,5 @@ Roadmap
 
 #### Planned features:
 - [ ] Full-text search
-- [ ] End-to-end encrypted
+- [ ] End-to-end encrypted for Cloud note
 - [ ] Sync your local notes to the cloud
-- [ ] Lightweight web UI (read-only)
