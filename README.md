@@ -27,7 +27,7 @@ Always a WIP, but already usable and stable for daily note-taking.
 
 Merlion works fully offline by default, no account needed, all files are on your computer in a SqliteDB.
 - To have online note for sharing note across computer, you can create an account at [Merlion.dev](https://merlion.dev)
-    - You note will then be local, or online, switch between the two workplace with `(` or `)`
+    - Your notes will then be local, or online, switch between the two workplace with `(` or `)`
     - Sync capability between online & offline note will soon be added
 
 ---
@@ -39,9 +39,10 @@ Merlion works fully offline by default, no account needed, all files are on your
 
 ```sh
 just build
+
 # Or:
 go build -o merlion ./cmd/merlion
-
+```
 
 Run it:
 ```sh
