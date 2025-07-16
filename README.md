@@ -26,7 +26,7 @@ Always a WIP, but already usable and stable for daily note-taking.
 ## Sync and Accounts
 
 Merlion works fully offline by default, no account needed, all files are on your computer in a SqliteDB.
-- To have online note to sharing note across computer, you can create an account at [Merlion.dev](https://merlion.dev)
+- To have online note for sharing note across computer, you can create an account at [Merlion.dev](https://merlion.dev)
     - You note will then be local, or online, switch between the two workplace with `(` or `)`
     - Sync capability between online & offline note will soon be added
 
