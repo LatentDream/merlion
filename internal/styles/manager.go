@@ -34,7 +34,7 @@ func NewThemeManager(configDir string) (*ThemeManager, error) {
 			InfoBottom:  true,
 			CompactView: false,
 		},
-		Theme: NeoTokyo,
+		Theme: Terminal,
 	}
 
 	// Load saved config if exists
@@ -68,6 +68,8 @@ func (tm *ThemeManager) loadConfig() error {
 		tm.Theme = Gruvbox
 	case "neotokyo":
 		tm.Theme = NeoTokyo
+	case "terminal":
+		tm.Theme = Terminal
 	default:
 		return fmt.Errorf("unknown theme: %s", tm.Config.Theme)
 	}
@@ -112,6 +114,8 @@ func (tm *ThemeManager) NextTheme() *Styles {
 	case "gruvbox":
 		nextTheme = "neotokyo"
 	case "neotokyo":
+		nextTheme = "terminal"
+	case "terminal":
 		nextTheme = "gruvbox"
 	}
 	err := tm.SetTheme(nextTheme)
@@ -127,6 +131,8 @@ func (tm *ThemeManager) SetTheme(name string) error {
 		tm.Theme = Gruvbox
 	case "neotokyo":
 		tm.Theme = NeoTokyo
+	case "terminal":
+		tm.Theme = Terminal
 	default:
 		return fmt.Errorf("unknown theme: %s", name)
 	}

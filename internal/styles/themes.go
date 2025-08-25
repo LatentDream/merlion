@@ -31,6 +31,27 @@ type Theme struct {
 }
 
 var (
+	Terminal = Theme{
+		Name:           "terminal",
+		Background:     lipgloss.Color("0"),
+		Foreground:     lipgloss.Color("7"),
+		Selection:      lipgloss.Color("8"),
+		Comment:        lipgloss.Color("2"),
+		Primary:        lipgloss.Color("12"),
+		Secondary:      lipgloss.Color("4"),
+		Tertiary:       lipgloss.Color("6"),
+		Error:          lipgloss.Color("9"),
+		Warning:        lipgloss.Color("11"),
+		Success:        lipgloss.Color("10"),
+		BorderColor:    lipgloss.Color("8"),
+		HighlightColor: lipgloss.Color("13"),
+		MutedColor:     lipgloss.Color("8"),
+		HelpColor:      lipgloss.Color("7"),
+
+		Margin:     2,
+		ListIndent: 4,
+	}
+
 	Gruvbox = Theme{
 		Name:           "gruvbox",
 		Background:     lipgloss.Color("#282828"),
@@ -46,7 +67,7 @@ var (
 		BorderColor:    lipgloss.Color("#504945"),
 		HighlightColor: lipgloss.Color("#d79921"),
 		MutedColor:     lipgloss.Color("#a89984"),
-		HelpColor:     lipgloss.Color("#494949"),
+		HelpColor:      lipgloss.Color("#494949"),
 		Margin:         2,
 		ListIndent:     4,
 	}
@@ -67,7 +88,7 @@ var (
 		BorderColor:    lipgloss.Color("#24283b"),
 		HighlightColor: lipgloss.Color("#ff9e64"),
 		MutedColor:     lipgloss.Color("#787c99"),
-		HelpColor:     lipgloss.Color("#494949"),
+		HelpColor:      lipgloss.Color("#494949"),
 		Margin:         2,
 		ListIndent:     4,
 	}
