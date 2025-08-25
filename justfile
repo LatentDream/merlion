@@ -34,4 +34,4 @@ log:
 # Export the binary in the `~/tools/` folder
 export:
     just build
-    mv ./merlion ~/tools/
+    mv ./merlion ~/.local/bin/
