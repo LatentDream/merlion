@@ -30,9 +30,7 @@ func WithCompactViewStart(isStartingInCompactView bool) ContextOption {
 // WithLocalFirst: if the user should start with local notes as default view
 func WithLocalFirst(isLocalFirst bool) ContextOption {
 	return func(c *Context) {
-		if isLocalFirst {
-			c.DefaultToCloud = !isLocalFirst
-		}
+		c.DefaultToCloud = !isLocalFirst
 	}
 }
 

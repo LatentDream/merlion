@@ -31,7 +31,7 @@ clean:
 log:
     tail -f $(go run os_check.go)
 
-# Export the binary in the `~/tools/` folder
+# Export the binary in the user local bin
 export:
     just build
     mv ./merlion ~/.local/bin/

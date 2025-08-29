@@ -60,7 +60,11 @@ func startTUI(flags ...string) {
 	}
 	if slices.Contains(flags, "--local") {
 		options = append(options, context.WithLocalFirst(true))
+	} else if slices.Contains(flags, "--remote") {
+		options = append(options, context.WithLocalFirst(false))
 	}
+
+	// App CTX
 	ctx, err := context.NewContext(configDir, options...)
 	if err != nil {
 		log.Fatalf("Failed to initialize theme manager: %v", err)

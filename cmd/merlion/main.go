@@ -29,8 +29,9 @@ func helpCmd(args ...string) int {
 	}
 	fmt.Println("\nAvailable flags for TUI:")
 	fmt.Println("  --compact      Start in compact mode")
-	fmt.Println("  --no-save       Disable autosave of config")
-	fmt.Println("  --local        Show local notes first instead of remote")
+	fmt.Println("  --no-save      Disable autosave of config")
+	fmt.Println("  --local        Show local notes when opening the app")
+	fmt.Println("  --remote       Show remote notes when opening the app")
 	return 0
 }
 

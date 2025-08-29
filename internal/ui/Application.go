@@ -16,6 +16,7 @@ import (
 	NotesUI "merlion/internal/ui/notes"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/log"
 )
 
 type Model struct {
@@ -42,6 +43,7 @@ func NewModel(credentialsManager *cloud.CredentialsManager, localDB *sql.DB, ctx
 		initialUI = navigation.LoginUI
 	}
 
+	log.Info("Default to cloud: ", ctx.DefaultToCloud)
 	manager := store.NewManager(cloudClient, localClient, ctx.DefaultToCloud)
 
 	// Create views
