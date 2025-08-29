@@ -2,6 +2,8 @@ package Tabs
 
 import (
 	"merlion/internal/styles"
+
+	"github.com/charmbracelet/log"
 )
 
 const TabsHeight = 1
@@ -23,18 +25,31 @@ func (t *Tabs[T]) CurrentTab() T {
 	return t.Tabs[t.ActiveTab]
 }
 
-func New[T Displayable](
+func New[T interface {
+	Displayable
+	comparable
+}](
 	tabs []T,
 	themeManager *styles.ThemeManager,
+	firstTab string,
 ) Tabs[T] {
+	if len(tabs) == 0 {
+		log.Fatal("Tabs initialization: tabs lenght is 0")
+	}
+	startTab := 0
+	for i, tab := range tabs {
+		if tab.String() == firstTab {
+			startTab = i
+			break
+		}
+	}
 	return Tabs[T]{
 		Tabs:         tabs,
-		ActiveTab:    0,
+		ActiveTab:    startTab,
 		themeManager: themeManager,
 		ShowArrows:   true,
 	}
 }
-
 
 func (t *Tabs[T]) renderTabs() string {
 	if t.Width == 0 {

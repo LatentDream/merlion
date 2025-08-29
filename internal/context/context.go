@@ -7,6 +7,7 @@ import (
 type Context struct {
 	ThemeManager   *styles.ThemeManager
 	DefaultToCloud bool
+	FirstTab       string
 }
 
 type ContextOption func(*Context)
@@ -15,6 +16,20 @@ type ContextOption func(*Context)
 func WithSaveOnChange(saveOnChange bool) ContextOption {
 	return func(c *Context) {
 		c.ThemeManager.SetSaveOnChange(saveOnChange)
+	}
+}
+
+// WithFavorityOpen: Allows to open the app with the favorites tab open
+func WithFavorityOpen() ContextOption {
+	return func(c *Context) {
+		c.FirstTab = "Favorites"
+	}
+}
+
+// WithWorkLogOpen: Allows to open the app with the worklogs tab open
+func WithWorkLogOpen() ContextOption {
+	return func(c *Context) {
+		c.FirstTab = "Work Logs"
 	}
 }
 

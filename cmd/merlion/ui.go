@@ -63,6 +63,12 @@ func startTUI(flags ...string) {
 	} else if slices.Contains(flags, "--remote") {
 		options = append(options, context.WithLocalFirst(false))
 	}
+	if slices.Contains(flags, "--favorites") {
+		options = append(options, context.WithFavorityOpen())
+	}
+	if slices.Contains(flags, "--work-logs") {
+		options = append(options, context.WithWorkLogOpen())
+	}
 
 	// App CTX
 	ctx, err := context.NewContext(configDir, options...)

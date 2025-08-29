@@ -97,7 +97,7 @@ type Model struct {
 	tagsList     grouplist.Model
 }
 
-func NewModel(storeManager *store.Manager, themeManager *styles.ThemeManager) Model {
+func NewModel(storeManager *store.Manager, themeManager *styles.ThemeManager, firstTab string) Model {
 	s := themeManager.Styles()
 
 	// Initialize spinner with themed color
@@ -117,7 +117,8 @@ func NewModel(storeManager *store.Manager, themeManager *styles.ThemeManager) Mo
 	l.Styles.Title = s.Title
 
 	filterTabs := []TabKind{AllNotes, Favorites, WorkLogs, Tags}
-	tabs := tabs.New(filterTabs, themeManager)
+
+	tabs := tabs.New(filterTabs, themeManager, firstTab)
 
 	noteRenderer := renderer.New(themeManager, storeManager)
 
