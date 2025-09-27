@@ -114,6 +114,7 @@ func NewModel(storeManager *store.Manager, themeManager *styles.ThemeManager, fi
 	l.SetFilteringEnabled(false)
 	l.SetShowStatusBar(true)
 	l.SetFilteringEnabled(true)
+	l.SetShowHelp(false)
 	l.Styles.Title = s.Title
 
 	filterTabs := []TabKind{AllNotes, Favorites, WorkLogs, Tags}

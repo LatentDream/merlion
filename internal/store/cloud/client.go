@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	baseURL = "https://api.merlion.dev"
+	baseURL = "https://api.note.merlion.dev"
 	Name = "Cloud"
 )
 

@@ -22,7 +22,7 @@ func helpCmd(args ...string) int {
 	fmt.Println("TUI Note-taking application")
 	fmt.Println("Run `merlion` without args to start in TUI mode")
 	fmt.Println("For remote storage capability, create an account at:")
-	fmt.Println("    https://merlion.dev/login")
+	fmt.Println("    https://note.merlion.dev/login")
 	fmt.Println("\nAvailable commands:")
 	for _, cmd := range COMMANDS {
 		fmt.Printf("  %-10s %s\n", cmd.name, cmd.description)

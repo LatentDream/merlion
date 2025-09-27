@@ -184,7 +184,7 @@ func (m Model) View() string {
 
 	// Add signup notice
 	b.WriteString(m.styles.Muted.Render("\nDon't have an account yet?") + "\n")
-	b.WriteString(m.styles.Muted.Render("Visit https://merlion.dev to create one"))
+	b.WriteString(m.styles.Muted.Render("Visit https://note.merlion.dev to create one"))
 
 	// Center the container in the terminal
 	container := m.styles.Container.Render(b.String())
