@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"merlion/cmd/merlion/export"
 	version "merlion/cmd/merlion/version"
 	_ "net/http/pprof"
 	"os"
@@ -48,6 +49,11 @@ func init() {
 			name:        "version",
 			description: "Show version information",
 			run:         version.VersionCmd,
+		},
+		{
+			name:        "export",
+			description: "Export the SQLite database to a Obsidian vault. --help for more info",
+			run:         export.ExportCmd,
 		},
 		{
 			name:        "logout",
