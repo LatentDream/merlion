@@ -77,12 +77,8 @@ bind C-m display-popup \
 ```
 Then launch it with `<tmux-leader> + m`.
 
-#### Cloud Code
+#### Cloud Storage
 
-The cloud backend is currently private.
-Roadmap
+Merlion supports cloud storage, you can create an account at [note.Merlion.dev](https://note.merlion.dev) to get your notes across devices.
+- This is still a WIP and subject to change / removal in favor of a sync feature
 
-#### Planned features:
-- [ ] Full-text search
-- [ ] End-to-end encrypted for Cloud note
-- [ ] Sync your local notes to the cloud
