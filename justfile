@@ -21,7 +21,7 @@ build:
 
 # Run binary
 run:
-    LOG_LEVEL=DEBUG APP_ENV=dev MERLION_DB_PATH=./dev.db ./merlion
+    EDITOR=vim LOG_LEVEL=DEBUG APP_ENV=dev MERLION_DB_PATH=./dev.db MERLION_PATH="~/host/Documents/notes/test/Test/" ./merlion
 
 # Remove the Exectutable
 clean:

@@ -1,14 +1,15 @@
 package store
 
 import (
-	"fmt"
 	"log"
+	"strings"
+
 	"merlion/internal/model"
 	"merlion/internal/store/cloud"
-	"merlion/internal/store/local"
+	"merlion/internal/store/file"
+	sqlite "merlion/internal/store/local"
 	"merlion/internal/utils"
 	"merlion/internal/utils/assert"
-	"strings"
 )
 
 const panic__consistency_msg = "Storage was changed, but note wasn't refresh"
@@ -20,9 +21,7 @@ const panic__consistency_msg = "Storage was changed, but note wasn't refresh"
 type Manager struct {
 	activeStore          Store
 	Name                 string
-	inited               bool
-	internal__cloudStore *cloud.Client
-	internal__localStore *local.Client
+	stores               []Store
 	internal__notesStore string
 	// Notes contains a cached list of Notes, but their content field may be nil
 	// Use GetNote() to retrieve the complete note with content
@@ -31,26 +30,51 @@ type Manager struct {
 
 // NewManager creates a new manager with the given store implementation
 // and initializes the notes metadata list (without full content).
-func NewManager(cloudStore *cloud.Client, localStore *local.Client, defaultToCloud bool) *Manager {
+func NewManager(cloudStore *cloud.Client, sqliteStore *sqlite.Client, filesStore *file.Client, defaultToCloud bool) *Manager {
 	var defaultStore Store
-	defaultStore = localStore
+	defaultStore = sqliteStore
 	if cloudStore != nil && defaultToCloud {
 		defaultStore = cloudStore
 	}
 
+	var stores []Store
+	if cloudStore != nil {
+		stores = append(stores, cloudStore)
+	}
+	if filesStore != nil {
+		stores = append(stores, filesStore)
+	}
+	if sqliteStore != nil {
+		stores = append(stores, sqliteStore)
+	}
+
+	if len(stores) == 0 {
+		panic("No store found")
+	}
+
 	return &Manager{
-		activeStore:          defaultStore,
-		Name:                 defaultStore.Name(),
-		inited:               false,
-		internal__cloudStore: cloudStore,
-		internal__localStore: localStore,
-		internal__notesStore: defaultStore.Name(),
+		activeStore: defaultStore,
+		Name:        defaultStore.Name(),
+		stores:      stores,
 	}
 }
 
 // UpdateCloudStore will swap the cloud storage for a new store
 // Expect the store to be valid and functionnal, panic otherwise
 func (m *Manager) UpdateCloudClient(client *cloud.Client) {
+	found := false
+	for i, store := range m.stores {
+		if store.Name() == cloud.Name {
+			m.stores[i] = client
+			found = true
+			break
+		}
+	}
+	if !found {
+		m.stores = append(m.stores, client)
+		m.setActiveStore(client)
+	}
+
 	if m.activeStore.Name() == cloud.Name {
 		m.activeStore = client
 		_, err := m.ListNoteMetadata()
@@ -58,23 +82,24 @@ func (m *Manager) UpdateCloudClient(client *cloud.Client) {
 			log.Fatalf("Failed to fetch from new cloud store: %v", err)
 		}
 	}
-	m.internal__cloudStore = client
 }
 
 // NextStore swap the current underlying storage with the next registered one
 // Dev needs to call ListNoteMetadata after calling this, otherwise a panic occur
 func (m *Manager) NextStore() error {
-	if m.Name == cloud.Name {
-		m.activeStore = m.internal__localStore
-	} else {
-		if m.internal__cloudStore == nil {
-			return fmt.Errorf("Cloud store is nil")
+	for i, store := range m.stores {
+		if store.Name() == m.activeStore.Name() {
+			m.setActiveStore(m.stores[(i+1)%len(m.stores)])
+			break
 		}
-		m.activeStore = m.internal__cloudStore
 	}
-	m.Name = m.activeStore.Name()
 
 	return nil
+}
+
+func (m *Manager) setActiveStore(store Store) {
+	m.activeStore = store
+	m.Name = m.activeStore.Name()
 }
 
 // GetFullNote retrieves a specific note by ID with its complete content.
@@ -139,7 +164,6 @@ func (m *Manager) SearchByTitle(title string) *model.Note {
 		}
 	}
 	return nil
-
 }
 
 // GetTags returns all available tags from the cached notes.

@@ -3,9 +3,11 @@ package ui
 import (
 	"database/sql"
 	"fmt"
+
 	"merlion/internal/context"
 	"merlion/internal/store"
 	"merlion/internal/store/cloud"
+	"merlion/internal/store/file"
 	"merlion/internal/store/local"
 	"merlion/internal/store/local/database"
 	"merlion/internal/ui/create"
@@ -24,17 +26,18 @@ type Model struct {
 	store *store.Manager
 }
 
-func NewModel(credentialsManager *cloud.CredentialsManager, localDB *sql.DB, ctx *context.Context) (Model, error) {
+func NewModel(credentialsManager *cloud.CredentialsManager, localDB *sql.DB, localPath *string, ctx *context.Context) (Model, error) {
 	initialUI := navigation.NoteUI
 
+	// Local SQLite client -----
 	db, err := database.InitDB()
 	if err != nil {
 		panic(fmt.Sprintln("Failed to init DB", err))
 	}
 	localClient := local.NewClient(db)
 
+	// Cloud client -----
 	var cloudClient *cloud.Client = nil
-	// Check credentials
 	creds, _ := credentialsManager.LoadCredentials()
 	if creds != nil {
 		cloudClient, _ = cloud.NewClient(creds)
@@ -42,7 +45,16 @@ func NewModel(credentialsManager *cloud.CredentialsManager, localDB *sql.DB, ctx
 		initialUI = navigation.LoginUI
 	}
 
-	manager := store.NewManager(cloudClient, localClient, ctx.DefaultToCloud)
+	// Local file client -----
+	var filesClient *file.Client = nil
+	if localPath != nil {
+		filesClient, err = file.NewClient(*localPath)
+		if err != nil {
+			return Model{}, fmt.Errorf("failed to init local file client: %w", err)
+		}
+	}
+
+	manager := store.NewManager(cloudClient, localClient, filesClient, ctx.DefaultToCloud)
 
 	// Create views
 	views := make(map[navigation.CurrentUI]navigation.View)

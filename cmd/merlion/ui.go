@@ -92,7 +92,14 @@ func startTUI(flags ...string) {
 	}
 	defer localDB.Close()
 
-	model, err := ui.NewModel(credMgr, localDB, ctx)
+	// Init the file client from the MERLION_PATH env var
+	var localPath *string = nil
+	if os.Getenv("MERLION_PATH") != "" {
+		root := os.Getenv("MERLION_PATH")
+		localPath = &root
+	}
+
+	model, err := ui.NewModel(credMgr, localDB, localPath, ctx)
 	if err != nil {
 		log.Fatalf("Failed to create UI model: %v", err)
 	}
