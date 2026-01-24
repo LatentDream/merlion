@@ -91,7 +91,7 @@ func main() {
 		args := commands[1:]
 
 		for _, cmd := range COMMANDS {
-			if strings.ToLower(cmd.name) == strings.ToLower(command) {
+			if strings.EqualFold(cmd.name, command) {
 				os.Exit(cmd.run(args...))
 			}
 		}

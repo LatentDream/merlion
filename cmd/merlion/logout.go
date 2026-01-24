@@ -8,7 +8,7 @@ import (
 func logoutCmd(args ...string) int {
 	credMgr, err := cloud.NewCredentialsManager()
 	if err != nil {
-		fmt.Println("Failed to initialize credentials manager: %v", err)
+		fmt.Printf("Failed to initialize credentials manager: %v", err)
 		return 1
 	}
 
