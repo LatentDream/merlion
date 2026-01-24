@@ -1,4 +1,5 @@
-package local
+// Package sqlite implements a local storage for notes using SQLite.
+package sqlite
 
 import (
 	"database/sql"
@@ -14,7 +15,7 @@ import (
 )
 
 const (
-	Name = "Local"
+	Name = "SQLite"
 )
 
 type Client struct {

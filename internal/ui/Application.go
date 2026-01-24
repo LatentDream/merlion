@@ -7,9 +7,8 @@ import (
 	"merlion/internal/context"
 	"merlion/internal/store"
 	"merlion/internal/store/cloud"
-	"merlion/internal/store/file"
-	"merlion/internal/store/local"
-	"merlion/internal/store/local/database"
+	"merlion/internal/store/files"
+	"merlion/internal/store/sqlite"
 	"merlion/internal/ui/create"
 	"merlion/internal/ui/dialog"
 	"merlion/internal/ui/login"
@@ -30,11 +29,7 @@ func NewModel(credentialsManager *cloud.CredentialsManager, localDB *sql.DB, loc
 	initialUI := navigation.NoteUI
 
 	// Local SQLite client -----
-	db, err := database.InitDB()
-	if err != nil {
-		panic(fmt.Sprintln("Failed to init DB", err))
-	}
-	localClient := local.NewClient(db)
+	localClient := sqlite.NewClient(localDB)
 
 	// Cloud client -----
 	var cloudClient *cloud.Client = nil
@@ -46,9 +41,10 @@ func NewModel(credentialsManager *cloud.CredentialsManager, localDB *sql.DB, loc
 	}
 
 	// Local file client -----
-	var filesClient *file.Client = nil
+	var filesClient *files.Client = nil
 	if localPath != nil {
-		filesClient, err = file.NewClient(*localPath)
+		var err error = nil
+		filesClient, err = files.NewClient(*localPath)
 		if err != nil {
 			return Model{}, fmt.Errorf("failed to init local file client: %w", err)
 		}

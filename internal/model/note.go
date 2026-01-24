@@ -23,6 +23,8 @@ type CreateNoteRequest struct {
 	IsFavorite  *bool    `json:"is_favorite,omitempty"`
 	IsWorkLog   *bool    `json:"is_work_log,omitempty"`
 	IsPublic    *bool    `json:"is_public,omitempty"`
+	CreatedAt   *time.Time `json:"created_at"`
+	UpdatedAt   *time.Time `json:"updated_at"`
 }
 
 // Utilities

@@ -1,6 +1,6 @@
-// Package file implements a local storage for notes.
+// Package files implements a local storage for notes.
 // Uses the same format as Obsidian (https://obsidian.md/)
-package file
+package files
 
 import (
 	"encoding/json"
@@ -109,6 +109,15 @@ func (c *Client) CreateNote(req model.CreateNoteRequest) (*model.Note, error) {
 	}
 
 	now := time.Now()
+	createdAt := now
+	updatedAt := now
+	if req.CreatedAt != nil {
+		createdAt = *req.CreatedAt
+	}
+	if req.UpdatedAt != nil {
+		updatedAt = *req.UpdatedAt
+	}
+
 	note := model.Note{
 		NoteID:      noteID,
 		Title:       req.Title,
@@ -118,8 +127,8 @@ func (c *Client) CreateNote(req model.CreateNoteRequest) (*model.Note, error) {
 		IsFavorite:  getBoolOrDefault(req.IsFavorite, false),
 		IsWorkLog:   getBoolOrDefault(req.IsWorkLog, false),
 		IsPublic:    getBoolOrDefault(req.IsPublic, false),
-		CreatedAt:   now,
-		UpdatedAt:   now,
+		CreatedAt:   createdAt,
+		UpdatedAt:   updatedAt,
 	}
 
 	err := c.writeNoteFile(notePath, note)

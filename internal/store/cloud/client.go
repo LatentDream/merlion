@@ -1,3 +1,4 @@
+// Package cloud implements a cloud storage for notes using www.merlion.dev.
 package cloud
 
 import (

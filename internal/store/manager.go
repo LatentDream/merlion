@@ -1,15 +1,15 @@
 package store
 
 import (
-	"log"
 	"strings"
 
 	"merlion/internal/model"
 	"merlion/internal/store/cloud"
-	"merlion/internal/store/file"
-	sqlite "merlion/internal/store/local"
+	"merlion/internal/store/files"
+	sqlite "merlion/internal/store/sqlite"
 	"merlion/internal/utils"
 	"merlion/internal/utils/assert"
+	"github.com/charmbracelet/log"
 )
 
 const panic__consistency_msg = "Storage was changed, but note wasn't refresh"
@@ -30,7 +30,7 @@ type Manager struct {
 
 // NewManager creates a new manager with the given store implementation
 // and initializes the notes metadata list (without full content).
-func NewManager(cloudStore *cloud.Client, sqliteStore *sqlite.Client, filesStore *file.Client, defaultToCloud bool) *Manager {
+func NewManager(cloudStore *cloud.Client, sqliteStore *sqlite.Client, filesStore *files.Client, defaultToCloud bool) *Manager {
 	var defaultStore Store
 	defaultStore = sqliteStore
 	if cloudStore != nil && defaultToCloud {
@@ -100,6 +100,7 @@ func (m *Manager) NextStore() error {
 func (m *Manager) setActiveStore(store Store) {
 	m.activeStore = store
 	m.Name = m.activeStore.Name()
+	log.Infof("Set active store to %s", m.Name)
 }
 
 // GetFullNote retrieves a specific note by ID with its complete content.

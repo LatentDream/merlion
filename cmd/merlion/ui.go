@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"merlion/internal/context"
 	"merlion/internal/store/cloud"
-	"merlion/internal/store/local/database"
+	"merlion/internal/store/sqlite/database"
 	"merlion/internal/ui"
 	"merlion/internal/utils"
 	"net/http"
