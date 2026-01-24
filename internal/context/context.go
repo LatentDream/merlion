@@ -12,28 +12,28 @@ type Context struct {
 
 type ContextOption func(*Context)
 
-// WithSaveOnChange: Allows to remove the auto onsave when changing the config element
+// WithSaveOnChange Allows to remove the auto onsave when changing the config element
 func WithSaveOnChange(saveOnChange bool) ContextOption {
 	return func(c *Context) {
 		c.ThemeManager.SetSaveOnChange(saveOnChange)
 	}
 }
 
-// WithFavorityOpen: Allows to open the app with the favorites tab open
+// WithFavorityOpen Allows to open the app with the favorites tab open
 func WithFavorityOpen() ContextOption {
 	return func(c *Context) {
 		c.FirstTab = "Favorites"
 	}
 }
 
-// WithWorkLogOpen: Allows to open the app with the worklogs tab open
+// WithWorkLogOpen Allows to open the app with the worklogs tab open
 func WithWorkLogOpen() ContextOption {
 	return func(c *Context) {
 		c.FirstTab = "Work Logs"
 	}
 }
 
-// WithCompactViewStart: if the user only has access to the compact view
+// WithCompactViewStart if the user only has access to the compact view
 func WithCompactViewStart(isStartingInCompactView bool) ContextOption {
 	return func(c *Context) {
 		if isStartingInCompactView {
@@ -42,15 +42,15 @@ func WithCompactViewStart(isStartingInCompactView bool) ContextOption {
 	}
 }
 
-// WithLocalFirst: if the user should start with local notes as default view
+// WithLocalFirst if the user should start with local notes as default view
 func WithLocalFirst(isLocalFirst bool) ContextOption {
 	return func(c *Context) {
 		c.DefaultToCloud = !isLocalFirst
 	}
 }
 
-func NewContext(configDir string, options ...ContextOption) (*Context, error) {
-	tm, err := styles.NewThemeManager(configDir)
+func NewContext(options ...ContextOption) (*Context, error) {
+	tm, err := styles.NewThemeManager()
 	if err != nil {
 		return nil, err
 	}

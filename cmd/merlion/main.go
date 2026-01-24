@@ -2,11 +2,15 @@ package main
 
 import (
 	"fmt"
-	"merlion/cmd/merlion/export"
-	version "merlion/cmd/merlion/version"
 	_ "net/http/pprof"
 	"os"
 	"strings"
+
+	"merlion/cmd/merlion/export"
+	"merlion/cmd/merlion/parser"
+	"merlion/cmd/merlion/vault"
+	version "merlion/cmd/merlion/version"
+	"merlion/internal/utils"
 )
 
 type Command struct {
@@ -46,6 +50,11 @@ func init() {
 			run:         helpCmd,
 		},
 		{
+			name:        "vault",
+			description: "Create a new note vault storage, switch between them using `)`",
+			run:         vault.VaultCmd,
+		},
+		{
 			name:        "version",
 			description: "Show version information",
 			run:         version.VersionCmd,
@@ -63,20 +72,16 @@ func init() {
 	}
 }
 
-// parseArgs separates flags from commands and returns both
-func parseArgs(args []string) (flags []string, commands []string) {
-	for _, arg := range args {
-		if strings.HasPrefix(arg, "--") {
-			flags = append(flags, arg)
-		} else {
-			commands = append(commands, arg)
-		}
-	}
-	return flags, commands
-}
-
 func main() {
-	flags, commands := parseArgs(os.Args[1:])
+	// Setup Logging
+	closer, err := utils.SetupLog()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	defer closer()
+
+	flags, commands := parser.SplitCmdsAndFlags(os.Args[1:])
 
 	// Handle --help flag
 	for _, flag := range flags {

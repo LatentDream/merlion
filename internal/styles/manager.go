@@ -1,80 +1,28 @@
+// Package styles contains the logic to manage the user theme
 package styles
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
+
+	"merlion/internal/config"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 )
 
-type UserConfig struct {
-	Theme          string `json:"theme"`
-	InfoHidden     bool   `json:"infoHidden"`
-	InfoBottom     bool   `json:"infoBottom"`
-	CompactView    bool   `json:"compactView"`
-	DefaultToCloud bool   `json:"defaultToCloud"`
-}
-
 type ThemeManager struct {
 	Theme        Theme
-	Config       UserConfig
-	configDir    string
+	Config       *config.UserConfig
 	saveOnChange bool
 }
 
-func NewThemeManager(configDir string) (*ThemeManager, error) {
+func NewThemeManager() (*ThemeManager, error) {
 	tm := &ThemeManager{
-		configDir: configDir,
-		Config: UserConfig{
-			Theme:       "neotokyo",
-			InfoHidden:  false,
-			InfoBottom:  true,
-			CompactView: false,
-		},
-		Theme: Terminal,
-	}
-
-	// Load saved config if exists
-	if err := tm.loadConfig(); err != nil {
-		// If no saved config, save the default
-		if err := tm.SaveConfig(); err != nil {
-			return nil, fmt.Errorf("saving default config: %w", err)
-		}
+		Config:    config.Load(),
+		Theme:     Terminal,
 	}
 
 	return tm, nil
-}
-
-func (tm *ThemeManager) loadConfig() error {
-	data, err := os.ReadFile(filepath.Join(tm.configDir, "config.json"))
-	if err != nil {
-		log.Errorf("Error loading config: %w", err)
-		return err
-	}
-
-	var config UserConfig
-	if err := json.Unmarshal(data, &config); err != nil {
-		return fmt.Errorf("unmarshaling config: %w", err)
-	}
-
-	tm.Config = config
-
-	// Set the theme based on the config value
-	switch tm.Config.Theme {
-	case "gruvbox":
-		tm.Theme = Gruvbox
-	case "neotokyo":
-		tm.Theme = NeoTokyo
-	case "terminal":
-		tm.Theme = Terminal
-	default:
-		return fmt.Errorf("unknown theme: %s", tm.Config.Theme)
-	}
-
-	return nil
 }
 
 // SetSaveOnChange: Allows to remove the auto onsave when changing the config element
@@ -87,21 +35,8 @@ func (tm *ThemeManager) SaveConfig() error {
 		log.Info("Config not saved because saveOnChange is false")
 		return nil
 	}
-
-	data, err := json.Marshal(tm.Config)
-	if err != nil {
-		return fmt.Errorf("marshaling config: %w", err)
-	}
-
-	if err := os.WriteFile(
-		filepath.Join(tm.configDir, "config.json"),
-		data,
-		0600,
-	); err != nil {
-		return fmt.Errorf("writing config file: %w", err)
-	}
-
-	return nil
+	err := tm.Config.Save()
+	return err
 }
 
 func (tm *ThemeManager) Current() Theme {

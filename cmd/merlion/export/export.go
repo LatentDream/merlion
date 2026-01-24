@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"merlion/cmd/merlion/parser"
 	"merlion/internal/model"
 	"merlion/internal/store"
 	"merlion/internal/store/cloud"
@@ -74,18 +75,8 @@ func printHelp(invalidArgs bool) {
 	os.Exit(0)
 }
 
-func GetArg(args []string) (string, []string) {
-	if len(args) == 0 {
-		printHelp(true)
-	}
-	currArg := args[0]
-	args = args[1:]
-	log.Infof("currArg: %s", currArg)
-	return currArg, args
-}
-
 func parseStore(args []string) (store.Store, func() error, []string) {
-	arg, args := GetArg(args)
+	arg, args := parser.GetArg(args, printHelp)
 	switch arg {
 	case "sqlite":
 		client, cleanup, err := initSqliteDB()
@@ -94,7 +85,7 @@ func parseStore(args []string) (store.Store, func() error, []string) {
 		}
 		return client, cleanup, args
 	case "file":
-		arg, args = GetArg(args)
+		arg, args = parser.GetArg(args, printHelp)
 		client, cleanup, err := initFileClient(arg)
 		if err != nil {
 			log.Fatalf("Failed to init file client: %v", err)
@@ -123,7 +114,7 @@ func ExportCmd(args ...string) int {
 	if cleanupFrom != nil {
 		defer cleanupFrom()
 	}
-	toStore, cleanupTo, args = parseStore(args)
+	toStore, cleanupTo, _ = parseStore(args)
 	if cleanupTo != nil {
 		defer cleanupTo()
 	}
@@ -135,6 +126,7 @@ func ExportCmd(args ...string) int {
 		log.Fatalf("Failed to list notes: %v", err)
 	}
 
+	nbErrors := 0
 	for _, note := range notes {
 		note, err := fromStore.GetNote(note.NoteID)
 		if err != nil {
@@ -154,9 +146,12 @@ func ExportCmd(args ...string) int {
 		}
 		_, err = toStore.CreateNote(req)
 		if err != nil {
-			log.Warn("Failed to create note '%s': %v\n", note.Title, err)
+			fmt.Printf("Failed to create note '%s': %v\n", note.Title, err)
+			nbErrors++
 		}
 	}
+
+	fmt.Printf("Exported %d notes\n", len(notes) - nbErrors)
 
 	return 0
 }
