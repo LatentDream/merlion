@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/log"
 	"merlion/internal/model"
 )
 
@@ -38,13 +37,11 @@ func (c *Client) Name() string {
 }
 
 func (c *Client) ListNotes() ([]model.Note, error) {
-	log.Debug("Starting to list notes", "root", c.root)
 	var notes []model.Note
 
 	err := filepath.WalkDir(c.root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			log.Error("Error walking directory", "path", path, "error", err)
-			return err
+			return fmt.Errorf("failed to walk directory: %w", err)
 		}
 
 		if d.IsDir() {
@@ -57,54 +54,43 @@ func (c *Client) ListNotes() ([]model.Note, error) {
 
 		note, err := c.parseNoteFile(path)
 		if err != nil {
-			log.Error("Error parsing note file", "path", path, "error", err)
-			return err
+			return fmt.Errorf("failed to parse note file: %w", err)
 		}
 
 		notes = append(notes, *note)
 		return nil
 	})
 
-	log.Debug("Finished listing notes", "count", len(notes), "error", err)
 	return notes, err
 }
 
 func (c *Client) GetNote(noteID string) (*model.Note, error) {
 	notePath := filepath.Join(c.root, noteID+".md")
-	log.Debug("Getting note", "noteID", noteID, "path", notePath)
 
 	if _, err := os.Stat(notePath); os.IsNotExist(err) {
-		log.Warn("Note not found", "noteID", noteID, "path", notePath)
 		return nil, fmt.Errorf("note not found: %s", noteID)
 	}
 
 	note, err := c.parseNoteFile(notePath)
 	if err != nil {
-		log.Error("Error parsing note", "noteID", noteID, "error", err)
-	} else {
-		log.Debug("Successfully retrieved note", "noteID", noteID, "title", note.Title)
-	}
-	return note, err
+		return nil, fmt.Errorf("failed to parse note: %w", err)
+	} 	
+	return note, nil
 }
 
 func (c *Client) CreateNote(req model.CreateNoteRequest) (*model.Note, error) {
-	log.Debug("Creating note", "title", req.Title, "workspaceID", req.WorkspaceID, keyTags, req.Tags)
-
 	// Verify that the title is valid
 	forbiddenChars := []string{"/", "\\", ":", "*", "?", "\"", "<", ">", "|"}
 	for _, char := range forbiddenChars {
 		if strings.Contains(req.Title, char) {
-			log.Error("Invalid title with forbidden characters", "title", req.Title, "char", char)
 			return nil, fmt.Errorf("invalid title: %s", req.Title)
 		}
 	}
 
 	noteID := req.Title
 	notePath := filepath.Join(c.root, noteID+".md")
-	log.Debug("Checking if note already exists", "noteID", noteID, "path", notePath)
 
 	if _, err := os.Stat(notePath); err == nil {
-		log.Warn("Note already exists", "noteID", noteID)
 		return nil, fmt.Errorf("note already exists: %s", noteID)
 	}
 
@@ -133,22 +119,18 @@ func (c *Client) CreateNote(req model.CreateNoteRequest) (*model.Note, error) {
 
 	err := c.writeNoteFile(notePath, note)
 	if err != nil {
-		log.Error("Failed to write note file", "noteID", noteID, "error", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to write note file: %w", err)
 	}
 
-	log.Info("Successfully created note", "noteID", noteID, "title", note.Title)
 	return &note, nil
 }
 
 func (c *Client) UpdateNote(noteID string, req model.CreateNoteRequest) (*model.Note, error) {
 	notePath := filepath.Join(c.root, noteID+".md")
-	log.Debug("Updating note", "noteID", noteID, "path", notePath)
 
 	existingNote, err := c.parseNoteFile(notePath)
 	if err != nil {
-		log.Error("Failed to parse existing note for update", "noteID", noteID, "error", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to parse existing note for update: %w", err)
 	}
 
 	updatedNote := *existingNote
@@ -163,8 +145,7 @@ func (c *Client) UpdateNote(noteID string, req model.CreateNoteRequest) (*model.
 
 	err = c.writeNoteFile(notePath, updatedNote)
 	if err != nil {
-		log.Error("Failed to write updated note file", "noteID", noteID, "error", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to write updated note file: %w", err)
 	}
 
 	return &updatedNote, nil
@@ -172,20 +153,16 @@ func (c *Client) UpdateNote(noteID string, req model.CreateNoteRequest) (*model.
 
 func (c *Client) DeleteNote(noteID string) error {
 	notePath := filepath.Join(c.root, noteID+".md")
-	log.Debug("Deleting note", "noteID", noteID, "path", notePath)
 
 	if _, err := os.Stat(notePath); os.IsNotExist(err) {
-		log.Warn("Note not found for deletion", "noteID", noteID, "path", notePath)
 		return fmt.Errorf("note not found: %s", noteID)
 	}
 
 	err := moveToTrash(notePath)
 	if err != nil {
-		log.Error("Failed to move note to trash", "noteID", noteID, "error", err)
-	} else {
-		log.Info("Successfully deleted note", "noteID", noteID)
-	}
-	return err
+		return fmt.Errorf("failed to move note to trash: %w", err)
+	} 
+	return nil
 }
 
 func (c *Client) parseNoteFile(path string) (*model.Note, error) {
@@ -202,8 +179,7 @@ func (c *Client) parseNoteFile(path string) (*model.Note, error) {
 
 	filename, err := filepath.Rel(c.root, path)
 	if err != nil {
-		log.Error("Error getting relative path", "path", path, "error", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to get relative path: %w", err)
 	}
 	noteID := strings.TrimSuffix(filename, filepath.Ext(filename))
 

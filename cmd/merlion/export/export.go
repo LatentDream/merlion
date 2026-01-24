@@ -1,42 +1,142 @@
+// Package export implements the export command allowing user to export notes from one store to another
 package export
 
 import (
 	"fmt"
-	"log"
+	"os"
 
 	"merlion/internal/model"
+	"merlion/internal/store"
+	"merlion/internal/store/cloud"
 	"merlion/internal/store/files"
 	"merlion/internal/store/sqlite"
 	"merlion/internal/store/sqlite/database"
+	"merlion/internal/utils"
+
+	"github.com/charmbracelet/log"
 )
 
-func ExportCmd(args ...string) int {
-	if len(args) == 0 || args[0] == "--help" || args[0] == "-h" {
-		fmt.Println("Usage: merlion export <path>")
-		return 1
-	}
-
-	fmt.Println("Exporting notes to Obsidian vault")
-	fmt.Println("Path:", args[0])
-
+func initSqliteDB() (*sqlite.Client, func() error, error) {
 	localDB, err := database.InitDB()
 	if err != nil {
-		log.Fatalf("Failed to init DB: %v", err)
+		return nil, nil, err
 	}
-	defer localDB.Close()
 	sqliteClient := sqlite.NewClient(localDB)
-	fileClient, err := files.NewClient(args[0])
+	return sqliteClient, localDB.Close, nil
+}
+
+func initFileClient(path string) (*files.Client, func() error, error) {
+	fileClient, err := files.NewClient(path)
 	if err != nil {
-		log.Fatalf("Failed to init file client: %v", err)
+		return nil, nil, err
+	}
+	return fileClient, nil, nil
+}
+
+func initCloudClient() (*cloud.Client, func() error, error) {
+	credentialsManager, err := cloud.NewCredentialsManager()
+	if err != nil {
+		log.Fatalf("Failed to initialize credentials manager: %v", err)
+	}
+	creds, err := credentialsManager.LoadCredentials()
+	if err != nil {
+		log.Fatalf("Failed to load credentials: %v", err)
+	}
+	if creds == nil {
+		log.Fatalf("You need to login to use Cloud")
 	}
 
-	notes, err := sqliteClient.ListNotes()
+	cloudClient, err := cloud.NewClient(creds)
+	if err != nil {
+		log.Fatalf("Failed to init cloud client: %v", err)
+	}
+
+	return cloudClient, nil, nil
+}
+
+func printHelp(invalidArgs bool) {
+	if invalidArgs {
+		fmt.Println("Invalid arguments")
+	}
+
+	fmt.Println("Usage: merlion export <from-provider> <to-provider>")
+	fmt.Println("Provider: sqlite, file <obsidian-vault-path>, cloud")
+	fmt.Println("  - sqlite: export to a local SQLite database")
+	fmt.Println("  - file <obsidian-vault-path>: export to a local Obsidian vault")
+	fmt.Println("  - cloud: export to a cloud storage provider")
+	fmt.Println("Examples:")
+	fmt.Println("  merlion export sqlite files ~/notes")
+	fmt.Println("  merlion export sqlite cloud")
+
+	if invalidArgs {
+		os.Exit(1)
+	}
+	os.Exit(0)
+}
+
+func GetArg(args []string) (string, []string) {
+	if len(args) == 0 {
+		printHelp(true)
+	}
+	currArg := args[0]
+	args = args[1:]
+	log.Infof("currArg: %s", currArg)
+	return currArg, args
+}
+
+func parseStore(args []string) (store.Store, func() error, []string) {
+	arg, args := GetArg(args)
+	switch arg {
+	case "sqlite":
+		client, cleanup, err := initSqliteDB()
+		if err != nil {
+			log.Fatalf("Failed to init SQLite client: %v", err)
+		}
+		return client, cleanup, args
+	case "file":
+		arg, args = GetArg(args)
+		client, cleanup, err := initFileClient(arg)
+		if err != nil {
+			log.Fatalf("Failed to init file client: %v", err)
+		}
+		return client, cleanup, args
+	case "cloud":
+		client, cleanup, err := initCloudClient()
+		if err != nil {
+			log.Fatalf("Failed to init cloud client: %v", err)
+		}
+		return client, cleanup, args
+	default:
+		printHelp(true)
+	}
+	return nil, nil, nil
+}
+
+func ExportCmd(args ...string) int {
+	if len(args) == 0 || utils.Contains(args, "--help") || utils.Contains(args, "-h") {
+		printHelp(false)
+	}
+
+	var fromStore, toStore store.Store = nil, nil
+	var cleanupFrom, cleanupTo func() error = nil, nil
+	fromStore, cleanupFrom, args = parseStore(args)
+	if cleanupFrom != nil {
+		defer cleanupFrom()
+	}
+	toStore, cleanupTo, args = parseStore(args)
+	if cleanupTo != nil {
+		defer cleanupTo()
+	}
+
+	fmt.Printf("Exporting %s -> %s\n", fromStore.Name(), toStore.Name())
+
+	notes, err := fromStore.ListNotes()
 	if err != nil {
 		log.Fatalf("Failed to list notes: %v", err)
 	}
 
 	for _, note := range notes {
-		note, err := sqliteClient.GetNote(note.NoteID)
+		note, err := fromStore.GetNote(note.NoteID)
 		if err != nil {
 			log.Fatalf("Failed to get note: %v", err)
 		}
@@ -52,7 +152,10 @@ func ExportCmd(args ...string) int {
 			UpdatedAt:   &note.UpdatedAt,
 			WorkspaceID: note.WorkspaceID,
 		}
-		fileClient.CreateNote(req)
+		_, err = toStore.CreateNote(req)
+		if err != nil {
+			log.Warn("Failed to create note '%s': %v\n", note.Title, err)
+		}
 	}
 
 	return 0

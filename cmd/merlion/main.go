@@ -52,7 +52,7 @@ func init() {
 		},
 		{
 			name:        "export",
-			description: "Export the SQLite database to a Obsidian vault. --help for more info",
+			description: "Export the SQLite database to a Obsidian vault.",
 			run:         export.ExportCmd,
 		},
 		{
