@@ -58,12 +58,6 @@ func SwitchUICmd(newState CurrentUI, args []any) tea.Cmd {
 	}
 }
 
-func LoginCmd(client *cloud.Client) tea.Cmd {
-	return func() tea.Msg {
-		return LoginMsg{Client: client}
-	}
-}
-
 func AskConfirmationCmd(title string, subtitle string, level Level, onConfirm func(), returnUI CurrentUI) tea.Cmd {
 	return func() tea.Msg {
 		return OpenDialogMsg{Title: title, Subtitle: subtitle, Level: level, OnConfirm: onConfirm, ReturnUI: returnUI}

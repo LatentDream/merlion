@@ -54,9 +54,8 @@ func LoadStores(config *config.UserConfig, credentialsManager *cloud.Credentials
 	for _, vault := range config.Vaults {
 		switch vault.Provider {
 		case cloud.Name:
-			var err error
-			creds, _ := credentialsManager.LoadCredentials()
-			if creds != nil {
+			creds, err := credentialsManager.LoadCredentials()
+			if err != nil {
 				log.Fatalf("You need to login to use Cloud")
 			}
 			cloudStore, err = cloud.NewClient(creds)
@@ -66,8 +65,8 @@ func LoadStores(config *config.UserConfig, credentialsManager *cloud.Credentials
 		case sqlite.Name:
 			store := sqlite.NewClient()
 			stores = append(stores, store)
-		case files.Name:
-			store, err := files.NewClient(vault.Path)
+		case files.Type:
+			store, err := files.NewClient(vault.Path, vault.Name)
 			if err != nil {
 				log.Fatalf("Failed to init local file client: %v", err)
 			}
@@ -87,7 +86,7 @@ func LoadStores(config *config.UserConfig, credentialsManager *cloud.Credentials
 func (m *Manager) UpdateCloudClient(client *cloud.Client) {
 	found := false
 	for i, store := range m.stores {
-		if store.Name() == cloud.Name {
+		if store.Type() == cloud.Type {
 			m.stores[i] = client
 			found = true
 			break
@@ -98,7 +97,7 @@ func (m *Manager) UpdateCloudClient(client *cloud.Client) {
 		m.setActiveStore(client)
 	}
 
-	if m.activeStore.Name() == cloud.Name {
+	if m.activeStore.Type() == cloud.Type {
 		m.activeStore = client
 		_, err := m.ListNoteMetadata()
 		if err != nil {

@@ -22,7 +22,7 @@ func initSqliteDB() (*sqlite.Client, error) {
 }
 
 func initFileClient(path string) (*files.Client, error) {
-	fileClient, err := files.NewClient(path)
+	fileClient, err := files.NewClient(path, "")
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +139,7 @@ func ExportCmd(args ...string) int {
 		}
 	}
 
-	fmt.Printf("Exported %d notes\n", len(notes) - nbErrors)
+	fmt.Printf("Exported %d notes\n", len(notes)-nbErrors)
 
 	return 0
 }

@@ -201,6 +201,7 @@ func newCloudVault(args ...string) int {
 	}
 	cfg.Vaults = append(cfg.Vaults, config.Vault{
 		Provider: cloud.Name,
+		Name:     cloud.Name,
 		Path:     "Not Used - credentials are stored in ~/.merlion/credentials.json",
 	})
 	cfg.Save()
@@ -223,7 +224,8 @@ func newFilesVault(args ...string) int {
 	
 	cfg := config.Load()
 	cfg.Vaults = append(cfg.Vaults, config.Vault{
-		Provider: files.Name,
+		Provider: files.Type,
+		Name:     cleanPath,
 		Path:     cleanPath,
 	})
 	cfg.Save()
@@ -235,6 +237,7 @@ func newSQLiteVault(args ...string) int {
 	cfg := config.Load()
 	cfg.Vaults = append(cfg.Vaults, config.Vault{
 		Provider: sqlite.Name,
+		Name:     sqlite.Name,
 		Path:     "Not Used - Use MERLION_DB_PATH env var to override",
 	})
 	cfg.Save()

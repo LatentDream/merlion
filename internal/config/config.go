@@ -8,12 +8,17 @@ import (
 	"path/filepath"
 	"sync"
 
+	"merlion/internal/store/cloud"
+	"merlion/internal/store/files"
+	"merlion/internal/store/sqlite"
+
 	"github.com/charmbracelet/log"
 )
 
 type Vault struct {
 	Provider string `json:"provider"`
 	Path     string `json:"path"`
+	Name     string `json:"name"`
 }
 
 type UserConfig struct {
@@ -44,9 +49,9 @@ func getConfigDir() (string, error) {
 
 func (c *UserConfig) validate() error {
 	validProviders := map[string]bool{
-		"Cloud":  true,
-		"SQLite": true,
-		"Files":  true,
+		cloud.Type:  true,
+		sqlite.Type: true,
+		files.Type:  true,
 	}
 
 	for _, vault := range c.Vaults {

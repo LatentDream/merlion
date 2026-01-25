@@ -19,6 +19,7 @@ import (
 const (
 	baseURL = "https://api.note.merlion.dev"
 	Name = "Cloud"
+	Type = "Cloud"
 )
 
 type Client struct {
@@ -43,6 +44,10 @@ func NewClient(credentials *Credentials) (*Client, error) {
 }
 
 func (c *Client) Name() string {
+	return Name
+}
+
+func (c *Client) Type() string {
 	return Name
 }
 

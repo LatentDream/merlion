@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	Name = "SQLite"
+	Name = "Gloabl"
+	Type = "SQLite"
 )
 
 type Client struct {
@@ -38,6 +39,10 @@ func NewClient() *Client {
 
 func (c *Client) Name() string {
 	return Name
+}
+
+func (c *Client) Type() string {
+	return Type
 }
 
 func (c *Client) ListNotes() ([]model.Note, error) {

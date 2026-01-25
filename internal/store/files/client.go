@@ -16,11 +16,12 @@ import (
 
 type Client struct {
 	root string
+	name string
 }
 
-const Name = "Files"
+const Type = "Files"
 
-func NewClient(root string) (*Client, error) {
+func NewClient(root string, name string) (*Client, error) {
 	baseFolder, err := validatePath(root)
 	if err != nil {
 		return nil, err
@@ -31,11 +32,15 @@ func NewClient(root string) (*Client, error) {
 		return nil, err
 	}
 
-	return &Client{baseFolder}, nil
+	return &Client{baseFolder, name}, nil
 }
 
 func (c *Client) Name() string {
-	return fmt.Sprintf("%s (%s)", Name, c.root)
+	return c.name
+}
+
+func (c *Client) Type() string {
+	return Type
 }
 
 func (c *Client) ListNotes() ([]model.Note, error) {
@@ -76,7 +81,7 @@ func (c *Client) GetNote(noteID string) (*model.Note, error) {
 	note, err := c.parseNoteFile(notePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse note: %w", err)
-	} 	
+	}
 	return note, nil
 }
 
@@ -163,7 +168,7 @@ func (c *Client) DeleteNote(noteID string) error {
 	err := moveToTrash(notePath)
 	if err != nil {
 		return fmt.Errorf("failed to move note to trash: %w", err)
-	} 
+	}
 	return nil
 }
 
