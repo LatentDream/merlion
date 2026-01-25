@@ -31,7 +31,13 @@ clean:
 log:
     tail -f $(go run os_check.go)
 
+# Release the latest version to GitHub
+release:
+    goreleaser release
+
 # Export the binary in the user local bin
 export:
     just build
     mv ./merlion ~/.local/bin/
+
+
