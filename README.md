@@ -105,5 +105,5 @@ Merlion supports cloud storage, you can create an account at [note.Merlion.dev](
 
 
 <p align="center">
-  _This project is still in development, expect it to be rough around the edges_
+  <i>This software is provided "as is", the code ain't perfect, the app ain't perfect and I'm having fun </i>
 </p>
