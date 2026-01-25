@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"sync"
 
-	"merlion/internal/store/cloud"
-	"merlion/internal/store/files"
-	"merlion/internal/store/sqlite"
+	"merlion/internal/vault/cloud"
+	"merlion/internal/vault/files"
+	"merlion/internal/vault/sqlite"
 
 	"github.com/charmbracelet/log"
 )

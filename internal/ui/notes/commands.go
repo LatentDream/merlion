@@ -3,7 +3,7 @@ package Notes
 import (
 	"fmt"
 	"merlion/internal/model"
-	"merlion/internal/store"
+	"merlion/internal/vault"
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -105,7 +105,7 @@ type noteContentMsg struct {
 }
 type errMsg struct{ err error }
 
-func fetchNoteContent(storeManager *store.Manager, noteId string) tea.Cmd {
+func fetchNoteContent(storeManager *vault.Manager, noteId string) tea.Cmd {
 	return func() tea.Msg {
 		updatedNote, err := storeManager.GetFullNote(noteId)
 		if err != nil {

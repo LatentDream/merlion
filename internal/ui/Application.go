@@ -3,8 +3,8 @@ package ui
 import (
 	"merlion/internal/config"
 	"merlion/internal/context"
-	"merlion/internal/store"
-	"merlion/internal/store/cloud"
+	"merlion/internal/vault"
+	"merlion/internal/vault/cloud"
 	"merlion/internal/ui/create"
 	"merlion/internal/ui/dialog"
 	"merlion/internal/ui/manage"
@@ -17,13 +17,13 @@ import (
 type Model struct {
 	state navigation.CurrentUI
 	views map[navigation.CurrentUI]navigation.View
-	store *store.Manager
+	store *vault.Manager
 }
 
 func NewModel(cfg *config.UserConfig, credentialsManager *cloud.CredentialsManager, ctx *context.Context) (Model, error) {
 	initialUI := navigation.NoteUI
 
-	manager := store.NewManager(cfg, credentialsManager, ctx.DefaultToCloud)
+	manager := vault.NewManager(cfg, credentialsManager, ctx.DefaultToCloud)
 
 	// Create views
 	views := make(map[navigation.CurrentUI]navigation.View)

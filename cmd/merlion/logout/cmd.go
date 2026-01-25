@@ -2,7 +2,7 @@ package logout
 
 import (
 	"fmt"
-	"merlion/internal/store/cloud"
+	"merlion/internal/vault/cloud"
 )
 
 func Cmd(args ...string) int {

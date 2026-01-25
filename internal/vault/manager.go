@@ -1,14 +1,14 @@
 // Package store contains the logic to manage the user's notes
-package store
+package vault
 
 import (
 	"strings"
 
 	"merlion/internal/config"
 	"merlion/internal/model"
-	"merlion/internal/store/cloud"
-	"merlion/internal/store/files"
-	sqlite "merlion/internal/store/sqlite"
+	"merlion/internal/vault/cloud"
+	"merlion/internal/vault/files"
+	sqlite "merlion/internal/vault/sqlite"
 	"merlion/internal/utils"
 	"merlion/internal/utils/assert"
 

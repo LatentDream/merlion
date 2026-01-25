@@ -7,10 +7,10 @@ import (
 
 	"merlion/cmd/merlion/parser"
 	"merlion/internal/model"
-	"merlion/internal/store"
-	"merlion/internal/store/cloud"
-	"merlion/internal/store/files"
-	"merlion/internal/store/sqlite"
+	"merlion/internal/vault"
+	"merlion/internal/vault/cloud"
+	"merlion/internal/vault/files"
+	"merlion/internal/vault/sqlite"
 	"merlion/internal/utils"
 
 	"github.com/charmbracelet/log"
@@ -70,7 +70,7 @@ func printHelp(invalidArgs bool) {
 	os.Exit(0)
 }
 
-func parseStore(args []string) (store.Store, []string) {
+func parseStore(args []string) (vault.Store, []string) {
 	arg, args := parser.GetArg(args, printHelp)
 	switch arg {
 	case "sqlite":
@@ -103,7 +103,7 @@ func Cmd(args ...string) int {
 		printHelp(false)
 	}
 
-	var fromStore, toStore store.Store = nil, nil
+	var fromStore, toStore vault.Store = nil, nil
 	fromStore, args = parseStore(args)
 	toStore, _ = parseStore(args)
 

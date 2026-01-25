@@ -7,8 +7,8 @@ import (
 
 	"merlion/internal/controls"
 	"merlion/internal/model"
-	"merlion/internal/store"
-	"merlion/internal/store/cloud"
+	"merlion/internal/vault"
+	"merlion/internal/vault/cloud"
 	"merlion/internal/styles"
 	styledDelegate "merlion/internal/styles/components/delegate"
 	grouplist "merlion/internal/styles/components/groupList"
@@ -91,13 +91,13 @@ type Model struct {
 	listDelegate *styledDelegate.StyledDelegate
 	styles       *styles.Styles
 	themeManager *styles.ThemeManager
-	storeManager *store.Manager
+	storeManager *vault.Manager
 	viewType     ViewType
 	compactView  bool
 	tagsList     grouplist.Model
 }
 
-func NewModel(storeManager *store.Manager, themeManager *styles.ThemeManager, firstTab string) Model {
+func NewModel(storeManager *vault.Manager, themeManager *styles.ThemeManager, firstTab string) Model {
 	s := themeManager.Styles()
 
 	// Initialize spinner with themed color

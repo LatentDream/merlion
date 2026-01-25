@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"merlion/internal/store/cloud"
+	"merlion/internal/vault/cloud"
 	"merlion/internal/styles"
 
 	"github.com/charmbracelet/bubbles/textinput"

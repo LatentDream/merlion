@@ -9,7 +9,7 @@ import (
 	"merlion/cmd/merlion/vault"
 	"merlion/internal/config"
 	"merlion/internal/context"
-	"merlion/internal/store/cloud"
+	"merlion/internal/vault/cloud"
 	"merlion/internal/ui"
 
 	tea "github.com/charmbracelet/bubbletea"

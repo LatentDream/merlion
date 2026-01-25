@@ -2,8 +2,8 @@ package manage
 
 import (
 	"merlion/internal/model"
-	"merlion/internal/store"
-	"merlion/internal/store/cloud"
+	"merlion/internal/vault"
+	"merlion/internal/vault/cloud"
 	"merlion/internal/styles"
 	"merlion/internal/styles/components"
 	taginput "merlion/internal/styles/components/tagInput"
@@ -21,7 +21,7 @@ type Model struct {
 	height          int
 	note            *model.Note
 	themeManager    *styles.ThemeManager
-	storeManager    *store.Manager
+	storeManager    *vault.Manager
 	spinner         spinner.Model
 	isLoading       bool
 	title           textinput.Model
@@ -31,7 +31,7 @@ type Model struct {
 }
 
 func NewModel(
-	storeManager *store.Manager,
+	storeManager *vault.Manager,
 	themeManager *styles.ThemeManager,
 ) navigation.View {
 	title := textinput.New()

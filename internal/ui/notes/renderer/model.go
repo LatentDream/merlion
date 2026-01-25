@@ -3,7 +3,7 @@ package renderer
 import (
 	"fmt"
 	"merlion/internal/model"
-	"merlion/internal/store"
+	"merlion/internal/vault"
 	"merlion/internal/styles"
 	"merlion/internal/ui/navigation"
 	"merlion/internal/utils"
@@ -37,12 +37,12 @@ type Model struct {
 	renderer     *glamour.TermRenderer
 	infoHide     bool
 	infoPos      Postion
-	storeManager *store.Manager
+	storeManager *vault.Manager
 	themeManager *styles.ThemeManager
 	spinner      spinner.Model
 }
 
-func New(themeManager *styles.ThemeManager, storeManager *store.Manager) Model {
+func New(themeManager *styles.ThemeManager, storeManager *vault.Manager) Model {
 
 	// Initialize glamour for markdown rendering
 	renderer, err := glamour.NewTermRenderer(

@@ -1,7 +1,7 @@
 package navigation
 
 import (
-	"merlion/internal/store/cloud"
+	"merlion/internal/vault/cloud"
 
 	tea "github.com/charmbracelet/bubbletea"
 )

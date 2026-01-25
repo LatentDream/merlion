@@ -1,8 +1,8 @@
 package dialog
 
 import (
-	"merlion/internal/store"
-	"merlion/internal/store/cloud"
+	"merlion/internal/vault"
+	"merlion/internal/vault/cloud"
 	"merlion/internal/styles"
 	"merlion/internal/ui/navigation"
 
@@ -19,7 +19,7 @@ type Model struct {
 	themeManager *styles.ThemeManager
 	width        int
 	height       int
-	storeManager *store.Manager
+	storeManager *vault.Manager
 	confirm      bool
 	returnUI     navigation.CurrentUI
 }
@@ -29,7 +29,7 @@ func (m Model) SetCloudClient(client *cloud.Client) navigation.View {
 	return m
 }
 
-func NewModel(sotreManager *store.Manager, themeManager *styles.ThemeManager) navigation.View {
+func NewModel(sotreManager *vault.Manager, themeManager *styles.ThemeManager) navigation.View {
 	return Model{
 		themeManager: themeManager,
 		storeManager: sotreManager,

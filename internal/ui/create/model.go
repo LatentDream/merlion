@@ -2,8 +2,8 @@ package create
 
 import (
 	"merlion/internal/model"
-	"merlion/internal/store"
-	"merlion/internal/store/cloud"
+	"merlion/internal/vault"
+	"merlion/internal/vault/cloud"
 	"merlion/internal/styles"
 	"merlion/internal/styles/components"
 	taginput "merlion/internal/styles/components/tagInput"
@@ -22,7 +22,7 @@ type Model struct {
 	isFavoriteInput components.RadioInput
 	isWorkLogInput  components.RadioInput
 	themeManager    *styles.ThemeManager
-	storeManager    *store.Manager
+	storeManager    *vault.Manager
 }
 
 func (m Model) SetCloudClient(client *cloud.Client) navigation.View {
@@ -31,7 +31,7 @@ func (m Model) SetCloudClient(client *cloud.Client) navigation.View {
 }
 
 func NewModel(
-	storeManager *store.Manager,
+	storeManager *vault.Manager,
 	themeManager *styles.ThemeManager,
 ) navigation.View {
 	title := textinput.New()

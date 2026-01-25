@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"merlion/internal/model"
-	"merlion/internal/store/clientError"
-	"merlion/internal/store/sqlite/database"
+	"merlion/internal/vault/clientError"
+	"merlion/internal/vault/sqlite/database"
 
 	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
