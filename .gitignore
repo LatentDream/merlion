@@ -26,3 +26,5 @@ go.work.sum
 # Dev database
 dev.db*
 .data/
+# Added by goreleaser init:
+dist/
