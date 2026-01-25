@@ -27,7 +27,7 @@ type Model struct {
 	themeManager       *styles.ThemeManager
 }
 
-func NewModel(credentialsManager *cloud.CredentialsManager, themeManager *styles.ThemeManager) navigation.View {
+func NewModel(credentialsManager *cloud.CredentialsManager, themeManager *styles.ThemeManager) tea.Model {
 	appStyles := themeManager.Styles()
 
 	emailInput := textinput.New()
@@ -59,15 +59,11 @@ func NewModel(credentialsManager *cloud.CredentialsManager, themeManager *styles
 	}
 }
 
-func (m Model) SetCloudClient(client *cloud.Client) navigation.View {
-	return m
-}
-
-func (m Model) Init(args ...any) tea.Cmd {
+func (m Model) Init() tea.Cmd {
 	return textinput.Blink
 }
 
-func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {

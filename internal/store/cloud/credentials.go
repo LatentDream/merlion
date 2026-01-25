@@ -48,25 +48,25 @@ func loadOrGenerateKey(keyPath string) ([]byte, error) {
 }
 
 func NewCredentialsManager() (*CredentialsManager, error) {
-	configBase, err := os.UserConfigDir()
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return nil, fmt.Errorf("getting config directory: %w", err)
+		return nil, fmt.Errorf("getting home directory: %w", err)
 	}
 
-	configDir := filepath.Join(configBase, "merlion")
-	if err := os.MkdirAll(configDir, 0700); err != nil {
+	hiddenDir := filepath.Join(homeDir, ".merlion")
+	if err := os.MkdirAll(hiddenDir, 0700); err != nil {
 		return nil, fmt.Errorf("creating config directory: %w", err)
 	}
 
 	// Load or generate encryption key
-	keyPath := filepath.Join(configDir, ".key")
+	keyPath := filepath.Join(hiddenDir, ".key")
 	key, err := loadOrGenerateKey(keyPath)
 	if err != nil {
 		return nil, fmt.Errorf("handling encryption key: %w", err)
 	}
 
 	return &CredentialsManager{
-		configDir: configDir,
+		configDir: hiddenDir,
 		key:       key,
 	}, nil
 }

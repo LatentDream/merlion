@@ -11,30 +11,25 @@ import (
 	"merlion/internal/store/cloud"
 	"merlion/internal/store/files"
 	"merlion/internal/store/sqlite"
-	"merlion/internal/store/sqlite/database"
 	"merlion/internal/utils"
 
 	"github.com/charmbracelet/log"
 )
 
-func initSqliteDB() (*sqlite.Client, func() error, error) {
-	localDB, err := database.InitDB()
-	if err != nil {
-		return nil, nil, err
-	}
-	sqliteClient := sqlite.NewClient(localDB)
-	return sqliteClient, localDB.Close, nil
+func initSqliteDB() (*sqlite.Client, error) {
+	sqliteClient := sqlite.NewClient()
+	return sqliteClient, nil
 }
 
-func initFileClient(path string) (*files.Client, func() error, error) {
+func initFileClient(path string) (*files.Client, error) {
 	fileClient, err := files.NewClient(path)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-	return fileClient, nil, nil
+	return fileClient, nil
 }
 
-func initCloudClient() (*cloud.Client, func() error, error) {
+func initCloudClient() (*cloud.Client, error) {
 	credentialsManager, err := cloud.NewCredentialsManager()
 	if err != nil {
 		log.Fatalf("Failed to initialize credentials manager: %v", err)
@@ -52,7 +47,7 @@ func initCloudClient() (*cloud.Client, func() error, error) {
 		log.Fatalf("Failed to init cloud client: %v", err)
 	}
 
-	return cloudClient, nil, nil
+	return cloudClient, nil
 }
 
 func printHelp(invalidArgs bool) {
@@ -75,32 +70,32 @@ func printHelp(invalidArgs bool) {
 	os.Exit(0)
 }
 
-func parseStore(args []string) (store.Store, func() error, []string) {
+func parseStore(args []string) (store.Store, []string) {
 	arg, args := parser.GetArg(args, printHelp)
 	switch arg {
 	case "sqlite":
-		client, cleanup, err := initSqliteDB()
+		client, err := initSqliteDB()
 		if err != nil {
 			log.Fatalf("Failed to init SQLite client: %v", err)
 		}
-		return client, cleanup, args
+		return client, args
 	case "file":
 		arg, args = parser.GetArg(args, printHelp)
-		client, cleanup, err := initFileClient(arg)
+		client, err := initFileClient(arg)
 		if err != nil {
 			log.Fatalf("Failed to init file client: %v", err)
 		}
-		return client, cleanup, args
+		return client, args
 	case "cloud":
-		client, cleanup, err := initCloudClient()
+		client, err := initCloudClient()
 		if err != nil {
 			log.Fatalf("Failed to init cloud client: %v", err)
 		}
-		return client, cleanup, args
+		return client, args
 	default:
 		printHelp(true)
 	}
-	return nil, nil, nil
+	return nil, nil
 }
 
 func ExportCmd(args ...string) int {
@@ -109,15 +104,8 @@ func ExportCmd(args ...string) int {
 	}
 
 	var fromStore, toStore store.Store = nil, nil
-	var cleanupFrom, cleanupTo func() error = nil, nil
-	fromStore, cleanupFrom, args = parseStore(args)
-	if cleanupFrom != nil {
-		defer cleanupFrom()
-	}
-	toStore, cleanupTo, _ = parseStore(args)
-	if cleanupTo != nil {
-		defer cleanupTo()
-	}
+	fromStore, args = parseStore(args)
+	toStore, _ = parseStore(args)
 
 	fmt.Printf("Exporting %s -> %s\n", fromStore.Name(), toStore.Name())
 

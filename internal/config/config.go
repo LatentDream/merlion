@@ -11,12 +11,18 @@ import (
 	"github.com/charmbracelet/log"
 )
 
+type Vault struct {
+	Provider string `json:"provider"`
+	Path     string `json:"path"`
+}
+
 type UserConfig struct {
-	Theme          string `json:"theme"`
-	InfoHidden     bool   `json:"infoHidden"`
-	InfoBottom     bool   `json:"infoBottom"`
-	CompactView    bool   `json:"compactView"`
-	DefaultToCloud bool   `json:"defaultToCloud"`
+	Theme          string  `json:"theme"`
+	InfoHidden     bool    `json:"infoHidden"`
+	InfoBottom     bool    `json:"infoBottom"`
+	CompactView    bool    `json:"compactView"`
+	DefaultToCloud bool    `json:"defaultToCloud"`
+	Vaults         []Vault `json:"vaults"`
 }
 
 var (
@@ -34,6 +40,21 @@ func getConfigDir() (string, error) {
 		log.Fatalf("Failed to create config directory: %v", err)
 	}
 	return configDir, nil
+}
+
+func (c *UserConfig) validate() error {
+	validProviders := map[string]bool{
+		"Cloud":  true,
+		"SQLite": true,
+		"Files":  true,
+	}
+
+	for _, vault := range c.Vaults {
+		if !validProviders[vault.Provider] {
+			return fmt.Errorf("provider must be one of: cloud, sqlite, files")
+		}
+	}
+	return nil
 }
 
 // Load loads the user config from the config file
@@ -62,6 +83,10 @@ func Load() *UserConfig {
 			if err := json.Unmarshal(data, &config); err != nil {
 				log.Fatalf("Failed to parse config: %v", err)
 			}
+		}
+
+		if err := config.validate(); err != nil {
+			log.Fatalf("Invalid config: %v", err)
 		}
 
 		instance = config

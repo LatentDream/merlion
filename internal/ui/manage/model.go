@@ -78,7 +78,7 @@ func (m Model) Update(msg tea.Msg) (navigation.View, tea.Cmd) {
 		return m, spinnerCmd
 
 	case navigation.OpenManageMsg:
-		note := m.storeManager.SearchById(msg.NoteId)
+		note := m.storeManager.SearchByID(msg.NoteId)
 		if note == nil {
 			log.Fatalf("Opened a Manage view on a note which doesn't exist")
 		}

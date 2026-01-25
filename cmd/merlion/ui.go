@@ -6,9 +6,10 @@ import (
 	"os"
 	"slices"
 
+	"merlion/cmd/merlion/vault"
+	"merlion/internal/config"
 	"merlion/internal/context"
 	"merlion/internal/store/cloud"
-	"merlion/internal/store/sqlite/database"
 	"merlion/internal/ui"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -56,22 +57,20 @@ func startTUI(flags ...string) {
 		log.Fatalf("Failed to initialize credentials manager: %v", err)
 	}
 
-	// Initial local DB - I don't like have the DB where, but needed to have the Close
-	// TODO: A ctx where closing funcs can be registered would be great
-	localDB, err := database.InitDB()
+	// Load config
+	cfg := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to init DB: %v", err)
-	}
-	defer localDB.Close()
-
-	// Init the file client from the MERLION_PATH env var
-	var localPath *string = nil
-	if os.Getenv("MERLION_PATH") != "" {
-		root := os.Getenv("MERLION_PATH")
-		localPath = &root
+		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	model, err := ui.NewModel(credMgr, localDB, localPath, ctx)
+	if cfg.Vaults == nil || len(cfg.Vaults) == 0 {
+		ok := vault.ChooseVault()
+		if ok != 0 {
+			os.Exit(1)
+		}
+	}
+
+	model, err := ui.NewModel(cfg, credMgr, ctx)
 	if err != nil {
 		log.Fatalf("Failed to create UI model: %v", err)
 	}

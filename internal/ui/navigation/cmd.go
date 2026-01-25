@@ -11,7 +11,6 @@ type CurrentUI int
 const (
 	NoteUI CurrentUI = iota
 	CreateUI
-	LoginUI
 	ManageUI
 	DialogUI
 )

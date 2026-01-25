@@ -9,7 +9,9 @@ import (
 
 	"merlion/internal/model"
 	"merlion/internal/store/clientError"
+	"merlion/internal/store/sqlite/database"
 
+	"github.com/charmbracelet/log"
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -22,7 +24,13 @@ type Client struct {
 	db *sql.DB
 }
 
-func NewClient(db *sql.DB) *Client {
+func NewClient() *Client {
+	db, err := database.InitDB()
+	if err != nil {
+		log.Fatalf("Failed to init DB: %v", err)
+	}
+	// TODO: A ctx where closing funcs can be registered would be great so we can properly close the DB
+	// defer localDB.Close()
 	return &Client{
 		db: db,
 	}

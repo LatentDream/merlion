@@ -18,6 +18,8 @@ type Client struct {
 	root string
 }
 
+const Name = "Files"
+
 func NewClient(root string) (*Client, error) {
 	baseFolder, err := validatePath(root)
 	if err != nil {
@@ -33,7 +35,7 @@ func NewClient(root string) (*Client, error) {
 }
 
 func (c *Client) Name() string {
-	return "File System"
+	return fmt.Sprintf("%s (%s)", Name, c.root)
 }
 
 func (c *Client) ListNotes() ([]model.Note, error) {

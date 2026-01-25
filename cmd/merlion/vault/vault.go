@@ -4,15 +4,19 @@ package vault
 
 import (
 	"fmt"
+	"os"
+
 	"merlion/cmd/merlion/parser"
 	"merlion/internal/utils"
-	"os"
 )
 
-
 func VaultCmd(args ...string) int {
-	if len(args) == 0 || len(args) > 2 || utils.Contains(args, "--help") || utils.Contains(args, "-h") {
+	if utils.Contains(args, "--help") || utils.Contains(args, "-h") {
 		printVaultHelp(true)
+	}
+
+	if len(args) == 0 {
+		return ChooseVault()
 	}
 
 	arg, args := parser.GetArg(args, printVaultHelp)
@@ -34,7 +38,7 @@ func printVaultHelp(invalidArgs bool) {
 		fmt.Println("Invalid arguments")
 	}
 
-	fmt.Println("Usage: merlion vault <provider>")
+	fmt.Println("Usage: merlion vault [<provider>]")
 	fmt.Println("Provider: sqlite, file [<obsidian-vault-path>], cloud")
 	fmt.Println("  - sqlite: create a new SQLite database")
 	fmt.Println("  - file <obsidian-vault-path>: create a new local Obsidian vault")
@@ -48,16 +52,4 @@ func printVaultHelp(invalidArgs bool) {
 		os.Exit(1)
 	}
 	os.Exit(0)
-}
-
-func newCloudVault(args ...string) int {
-	return 0
-}
-
-func newFilesVault(args ...string) int {
-	return 0
-}
-
-func newSQLiteVault(args ...string) int {
-	return 0
 }

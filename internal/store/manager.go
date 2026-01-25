@@ -1,14 +1,17 @@
+// Package store contains the logic to manage the user's notes
 package store
 
 import (
 	"strings"
 
+	"merlion/internal/config"
 	"merlion/internal/model"
 	"merlion/internal/store/cloud"
 	"merlion/internal/store/files"
 	sqlite "merlion/internal/store/sqlite"
 	"merlion/internal/utils"
 	"merlion/internal/utils/assert"
+
 	"github.com/charmbracelet/log"
 )
 
@@ -30,27 +33,13 @@ type Manager struct {
 
 // NewManager creates a new manager with the given store implementation
 // and initializes the notes metadata list (without full content).
-func NewManager(cloudStore *cloud.Client, sqliteStore *sqlite.Client, filesStore *files.Client, defaultToCloud bool) *Manager {
+func NewManager(config *config.UserConfig, credentialsManagert *cloud.CredentialsManager, defaultToCloud bool) *Manager {
 	var defaultStore Store
-	defaultStore = sqliteStore
-	if cloudStore != nil && defaultToCloud {
-		defaultStore = cloudStore
-	}
-
-	var stores []Store
-	if cloudStore != nil {
-		stores = append(stores, cloudStore)
-	}
-	if filesStore != nil {
-		stores = append(stores, filesStore)
-	}
-	if sqliteStore != nil {
-		stores = append(stores, sqliteStore)
-	}
-
+	stores := LoadStores(config, credentialsManagert)
 	if len(stores) == 0 {
-		panic("No store found")
+		log.Fatalf("No store found in config")
 	}
+	defaultStore = stores[0]
 
 	return &Manager{
 		activeStore: defaultStore,
@@ -59,7 +48,41 @@ func NewManager(cloudStore *cloud.Client, sqliteStore *sqlite.Client, filesStore
 	}
 }
 
-// UpdateCloudStore will swap the cloud storage for a new store
+func LoadStores(config *config.UserConfig, credentialsManager *cloud.CredentialsManager) []Store {
+	var cloudStore *cloud.Client
+	var stores = []Store{}
+	for _, vault := range config.Vaults {
+		switch vault.Provider {
+		case cloud.Name:
+			var err error
+			creds, _ := credentialsManager.LoadCredentials()
+			if creds != nil {
+				log.Fatalf("You need to login to use Cloud")
+			}
+			cloudStore, err = cloud.NewClient(creds)
+			if err != nil {
+				log.Fatalf("Failed to init cloud client: %v", err)
+			}
+		case sqlite.Name:
+			store := sqlite.NewClient()
+			stores = append(stores, store)
+		case files.Name:
+			store, err := files.NewClient(vault.Path)
+			if err != nil {
+				log.Fatalf("Failed to init local file client: %v", err)
+			}
+			stores = append(stores, store)
+		}
+	}
+
+	if cloudStore != nil {
+		stores = append(stores, cloudStore)
+	}
+
+	return stores
+}
+
+// UpdateCloudClient will swap the cloud storage for a new store
 // Expect the store to be valid and functionnal, panic otherwise
 func (m *Manager) UpdateCloudClient(client *cloud.Client) {
 	found := false
@@ -105,17 +128,17 @@ func (m *Manager) setActiveStore(store Store) {
 
 // GetFullNote retrieves a specific note by ID with its complete content.
 // This method guarantees that the returned note will have its content field populated.
-func (m *Manager) GetFullNote(noteId string) (*model.Note, error) {
+func (m *Manager) GetFullNote(noteID string) (*model.Note, error) {
 	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency_msg)
 
-	note, err := m.activeStore.GetNote(noteId)
+	note, err := m.activeStore.GetNote(noteID)
 	if err != nil {
 		return nil, err
 	}
 
 	found := false
 	for i, cachedNote := range m.Notes {
-		if cachedNote.NoteID == noteId {
+		if cachedNote.NoteID == noteID {
 			m.Notes[i] = *note
 			found = true
 			break
@@ -140,11 +163,11 @@ func (m *Manager) ListNoteMetadata() ([]model.Note, error) {
 	return notes, nil
 }
 
-func (m *Manager) SearchById(noteId string) *model.Note {
+func (m *Manager) SearchByID(noteID string) *model.Note {
 	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency_msg)
 
 	for _, note := range m.Notes {
-		if note.NoteID == noteId {
+		if note.NoteID == noteID {
 			return &note
 		}
 	}
@@ -198,17 +221,17 @@ func (m *Manager) CreateNote(req model.CreateNoteRequest) (*model.Note, error) {
 }
 
 // UpdateNote modifies an existing note with the provided changes and updates the metadata cache.
-func (m *Manager) UpdateNote(noteId string, changes model.CreateNoteRequest) (*model.Note, error) {
+func (m *Manager) UpdateNote(noteID string, changes model.CreateNoteRequest) (*model.Note, error) {
 	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency_msg)
 
-	note, err := m.activeStore.UpdateNote(noteId, changes)
+	note, err := m.activeStore.UpdateNote(noteID, changes)
 	if err != nil {
 		return nil, err
 	}
 
 	found := false
 	for i, cachedNote := range m.Notes {
-		if cachedNote.NoteID == noteId {
+		if cachedNote.NoteID == noteID {
 			m.Notes[i] = *note
 			found = true
 			break
@@ -221,16 +244,16 @@ func (m *Manager) UpdateNote(noteId string, changes model.CreateNoteRequest) (*m
 }
 
 // DeleteNote removes a note by its ID.
-func (m *Manager) DeleteNote(noteId string) error {
+func (m *Manager) DeleteNote(noteID string) error {
 	assert.Eq(m.internal__notesStore, m.activeStore.Name(), panic__consistency_msg)
 
-	err := m.activeStore.DeleteNote(noteId)
+	err := m.activeStore.DeleteNote(noteID)
 	if err != nil {
 		return err
 	}
 	idx := -1
 	for i, cachedNote := range m.Notes {
-		if cachedNote.NoteID == noteId {
+		if cachedNote.NoteID == noteID {
 			idx = i
 			break
 		}
