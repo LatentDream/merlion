@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"merlion/cmd/merlion/parser"
 	"merlion/internal/config"
@@ -13,168 +12,36 @@ import (
 	"merlion/internal/store/sqlite"
 	"merlion/internal/styles"
 	"merlion/internal/ui/login"
+	"merlion/internal/ui/vault"
 
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
 )
 
-type vaultType string
-
-const (
-	vaultCloud    vaultType = "Cloud"
-	vaultSQLite   vaultType = "SQLite"
-	vaultObsidian vaultType = "Obsidian Vault"
-)
-
-// Model states
-type state int
-
-const (
-	stateChooseVault state = iota
-	stateObsidianVault
-	stateDone
-)
-
-type model struct {
-	state       state
-	cursor      int
-	choices     []vaultType
-	textInput   textinput.Model
-	chosen      vaultType
-	obsidianDir string
-}
-
-func initialModel() model {
-	ti := textinput.New()
-	ti.Focus()
-
-	return model{
-		state:     stateChooseVault,
-		cursor:    0,
-		choices:   []vaultType{vaultCloud, vaultSQLite, vaultObsidian},
-		textInput: ti,
-	}
-}
-
-func (m model) Init() tea.Cmd {
-	return textinput.Blink
-}
-
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
-			return m, tea.Quit
-		case "up", "k":
-			if m.state == stateChooseVault && m.cursor > 0 {
-				m.cursor--
-			}
-		case "down", "j":
-			if m.state == stateChooseVault && m.cursor < len(m.choices)-1 {
-				m.cursor++
-			}
-		case "enter":
-			return m.handleEnter()
-		}
-	}
-
-	// Update text input when in input states
-	if m.state != stateChooseVault && m.state != stateDone {
-		var cmd tea.Cmd
-		m.textInput, cmd = m.textInput.Update(msg)
-		return m, cmd
-	}
-
-	return m, nil
-}
-
-func (m model) handleEnter() (tea.Model, tea.Cmd) {
-	switch m.state {
-	case stateChooseVault:
-		m.chosen = m.choices[m.cursor]
-
-		switch m.chosen {
-		case vaultSQLite, vaultCloud:
-			// SQLite and Cloud don't need input, go straight to done
-			m.state = stateDone
-			return m, tea.Quit
-		case vaultObsidian:
-			m.state = stateObsidianVault
-			homeDir, _ := os.UserHomeDir()
-			defaultPath := filepath.Join(homeDir, "notes")
-			m.textInput.SetValue(defaultPath)
-		}
-
-	case stateObsidianVault:
-		m.obsidianDir = m.textInput.Value()
-		m.state = stateDone
-		return m, tea.Quit
-	}
-
-	return m, nil
-}
-
-func (m model) View() string {
-	var s strings.Builder
-
-	switch m.state {
-	case stateChooseVault:
-		s.WriteString("You don't have any place to store your notes, please choose one:\n")
-		for i, choice := range m.choices {
-			cursor := " "
-			if m.cursor == i {
-				cursor = ">"
-			}
-			s.WriteString(fmt.Sprintf("%s %s\n", cursor, choice))
-		}
-		s.WriteString("\n\033[37mTo add new provider in the future, you can use \033[36;4mmerlion vault\033[0m\n")
-
-	case stateObsidianVault:
-		s.WriteString("Select a vault, or create a new one:\n")
-		s.WriteString("Root Folder: ")
-		s.WriteString(m.textInput.View())
-		s.WriteString("\n")
-
-	case stateDone:
-		s.WriteString("✓ Vault configured!\n\n")
-		switch m.chosen {
-		case vaultSQLite:
-			s.WriteString("Using default SQLite database\n")
-		case vaultObsidian:
-			s.WriteString(fmt.Sprintf("Obsidian vault: %s\n", m.obsidianDir))
-		case vaultCloud:
-			s.WriteString("Cloud vault will be configured\n")
-		}
-	}
-
-	return s.String()
-}
-
-// Integration functions
 func ChooseVault() int {
-	p := tea.NewProgram(initialModel())
+	p := tea.NewProgram(vault.NewModel())
 	finalModel, err := p.Run()
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		return 1
 	}
 
-	m := finalModel.(model)
+	m := finalModel.(vault.Model)
 
 	// Now call the appropriate function based on choice
-	switch m.chosen {
-	case vaultSQLite:
+	switch m.ChosenVault {
+	case vault.SQLite:
 		return newSQLiteVault()
-	case vaultObsidian:
-		return newFilesVault(m.obsidianDir)
-	case vaultCloud:
+	case vault.Obsidian:
+		return newFilesVault(m.ChosenPath)
+	case vault.Cloud:
 		return newCloudVault()
 	}
 
 	return 0
 }
+
+// TODO: move the vault creation logic in the related package
 
 func newCloudVault(args ...string) int {
 	tm, err := styles.NewThemeManager()
@@ -210,7 +77,7 @@ func newCloudVault(args ...string) int {
 
 func newFilesVault(args ...string) int {
 	root, _ := parser.GetArg(args, printVaultHelp)
-	
+
 	absPath, err := filepath.Abs(root)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: invalid path: %v\n", err)
@@ -221,7 +88,7 @@ func newFilesVault(args ...string) int {
 		fmt.Fprintf(os.Stderr, "Error: invalid path provided\n")
 		return 1
 	}
-	
+
 	cfg := config.Load()
 	cfg.Vaults = append(cfg.Vaults, config.Vault{
 		Provider: files.Type,

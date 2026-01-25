@@ -1,11 +1,11 @@
-package main
+package logout
 
 import (
 	"fmt"
 	"merlion/internal/store/cloud"
 )
 
-func logoutCmd(args ...string) int {
+func Cmd(args ...string) int {
 	credMgr, err := cloud.NewCredentialsManager()
 	if err != nil {
 		fmt.Printf("Failed to initialize credentials manager: %v", err)

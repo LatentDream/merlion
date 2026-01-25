@@ -15,7 +15,7 @@ func GetFullVersionInfo() map[string]string {
 	}
 }
 
-func VersionCmd(args ...string) int {
+func Cmd(args ...string) int {
 	version := fmt.Sprintf("version: %s\ncommit: %s", Version, Commit)
 	fmt.Println(version)
 	return 0

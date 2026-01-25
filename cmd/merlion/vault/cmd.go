@@ -10,7 +10,7 @@ import (
 	"merlion/internal/utils"
 )
 
-func VaultCmd(args ...string) int {
+func Cmd(args ...string) int {
 	if utils.Contains(args, "--help") || utils.Contains(args, "-h") {
 		printVaultHelp(true)
 	}
@@ -23,7 +23,7 @@ func VaultCmd(args ...string) int {
 	switch arg {
 	case "sqlite":
 		return newSQLiteVault(args...)
-	case "file":
+	case "files":
 		return newFilesVault(args...)
 	case "cloud":
 		return newCloudVault(args...)
@@ -39,13 +39,13 @@ func printVaultHelp(invalidArgs bool) {
 	}
 
 	fmt.Println("Usage: merlion vault [<provider>]")
-	fmt.Println("Provider: sqlite, file [<obsidian-vault-path>], cloud")
+	fmt.Println("Provider: sqlite, files [<obsidian-vault-path>], cloud")
 	fmt.Println("  - sqlite: create a new SQLite database")
-	fmt.Println("  - file <obsidian-vault-path>: create a new local Obsidian vault")
+	fmt.Println("  - files <obsidian-vault-path>: create a new local Obsidian vault")
 	fmt.Println("  - cloud: create a new cloud storage provider")
 	fmt.Println("Examples:")
 	fmt.Println("  merlion vault sqlite")
-	fmt.Println("  merlion vault file ~/notes")
+	fmt.Println("  merlion vault files ~/notes")
 	fmt.Println("  merlion vault cloud")
 
 	if invalidArgs {

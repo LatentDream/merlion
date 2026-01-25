@@ -98,7 +98,7 @@ func parseStore(args []string) (store.Store, []string) {
 	return nil, nil
 }
 
-func ExportCmd(args ...string) int {
+func Cmd(args ...string) int {
 	if len(args) == 0 || utils.Contains(args, "--help") || utils.Contains(args, "-h") {
 		printHelp(false)
 	}

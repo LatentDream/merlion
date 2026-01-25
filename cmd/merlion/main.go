@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"merlion/cmd/merlion/export"
+	"merlion/cmd/merlion/logout"
 	"merlion/cmd/merlion/parser"
 	"merlion/cmd/merlion/vault"
 	version "merlion/cmd/merlion/version"
@@ -52,22 +53,22 @@ func init() {
 		{
 			name:        "vault",
 			description: "Create a new note vault storage, switch between them using `)`",
-			run:         vault.VaultCmd,
+			run:         vault.Cmd,
 		},
 		{
 			name:        "version",
 			description: "Show version information",
-			run:         version.VersionCmd,
+			run:         version.Cmd,
 		},
 		{
 			name:        "export",
 			description: "Export the SQLite database to a Obsidian vault.",
-			run:         export.ExportCmd,
+			run:         export.Cmd,
 		},
 		{
 			name:        "logout",
 			description: "Removed the cached credentials",
-			run:         logoutCmd,
+			run:         logout.Cmd,
 		},
 	}
 }
