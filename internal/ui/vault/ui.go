@@ -6,6 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"merlion/internal/controls"
+
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -32,6 +35,7 @@ type Model struct {
 	cursor      int
 	choices     []vaultType
 	textInput   textinput.Model
+	keys        controls.KeyMap
 	ChosenVault vaultType
 	ChosenPath  string
 }
@@ -43,6 +47,7 @@ func NewModel() Model {
 	return Model{
 		state:     stateChooseVault,
 		cursor:    0,
+		keys:      controls.Keys,
 		choices:   []vaultType{Cloud, SQLite, Obsidian},
 		textInput: ti,
 	}
@@ -55,18 +60,18 @@ func (m Model) Init() tea.Cmd {
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
+		switch {
+		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
-		case "up", "k":
+		case key.Matches(msg, m.keys.Up):
 			if m.state == stateChooseVault && m.cursor > 0 {
 				m.cursor--
 			}
-		case "down", "j":
+		case key.Matches(msg, m.keys.Down):
 			if m.state == stateChooseVault && m.cursor < len(m.choices)-1 {
 				m.cursor++
 			}
-		case "enter":
+		case key.Matches(msg, m.keys.Select):
 			return m.handleEnter()
 		}
 	}

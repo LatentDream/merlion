@@ -13,16 +13,17 @@ type Note struct {
 	IsPublic    bool      `json:"is_public"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+	Source      string    `json:"-"`
 }
 
 type CreateNoteRequest struct {
-	Title       string   `json:"title"`
-	Content     *string  `json:"content"`      // pointer for nullable string
-	WorkspaceID *string  `json:"workspace_id"` // pointer for nullable UUID
-	Tags        []string `json:"tags,omitempty"`
-	IsFavorite  *bool    `json:"is_favorite,omitempty"`
-	IsWorkLog   *bool    `json:"is_work_log,omitempty"`
-	IsPublic    *bool    `json:"is_public,omitempty"`
+	Title       string     `json:"title"`
+	Content     *string    `json:"content"`      // pointer for nullable string
+	WorkspaceID *string    `json:"workspace_id"` // pointer for nullable UUID
+	Tags        []string   `json:"tags,omitempty"`
+	IsFavorite  *bool      `json:"is_favorite,omitempty"`
+	IsWorkLog   *bool      `json:"is_work_log,omitempty"`
+	IsPublic    *bool      `json:"is_public,omitempty"`
 	CreatedAt   *time.Time `json:"created_at"`
 	UpdatedAt   *time.Time `json:"updated_at"`
 }

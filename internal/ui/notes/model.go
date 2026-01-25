@@ -97,7 +97,7 @@ type Model struct {
 	tagsList     grouplist.Model
 }
 
-func NewModel(storeManager *vault.Manager, themeManager *styles.ThemeManager, firstTab string) Model {
+func NewModel(vaultManager *vault.Manager, themeManager *styles.ThemeManager, firstTab string) Model {
 	s := themeManager.Styles()
 
 	// Initialize spinner with themed color
@@ -121,7 +121,7 @@ func NewModel(storeManager *vault.Manager, themeManager *styles.ThemeManager, fi
 
 	tabs := tabs.New(filterTabs, themeManager, firstTab)
 
-	noteRenderer := renderer.New(themeManager, storeManager)
+	noteRenderer := renderer.New(themeManager, vaultManager)
 
 	gl := grouplist.New([]grouplist.Group{}, delegate, themeManager)
 
@@ -137,7 +137,7 @@ func NewModel(storeManager *vault.Manager, themeManager *styles.ThemeManager, fi
 		listDelegate: delegate,
 		styles:       s,
 		themeManager: themeManager,
-		storeManager: storeManager,
+		storeManager: vaultManager,
 		viewType:     large,
 		compactView:  themeManager.Config.CompactView,
 		tagsList:     gl,

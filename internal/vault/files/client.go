@@ -133,9 +133,9 @@ func (c *Client) CreateNote(req model.CreateNoteRequest) (*model.Note, error) {
 }
 
 func (c *Client) UpdateNote(noteID string, req model.CreateNoteRequest) (*model.Note, error) {
-	notePath := filepath.Join(c.root, noteID+".md")
+	oldPath := filepath.Join(c.root, noteID+".md")
 
-	existingNote, err := c.parseNoteFile(notePath)
+	existingNote, err := c.parseNoteFile(oldPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse existing note for update: %w", err)
 	}
@@ -150,7 +150,21 @@ func (c *Client) UpdateNote(noteID string, req model.CreateNoteRequest) (*model.
 	updatedNote.IsPublic = getBoolOrDefault(req.IsPublic, existingNote.IsPublic)
 	updatedNote.UpdatedAt = time.Now()
 
-	err = c.writeNoteFile(notePath, updatedNote)
+	if req.Content == nil {
+		c.GetNote(noteID)
+		req.Content = existingNote.Content
+	}
+
+	newPath := filepath.Join(c.root, req.Title+".md")
+	if oldPath != newPath {
+		err = os.Rename(oldPath, newPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to rename note file: %w", err)
+		}
+		updatedNote.NoteID = req.Title
+	}
+
+	err = c.writeNoteFile(newPath, updatedNote)
 	if err != nil {
 		return nil, fmt.Errorf("failed to write updated note file: %w", err)
 	}
