@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"merlion/internal/vault/cloud"
 	"merlion/internal/styles"
+	"merlion/internal/vault/cloud"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -179,7 +179,8 @@ func (m Model) View() string {
 
 	// Add signup notice
 	b.WriteString(m.styles.Muted.Render("\nDon't have an account yet?") + "\n")
-	b.WriteString(m.styles.Muted.Render("Visit https://note.merlion.dev to create one"))
+	b.WriteString(m.styles.Muted.Render("Visit https://note.merlion.dev to create one") + "\n")
+	b.WriteString(m.styles.Muted.Render("\nNote are not encryted at the moment - Don't store sensible information"))
 
 	// Center the container in the terminal
 	container := m.styles.Container.Render(b.String())

@@ -11,7 +11,7 @@
 Merlion is a TUI, Markdown-based note-taking application, inspired by Obsidian but built for command-line workflows.
 - Compatible with [Obsidian](https://obsidian.md/) vaults
 - Ability to use a single SQLite database for all notes stored locally
-- Cloud storage support (WIP, see below - **DON'T use this for sensitive data yet**)
+- Cloud storage support - work in progress, see below
 
 _Merlion works fully offline by default, no account needed, all files are on your computer in a SqliteDB or directly as .md files._
 

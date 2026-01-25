@@ -30,6 +30,19 @@ type Theme struct {
 	ListIndent uint
 }
 
+func FindThemeByName(name string) Theme {
+	switch name {
+	case "gruvbox":
+		return Gruvbox
+	case "neotokyo":
+		return NeoTokyo
+	case "terminal":
+		return Terminal
+	default:
+		return NeoTokyo
+	}
+}
+
 var (
 	Terminal = Theme{
 		Name:           "terminal",
