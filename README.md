@@ -19,6 +19,62 @@ _Merlion works fully offline by default, no account needed, all files are on you
 
 ---
 
+## Installation
+
+### Option 1: Download Pre-built Binaries (Recommended)
+
+Download the latest release for your platform from [GitHub Releases](https://github.com/latentdream/merlion/releases/tag/1.2.0):
+
+**macOS:**
+- ARM (M1/M2/M3): `merlion-darwin-arm64.tar.gz`
+- Intel (x86): `merlion-darwin-amd64.tar.gz`
+
+**Linux:**
+- ARM: `merlion-linux-arm64.tar.gz`
+- x86: `merlion-linux-amd64.tar.gz`
+
+**Windows:**
+- ARM: `merlion-windows-arm64.zip`
+- x86: `merlion-windows-amd64.zip`
+
+After downloading, extract and move the binary to your PATH:
+
+```sh
+# macOS/Linux example
+tar -xzf merlion-*.tar.gz
+sudo mv merlion /usr/local/bin/
+```
+
+### Option 2: Homebrew (macOS/Linux)
+
+Install from source using the Homebrew formula:
+
+```sh
+# In the root of the repo
+brew install --build-from-source merlion.rb
+```
+
+### Option 3: Build from Source
+
+Requirements: Go 1.21 or higher
+
+```sh
+# Clone the repository
+git clone https://github.com/latentdream/merlion.git
+cd merlion
+
+# Build using just
+just build
+
+# Or build directly with go
+go build -o merlion ./cmd/merlion
+
+# Move to your PATH
+sudo mv merlion /usr/local/bin/
+```
+
+---
+
 #### Features
 - Keyboard (only) navigation
 - Local-first note storage
@@ -61,19 +117,16 @@ _Merlion works fully offline by default, no account needed, all files are on you
 
 ## Getting Started
 
-1. Clone the repository  
-2. Build the project:
+Once installed (see [Installation](#installation) section above), run:
 
 ```sh
-just build
-
-# Or:
-go build -o merlion ./cmd/merlion
+merlion
 ```
 
-Run it:
+Or with compact mode for smaller terminals:
+
 ```sh
-./merlion
+merlion --compact
 ```
 
 #### Tmux Integration
