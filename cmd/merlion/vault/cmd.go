@@ -7,15 +7,15 @@ import (
 	"os"
 	"path/filepath"
 
-	"merlion/internal/utils"
 	"merlion/cmd/merlion/parser"
 	"merlion/internal/config"
-	"merlion/internal/vault/cloud"
-	"merlion/internal/vault/files"
-	"merlion/internal/vault/sqlite"
 	"merlion/internal/styles"
 	"merlion/internal/ui/login"
 	"merlion/internal/ui/vault"
+	"merlion/internal/utils"
+	"merlion/internal/vault/cloud"
+	"merlion/internal/vault/files"
+	"merlion/internal/vault/sqlite"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/log"
@@ -54,10 +54,10 @@ func printVaultHelp(invalidArgs bool) {
 	fmt.Println("  - sqlite: create a new SQLite database")
 	fmt.Println("  - files <obsidian-vault-path>: create a new local Obsidian vault")
 	fmt.Println("  - cloud: create a new cloud storage provider")
-	fmt.Println("Examples:")
-	fmt.Println("  merlion vault sqlite")
-	fmt.Println("  merlion vault files ~/notes")
-	fmt.Println("  merlion vault cloud")
+	fmt.Println("")
+	fmt.Println("To remove a vault")
+	fmt.Println("   - sqlite & files -> edit ~/.merlion/config.json")
+	fmt.Println("   - cloud -> merlion logout")
 
 	if invalidArgs {
 		os.Exit(1)

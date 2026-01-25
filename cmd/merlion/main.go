@@ -29,7 +29,7 @@ func helpCmd(args ...string) int {
 	fmt.Println("Run `merlion` without args to start in TUI mode")
 	fmt.Println("For remote storage capability, create an account at:")
 	fmt.Println("    https://note.merlion.dev/login")
-	fmt.Println("\nAvailable commands:")
+	fmt.Println("\nAvailable commands (run `merlion <command> --help` for more info):")
 	for _, cmd := range COMMANDS {
 		fmt.Printf("  %-10s %s\n", cmd.name, cmd.description)
 	}
@@ -56,6 +56,11 @@ func init() {
 			run:         vault.Cmd,
 		},
 		{
+			name:        "logout",
+			description: "Removed the cached credentials and Cloud Vault",
+			run:         logout.Cmd,
+		},
+		{
 			name:        "version",
 			description: "Show version information",
 			run:         version.Cmd,
@@ -64,11 +69,6 @@ func init() {
 			name:        "export",
 			description: "Export the SQLite database to a Obsidian vault.",
 			run:         export.Cmd,
-		},
-		{
-			name:        "logout",
-			description: "Removed the cached credentials",
-			run:         logout.Cmd,
 		},
 	}
 }
