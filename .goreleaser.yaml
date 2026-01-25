@@ -13,9 +13,9 @@ before:
     - go mod tidy
 
 builds:
-  - main: ./cmd/merion
-  - binary: merlion
-  - env:
+  - main: ./cmd/merlion
+    binary: merlion
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
