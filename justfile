@@ -1,7 +1,7 @@
 default:
     just --list
 
-version := "1.0.1"
+version := "1.1.0"
 commit := `git rev-parse HEAD`
 build_time := `date '+%Y-%m-%d %H:%M:%S'`
 module_path := `go list -m`
