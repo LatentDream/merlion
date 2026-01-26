@@ -111,7 +111,7 @@ sudo mv merlion /usr/local/bin/
 | `ctrl+p` | Toggle Info Position | Change note info panel position |
 | `ctrl+f` | Toggle Compact View | Toggle compact view (large screens only) |
 | `c` | Create | Create a new note |
-| `(` or `)` | Toggle Store | Toggle store view |
+| `(` or `)` | Toggle Vault | Toggle between Vault |
 
 ---
 
