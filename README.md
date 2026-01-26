@@ -9,7 +9,7 @@
 ## What is it?
 
 Merlion is a TUI, Markdown-based note-taking application, inspired by Obsidian but built for command-line workflows
-- Uses `$EDITOR` (nvim, nano, ...) as to edit notes
+- Uses `$EDITOR` (nvim, nano, ...) to edit notes
 - Uses Markdown Format 
 - Compatible with [Obsidian](https://obsidian.md/) vaults (any `.md` files)
 
