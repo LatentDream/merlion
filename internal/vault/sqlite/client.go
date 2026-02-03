@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	Name = "Gloabl"
+	Name = "Global"
 	Type = "SQLite"
 )
 

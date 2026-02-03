@@ -110,12 +110,12 @@ func newCloudVault(args ...string) int {
 	// TODO: could be more generic to have multiple accounts
 	cfg := config.Load()
 	for _, vault := range cfg.Vaults {
-		if vault.Provider == cloud.Name {
+		if vault.Provider == cloud.Type {
 			return 0
 		}
 	}
 	cfg.Vaults = append(cfg.Vaults, config.Vault{
-		Provider: cloud.Name,
+		Provider: cloud.Type,
 		Name:     cloud.Name,
 		Path:     "Not Used - credentials are stored in ~/.merlion/credentials.json",
 	})
@@ -151,7 +151,7 @@ func newSQLiteVault(args ...string) int {
 	// TODO: could be more generic accepting a path for the db
 	cfg := config.Load()
 	cfg.Vaults = append(cfg.Vaults, config.Vault{
-		Provider: sqlite.Name,
+		Provider: sqlite.Type,
 		Name:     sqlite.Name,
 		Path:     "Not Used - Use MERLION_DB_PATH env var to override",
 	})

@@ -66,12 +66,14 @@ func (c *UserConfig) validate() error {
 func Load() *UserConfig {
 	once.Do(func() {
 		configDir, err := getConfigDir()
+		configDir = "/Users/guillaume.thibault/.config/merlion"
 		if err != nil {
 			log.Fatalf("Failed to get config dir: %v", err)
 		}
 
 		var config UserConfig
 		configPath := filepath.Join(configDir, "config.json")
+		log.Info("Reading :s", configPath)
 		if _, err := os.Stat(configPath); os.IsNotExist(err) {
 			config = UserConfig{
 				Theme:       "neotokyo",
@@ -90,9 +92,12 @@ func Load() *UserConfig {
 			}
 		}
 
+		log.Info("Config", config)
+
 		if err := config.validate(); err != nil {
 			log.Fatalf("Invalid config: %v", err)
 		}
+
 
 		instance = config
 	})
@@ -108,12 +113,17 @@ func (config *UserConfig) Save() error {
 	}
 
 	configDir, err := getConfigDir()
+
+	configDir = "/Users/guillaume.thibault/.config/merlion"
 	if err != nil {
 		return err
 	}
 
+	path := filepath.Join(configDir, "config.json")
+	log.Info("Saving config: ", path)
+
 	if err := os.WriteFile(
-		filepath.Join(configDir, "config.json"),
+		path,
 		data,
 		0o600,
 	); err != nil {

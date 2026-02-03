@@ -53,7 +53,7 @@ func LoadStores(config *config.UserConfig, credentialsManager *cloud.Credentials
 	var stores = []Store{}
 	for _, vault := range config.Vaults {
 		switch vault.Provider {
-		case cloud.Name:
+		case cloud.Type:
 			creds, err := credentialsManager.LoadCredentials()
 			if err != nil {
 				log.Fatalf("You need to login to use Cloud")
@@ -62,7 +62,7 @@ func LoadStores(config *config.UserConfig, credentialsManager *cloud.Credentials
 			if err != nil {
 				log.Fatalf("Failed to init cloud client: %v", err)
 			}
-		case sqlite.Name:
+		case sqlite.Type:
 			store := sqlite.NewClient()
 			stores = append(stores, store)
 		case files.Type:

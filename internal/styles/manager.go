@@ -17,10 +17,11 @@ type ThemeManager struct {
 }
 
 func NewThemeManager() (*ThemeManager, error) {
-    config := config.Load()
+	config := config.Load()
 	tm := &ThemeManager{
-		Config:    config,
-		Theme:     FindThemeByName(config.Theme),
+		Config:       config,
+		Theme:        FindThemeByName(config.Theme),
+		saveOnChange: true,
 	}
 
 	return tm, nil
