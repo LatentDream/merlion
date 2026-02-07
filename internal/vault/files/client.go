@@ -212,8 +212,8 @@ func (c *Client) parseNoteFile(path string) (*model.Note, error) {
 	tags := frontMatterGetList(frontMatter, keyTags)
 	isFavorite := frontMatterGetBool(frontMatter, keyIsFavorite, false)
 	isWorkLog := frontMatterGetBool(frontMatter, keyIsWorkLog, false)
-	createdTime := frontMatterGetTime(frontMatter, keyCreatedAt, osCreatedTime)
-	updatedTime := frontMatterGetTime(frontMatter, keyUpdatedAt, osUpdatedTime)
+	createdTime := osCreatedTime
+	updatedTime := osUpdatedTime
 
 	note := model.Note{
 		NoteID:     noteID,
@@ -239,8 +239,8 @@ func (c *Client) writeNoteFile(path string, note model.Note) error {
 		keyTags:       note.Tags,
 		keyIsFavorite: note.IsFavorite,
 		keyIsWorkLog:  note.IsWorkLog,
-		keyCreatedAt:  note.CreatedAt.Format(time.RFC3339),
-		keyUpdatedAt:  note.UpdatedAt.Format(time.RFC3339),
+		// keyCreatedAt:  note.CreatedAt.Format(time.RFC3339),
+		// keyUpdatedAt:  note.UpdatedAt.Format(time.RFC3339),
 	}
 
 	if note.WorkspaceID != nil {
