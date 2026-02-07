@@ -10,7 +10,7 @@ import (
 	"github.com/muesli/termenv"
 )
 
-func getLogFilePath() (string, error) {
+func GetLogFilePath() (string, error) {
 	dir, err := gap.NewScope(gap.User, "merlion").CacheDir()
 	if err != nil {
 		return "", err
@@ -22,7 +22,7 @@ func SetupLog() (func() error, error) {
 	log.SetOutput(io.Discard)
 
 	// Log to file, if set
-	logFile, err := getLogFilePath()
+	logFile, err := GetLogFilePath()
 	if err != nil {
 		return nil, err
 	}

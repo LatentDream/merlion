@@ -82,6 +82,15 @@ func main() {
 	}
 	defer closer()
 
+	defer func() {
+		if r := recover(); r != nil {
+			logFile, _ := utils.GetLogFilePath()
+			fmt.Fprintf(os.Stderr, "PANIC: %v\n", r)
+			fmt.Fprintf(os.Stderr, "Log file: %s\n", logFile)
+			os.Exit(1)
+		}
+	}()
+
 	flags, commands := parser.SplitCmdsAndFlags(os.Args[1:])
 
 	// Handle --help flag

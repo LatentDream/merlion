@@ -36,15 +36,17 @@ var (
 )
 
 func getConfigDir() (string, error) {
-	userConfigDir, err := os.UserConfigDir()
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatalf("Failed to get user config directory: %v", err)
 	}
-	configDir := filepath.Join(userConfigDir, "merlion")
-	if err := os.MkdirAll(configDir, 0o700); err != nil {
+	configDir := filepath.Join(homeDir, ".config")
+	merlionDir := filepath.Join(configDir, "merlion")
+	if err := os.MkdirAll(merlionDir, 0o700); err != nil {
 		log.Fatalf("Failed to create config directory: %v", err)
 	}
-	return configDir, nil
+	log.Infof("merlion Dir: %s", configDir)
+	return merlionDir, nil
 }
 
 func (c *UserConfig) validate() error {
@@ -66,7 +68,6 @@ func (c *UserConfig) validate() error {
 func Load() *UserConfig {
 	once.Do(func() {
 		configDir, err := getConfigDir()
-		configDir = "/Users/guillaume.thibault/.config/merlion"
 		if err != nil {
 			log.Fatalf("Failed to get config dir: %v", err)
 		}
@@ -113,8 +114,6 @@ func (config *UserConfig) Save() error {
 	}
 
 	configDir, err := getConfigDir()
-
-	configDir = "/Users/guillaume.thibault/.config/merlion"
 	if err != nil {
 		return err
 	}
